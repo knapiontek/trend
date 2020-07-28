@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import requests
 
-AUTH = ('382d0bce-ae67-437b-8175-16c2a6d1f0b6', 'OttOAdbP8lIACA33YsKC')
+AUTH = ('?', '?')
 URL = 'https://api-demo.exante.eu/md/2.0'
 URL_EXCHANGES = f'{URL}/exchanges'
 URL_ACCOUNTS = f'{URL}/accounts'
