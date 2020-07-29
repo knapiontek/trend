@@ -1,22 +1,15 @@
-from pprint import pprint
-
-from src import store, config, session
-
-URL = config.exante_url()
-URL_EXCHANGES = f'{URL}/exchanges'
-URL_ACCOUNTS = f'{URL}/accounts'
+from src import store, session
 
 
-def display_resistance():
+def display_resistance(symbol: str):
     with store.Store('resistance') as content:
         with session.ExanteSession() as exante:
-            response = exante.get(url=URL_ACCOUNTS)
-            assert response.status_code == 200, response.text
+            candles = exante.candles(symbol, 10, 60)
 
-            accounts = response.json()
-            content['accounts'] = accounts
-            pprint(accounts)
+            content[symbol] = candles
 
 
 if __name__ == '__main__':
-    display_resistance()
+    # symbol = 'EUR/USD.E.FX'
+    symbol = 'PKO.WSE'
+    display_resistance(symbol)
