@@ -1,4 +1,5 @@
 import json
+from typing import Dict
 
 from src import config
 
@@ -8,7 +9,7 @@ class Store:
         self.filename = config.STORE_FOLDER.joinpath(f'{name}.json')
         self.content = {}
 
-    def __enter__(self):
+    def __enter__(self) -> Dict:
         if self.filename.exists():
             with self.filename.open() as read_io:
                 self.content = json.load(read_io)

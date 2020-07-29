@@ -2,6 +2,10 @@ import json
 import pathlib
 from functools import lru_cache
 
+import jsonschema
+
+from src import config_schema
+
 TREND_FOLDER = pathlib.Path(__file__).parent.parent
 STORE_FOLDER = TREND_FOLDER.joinpath('store')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
@@ -10,7 +14,9 @@ CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 @lru_cache(maxsize=None)
 def load():
     with CONFIG_FILE.open() as read_io:
-        return json.load(read_io)
+        config = json.load(read_io)
+        jsonschema.validate(config, config_schema.CONFIG_SCHEMA)
+        return config
 
 
 def exante_url():
