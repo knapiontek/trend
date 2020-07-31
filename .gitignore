@@ -1,3 +1,4 @@
 /store/*.json
+/store/*.csv
 .idea/
 src/__pycache__/
