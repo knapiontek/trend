@@ -23,20 +23,25 @@ plt.subplot(2, 2, 1)
 plt.plot(xom.Date, xom.Close, label='Price')
 plt.legend(loc='upper left')
 
-plt.subplot(2, 2, 2)
+plt.subplot(2, 2, 3)
 plt.plot(xom.Date, xom.Volume, label='Volume')
 plt.legend(loc='upper left')
 
-plt.subplot(2, 2, 3)
 
-_min = int(xom.Close.min())
-_max = int(xom.Close.max())
-x = range(_min, _max)
-y = [0] * (_max - _min)
-for i in xom.index:
-    close = int(xom.Close.iloc[i])
-    volume = xom.Volume.iloc[i]
-    y[close - _min - 1] += volume
+def distribution(df: pd.DataFrame):
+    _min = int(df.Close.min())
+    _max = int(df.Close.max())
+    x = range(_min, _max)
+    y = [0] * (_max - _min)
+    for i in df.index:
+        close = int(df.Close.iloc[i])
+        volume = df.Volume.iloc[i]
+        y[close - _min - 1] += volume
+    return x, y
+
+
+plt.subplot(2, 2, 2)
+x, y = distribution(xom)
 plt.bar(x, y, label='Distribution')
 plt.legend(loc='upper left')
 
