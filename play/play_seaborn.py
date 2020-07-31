@@ -1,12 +1,15 @@
-import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
-from scipy import stats
+
+from src import config
 
 sns.set(color_codes=True)
 
-x = np.random.normal(size=100)
-sns.distplot(x)
+filename = config.STORE_FOLDER.joinpath('XOM.csv')
+
+xom = pd.read_csv(filename, parse_dates=['Date'])
+xom = xom.sort_values(by='Date')
+sns.distplot(xom.Close)
 
 plt.show()
