@@ -1,4 +1,5 @@
 CONFIG_SCHEMA = {
+    '$ref': '#/definitions/Config',
     'definitions': {
         'Config': {
             'type': 'object',
@@ -6,6 +7,9 @@ CONFIG_SCHEMA = {
             'properties': {
                 'exante': {
                     '$ref': '#/definitions/Exante'
+                },
+                'quandl': {
+                    '$ref': '#/definitions/Quandl'
                 },
                 'notify-run': {
                     '$ref': '#/definitions/NotifyRun'
@@ -37,6 +41,16 @@ CONFIG_SCHEMA = {
                 'shared-key',
                 'url'
             ]
+        },
+        'Quandl': {
+            'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'shared-key': {
+                    'type': 'string'
+                }
+            },
+            'required': ['shared-key']
         },
         'NotifyRun': {
             'type': 'object',

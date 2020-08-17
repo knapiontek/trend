@@ -34,3 +34,9 @@ def exante_auth():
 def notify_channel():
     config = load()
     return config['notify-run']['channel']
+
+
+def quandl_auth():
+    config = load()
+    quandl_config = config['quandl']
+    return quandl_config['shared-key']
