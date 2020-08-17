@@ -40,3 +40,9 @@ def quandl_auth():
     config = load()
     quandl_config = config['quandl']
     return quandl_config['shared-key']
+
+
+def iex_auth():
+    config = load()
+    iex_config = config['iex']
+    return iex_config['shared-key']

@@ -11,12 +11,17 @@ CONFIG_SCHEMA = {
                 'quandl': {
                     '$ref': '#/definitions/Quandl'
                 },
+                'iex': {
+                    '$ref': '#/definitions/IEX'
+                },
                 'notify-run': {
                     '$ref': '#/definitions/NotifyRun'
                 }
             },
             'required': [
                 'exante',
+                'quandl',
+                'iex',
                 'notify-run'
             ]
         },
@@ -43,6 +48,16 @@ CONFIG_SCHEMA = {
             ]
         },
         'Quandl': {
+            'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'shared-key': {
+                    'type': 'string'
+                }
+            },
+            'required': ['shared-key']
+        },
+        'IEX': {
             'type': 'object',
             'additionalProperties': False,
             'properties': {

@@ -1,6 +1,7 @@
-import yfinance as yf
+from pprint import pprint
+
 import matplotlib.pyplot as plt
-import seaborn
+import yfinance as yf
 
 msft = yf.Ticker("MSFT")
 
@@ -8,7 +9,8 @@ msft = yf.Ticker("MSFT")
 print(msft.info)
 
 # get historical market data
-hist = msft.history(period="100d")
+hist = msft.history(period="1000d")
+pprint(hist)
 
 hist['Close'].plot(figsize=(16, 9))
 plt.show()

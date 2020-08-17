@@ -38,3 +38,6 @@
 curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
 cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
 https://rapidapi.com/apidojo/api/yahoo-finance1
+
+https://towardsdatascience.com/best-5-free-stock-market-apis-in-2019-ad91dddec984
+curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
