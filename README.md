@@ -10,10 +10,10 @@
 ### Run the engine on all instruments passing criteria (volume, short-allowance, etc)
 
 ## JSONStorage
- - based on MongoDB or ArangoDB
+ - based on arango-db
 
 ## Engine Web Viewer (nodejs based)
- - Accept the proposed intrument
+ - Accept the proposed instrument
  - instrument proposal based on volume, PE, EBIDA etc (criteria can be fully automated)
 
 ## Deployment
@@ -41,3 +41,9 @@ https://rapidapi.com/apidojo/api/yahoo-finance1
 
 https://towardsdatascience.com/best-5-free-stock-market-apis-in-2019-ad91dddec984
 curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
+
+### Price Action (bull market)
+
+- Green candles are bigger
+- More consecutive green bars, red bars alone
+- Big low wicks in the candles (hammers)

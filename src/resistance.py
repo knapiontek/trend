@@ -9,7 +9,11 @@ def display_resistance(symbol: str):
             content[symbol] = candles
 
 
-if __name__ == '__main__':
-    symbols = ['PKO.WSE', 'XOM.NYSE', 'EUR/USD.E.FX', 'TSLA.NASDAQ']
+def main():
+    symbols = ['PKO.WSE', 'KRU.WSE', 'CDR.WSE', 'XOM.NYSE', 'EUR/USD.E.FX', 'TSLA.NASDAQ']
     for symbol in symbols:
         display_resistance(symbol)
+
+
+if __name__ == '__main__':
+    main()

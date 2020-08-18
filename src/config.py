@@ -22,7 +22,7 @@ def load():
 def exante_url():
     config = load()
     exante_config = config['exante']
-    return exante_config['url']
+    return exante_config['data-url']
 
 
 def exante_auth():
