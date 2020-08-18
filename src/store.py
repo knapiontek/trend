@@ -6,7 +6,7 @@ from src import config
 
 class Store:
     def __init__(self, name: str):
-        self.filename = config.STORE_FOLDER.joinpath(f'{name}.json')
+        self.filename = config.STORE_PATH.joinpath(f'{name}.json')
         self.content = {}
 
     def __enter__(self) -> Dict:

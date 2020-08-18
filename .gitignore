@@ -1,3 +1,4 @@
+/logs/*.log
 /store/*.json
 /store/*.csv
 .idea/

@@ -1,12 +1,14 @@
+import logging
 import time
 import urllib.parse
 from datetime import datetime, timedelta, timezone
-from pprint import pprint
 from typing import List
 
 import requests
 
 from src import config
+
+LOG = logging.getLogger(__name__)
 
 URL = config.exante_url()
 DUBLIN_TZ = timezone(timedelta(hours=1), 'GMT')
@@ -61,12 +63,11 @@ class ExanteSession(requests.Session):
             'type': 'trades'
         }
         url = f'{URL}/ohlc/{url_encode(symbol)}/{duration}'
-        pprint(url)
-        pprint(params)
+        LOG.debug(f'url: {url} params: {params}')
         response = self.get(url=url, params=params)
         assert response.status_code == 200, response.text
         candles = response.json()
         for candle in candles:
             candle['datetime'] = from_timestamp(candle['timestamp']).isoformat()
-        pprint(candles)
+        LOG.debug(f'received candles: {len(candles)}')
         return candles

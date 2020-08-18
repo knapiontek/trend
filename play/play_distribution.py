@@ -11,7 +11,7 @@ sns.set(color_codes=True)
 
 register_matplotlib_converters()
 
-filename = config.STORE_FOLDER.joinpath('XOM.csv')
+filename = config.STORE_PATH.joinpath('XOM.csv')
 
 xom = pd.read_csv(filename, parse_dates=['Date'])
 
