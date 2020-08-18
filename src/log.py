@@ -2,7 +2,6 @@ import logging
 import pathlib
 import sys
 from logging.handlers import RotatingFileHandler
-from pprint import pprint
 
 from src import config
 
@@ -12,7 +11,7 @@ def init(script_file: str, persist=False):
     if persist:
         stem = pathlib.Path(script_file).stem
         file_name = config.LOG_PATH.joinpath(f'{stem}.log')
-        pprint(f'logging to file: {file_name}')
+        print(f'logging to file: {file_name}')
         file_handler = RotatingFileHandler(file_name,
                                            maxBytes=2e6,
                                            backupCount=5)

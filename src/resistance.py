@@ -4,7 +4,7 @@ from src import store, session, log
 def display_resistance(symbol: str):
     with store.Store('resistance') as content:
         with session.ExanteSession() as exante:
-            candles = exante.candles(symbol, batch_size=1000, duration=session.DURATION_1D)
+            candles = exante.candles(symbol, batch_size=100, duration=session.DURATION_1D)
 
             content[symbol] = candles
 

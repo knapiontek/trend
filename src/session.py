@@ -59,15 +59,15 @@ class ExanteSession(requests.Session):
             'from': to_timestamp(dt_from),
             'dt_to': dt_to.isoformat(),
             'to': to_timestamp(dt_to),
-            'size': 100,
+            'size': 1000,
             'type': 'trades'
         }
         url = f'{URL}/ohlc/{url_encode(symbol)}/{duration}'
-        LOG.debug(f'url: {url} params: {params}')
+        LOG.debug(f'url: {url} from: {dt_from} to: {dt_to}')
         response = self.get(url=url, params=params)
         assert response.status_code == 200, response.text
         candles = response.json()
         for candle in candles:
             candle['datetime'] = from_timestamp(candle['timestamp']).isoformat()
-        LOG.debug(f'received candles: {len(candles)}')
+        LOG.debug(f'received candles: {len(candles)} last: {candles[-1]["datetime"]}')
         return candles
