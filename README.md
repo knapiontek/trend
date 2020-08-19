@@ -47,3 +47,13 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 - Green candles are bigger
 - More consecutive green bars, red bars alone
 - Big low wicks in the candles (hammers)
+
+### Short Squeeze - False Break Out
+
+- Close with loss if build-up is observed
+
+### 3 EMA technique (50,100,150 EMA)
+
+- All 3 EMA's are parrallel
+- Enter trade when price dip and reverse from 50 EMA
+- Stop-loss at the lowest pull-back, enter trade when price cross back 50 EMA

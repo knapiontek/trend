@@ -55,9 +55,7 @@ class ExanteSession(requests.Session):
         dt_to = datetime.now(tz=DUBLIN_TZ)
         dt_from = dt_to - timedelta(seconds=seconds)
         params = {
-            'dt_from': dt_from.isoformat(),
             'from': to_timestamp(dt_from),
-            'dt_to': dt_to.isoformat(),
             'to': to_timestamp(dt_to),
             'size': 1000,
             'type': 'trades'

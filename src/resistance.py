@@ -10,8 +10,15 @@ def display_resistance(symbol: str):
 
 
 def main():
-    log.init(__file__, persist=True)
-    symbols = ['PKO.WSE', 'KRU.WSE', 'CDR.WSE', 'XOM.NYSE', 'EUR/USD.E.FX', 'TSLA.NASDAQ']
+    log.init(__file__, persist=False)
+    symbols = ['EUR/GBP.E.FX',
+               'EUR/GBP.E.FX',
+               'XAG/USD.E.FX',
+               'PKO.WSE',
+               'KRU.WSE',
+               'CDR.WSE',
+               'XOM.NYSE',
+               'TSLA.NASDAQ']
     for symbol in symbols:
         display_resistance(symbol)
 
