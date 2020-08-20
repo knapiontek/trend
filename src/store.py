@@ -85,3 +85,26 @@ class DBSeries:
 
     def __add__(self, series: List):
         self.tnx_collection.insert_many(series)
+
+    def latest(self) -> List:
+        query = '''
+            FOR series IN series_1d
+                COLLECT symbol = series.symbol
+                AGGREGATE latest_utc = MAX(series.utc)
+                RETURN {symbol, latest_utc}
+        '''
+        result = self.tnx_db.aql.execute(query)
+        return list(result)
+
+
+def empty_series():
+    db = db_connect()
+    names = [c['name'] for c in db.collections()]
+    for name in names:
+        if name.startswith('series'):
+            collection = db.collection(name)
+            collection.delete_match({})
+
+
+if __name__ == '__main__':
+    empty_series()

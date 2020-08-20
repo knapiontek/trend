@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import src.config
 from src import store, session, log, config
 
@@ -10,6 +12,12 @@ def receive_price_history(symbol: str):
             series += [{**c, **symbol_dict} for c in candles]
 
 
+def print_latest():
+    with store.DBSeries(duration=config.DURATION_1D) as series:
+        latest = series.latest()
+        pprint(latest)
+
+
 def main():
     log.init(__file__, persist=False)
     symbols = ['EUR/USD.E.FX',
@@ -20,10 +28,10 @@ def main():
                'CDR.WSE',
                'XOM.NYSE',
                'TSLA.NASDAQ']
-    symbols = ['TSLA.NASDAQ']
     for symbol in symbols:
         receive_price_history(symbol)
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    print_latest()
