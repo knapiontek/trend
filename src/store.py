@@ -3,7 +3,6 @@ from functools import lru_cache
 from typing import List, Dict
 
 from arango import ArangoClient
-from arango.collection import StandardCollection
 from arango.database import StandardDatabase
 
 from src import config
@@ -26,6 +25,28 @@ class FileStore:
                 json.dump(self.content, write_io, indent=2)
 
 
+CANDLE_SCHEMA = {
+    'message': 'candle-schema',
+    'level': 'strict',
+    'rule': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'timestamp': {'type': 'integer'},
+            'open': {'type': 'string'},
+            'low': {'type': 'string'},
+            'close': {'type': 'string'},
+            'volume': {'type': 'string', 'format': 'integer'},
+            'high': {'type': 'string'},
+            'utc': {'type': 'string'},
+            'dublin': {'type': 'string'},
+            'symbol': {'type': 'string'}
+        },
+        'required': ['close', 'dublin', 'high', 'low', 'open', 'symbol', 'timestamp', 'utc', 'volume']
+    }
+}
+
+
 @lru_cache(maxsize=1)
 def db_connect() -> StandardDatabase:
     url, username, password, db_name = config.arango_db_auth()
@@ -37,26 +58,30 @@ def db_connect() -> StandardDatabase:
     return db
 
 
-def db_collection(db: StandardDatabase, name: str) -> StandardCollection:
-    if db.has_collection(name):
-        collection = db.collection(name)
-    else:
+def create_collection(db: StandardDatabase, name: str):
+    if not db.has_collection(name):
         collection = db.create_collection(name)
-    return collection
+        collection.add_hash_index(fields=['symbol', 'timestamp'], unique=True)
 
 
 class DBSeries:
     def __init__(self, duration: int):
         duration_name = config.duration_name(duration)
+        self.collection_name = f'series_{duration_name}'
         self.db = db_connect()
-        self.collection = db_collection(self.db, f'series_{duration_name}')
+        create_collection(self.db, self.collection_name)
 
     def __enter__(self) -> 'DBSeries':
+        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=self.collection_name)
+        self.tnx_collection = self.tnx_db.collection(self.collection_name)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not exc_type:
-            pass
+        if self.tnx_db:
+            if exc_type:
+                self.tnx_db.abort_transaction()
+            else:
+                self.tnx_db.commit_transaction()
 
     def __add__(self, series: List):
-        self.collection.insert_many(series)
+        self.tnx_collection.insert_many(series)

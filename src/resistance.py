@@ -6,7 +6,7 @@ def receive_price_history(symbol: str):
     symbol_dict = {'symbol': symbol}
     with store.DBSeries(duration=config.DURATION_1D) as series:
         with session.ExanteSession() as exante:
-            candles = exante.candles(symbol, batch_size=1000, duration=src.config.DURATION_1D)
+            candles = exante.candles(symbol, batch_size=100, duration=src.config.DURATION_1D)
             series += [{**c, **symbol_dict} for c in candles]
 
 
@@ -20,6 +20,7 @@ def main():
                'CDR.WSE',
                'XOM.NYSE',
                'TSLA.NASDAQ']
+    symbols = ['TSLA.NASDAQ']
     for symbol in symbols:
         receive_price_history(symbol)
 
