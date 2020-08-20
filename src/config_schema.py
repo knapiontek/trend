@@ -16,13 +16,17 @@ CONFIG_SCHEMA = {
                 },
                 'notify-run': {
                     '$ref': '#/definitions/NotifyRun'
+                },
+                'arango-db': {
+                    '$ref': '#/definitions/ArangoDB'
                 }
             },
             'required': [
                 'exante',
                 'quandl',
                 'iex',
-                'notify-run'
+                'notify-run',
+                'arango-db'
             ]
         },
         'Exante': {
@@ -84,6 +88,17 @@ CONFIG_SCHEMA = {
             'required': [
                 'channel'
             ]
+        },
+        'ArangoDB': {
+            'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'url': {'type': 'string', 'format': 'uri'},
+                'username': {'type': 'string'},
+                'password': {'type': 'string'},
+                'database': {'type': 'string'}
+            },
+            'required': ['url', 'username', 'password', 'database']
         }
     }
 }

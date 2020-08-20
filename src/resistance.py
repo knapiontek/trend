@@ -1,17 +1,17 @@
-from src import store, session, log
+import src.config
+from src import store, session, log, config
 
 
-def display_resistance(symbol: str):
-    with store.Store('resistance') as content:
+def receive_price_history(symbol: str):
+    with store.DBSeries(symbol=symbol, duration=config.DURATION_1D) as series:
         with session.ExanteSession() as exante:
-            candles = exante.candles(symbol, batch_size=100, duration=session.DURATION_1D)
-
-            content[symbol] = candles
+            candles = exante.candles(symbol, batch_size=1000, duration=src.config.DURATION_1D)
+            series += candles
 
 
 def main():
     log.init(__file__, persist=False)
-    symbols = ['EUR/GBP.E.FX',
+    symbols = ['EUR/USD.E.FX',
                'EUR/GBP.E.FX',
                'XAG/USD.E.FX',
                'PKO.WSE',
@@ -19,8 +19,9 @@ def main():
                'CDR.WSE',
                'XOM.NYSE',
                'TSLA.NASDAQ']
+    symbols = ['XOM.NYSE']
     for symbol in symbols:
-        display_resistance(symbol)
+        receive_price_history(symbol)
 
 
 if __name__ == '__main__':

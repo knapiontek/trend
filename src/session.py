@@ -31,15 +31,6 @@ def from_timestamp(ts: int) -> datetime:
     return datetime.fromtimestamp(ts / 1000, tz=DUBLIN_TZ)
 
 
-DURATION_1M = 60
-DURATION_5M = 5 * 60
-DURATION_10M = 10 * 60
-DURATION_15M = 15 * 60
-DURATION_1H = 60 * 60
-DURATION_6H = 6 * 60 * 60
-DURATION_1D = 24 * 60 * 60
-
-
 class ExanteSession(requests.Session):
     def __init__(self):
         requests.Session.__init__(self)
