@@ -22,6 +22,18 @@ CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
 
 
+def duration_name(duration: int) -> str:
+    return {
+        DURATION_1M: '1m',
+        DURATION_5M: '5m',
+        DURATION_10M: '10m',
+        DURATION_15M: '15m',
+        DURATION_1H: '1h',
+        DURATION_6H: '6h',
+        DURATION_1D: '1d'
+    }[duration]
+
+
 @lru_cache(maxsize=1)
 def load_file():
     with CONFIG_FILE.open() as read_io:

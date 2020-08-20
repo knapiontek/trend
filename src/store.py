@@ -46,9 +46,10 @@ def db_collection(db: StandardDatabase, name: str) -> StandardCollection:
 
 
 class DBSeries:
-    def __init__(self, symbol: str, duration: int):
+    def __init__(self, duration: int):
+        duration_name = config.duration_name(duration)
         self.db = db_connect()
-        self.collection = db_collection(self.db, f'series-{duration}')
+        self.collection = db_collection(self.db, f'series_{duration_name}')
 
     def __enter__(self) -> 'DBSeries':
         return self

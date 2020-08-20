@@ -11,7 +11,12 @@ from src import config
 LOG = logging.getLogger(__name__)
 
 URL = config.exante_url()
+UTC_TZ = timezone(timedelta(hours=0), 'GMT')
 DUBLIN_TZ = timezone(timedelta(hours=1), 'GMT')
+
+
+def dt_format(dt: datetime):
+    return dt.strftime('%Y-%m-%d %H:%M:%S%z')
 
 
 def list_split(lst: List, chunk_size=5):
@@ -27,8 +32,8 @@ def to_timestamp(dt: datetime) -> int:
     return int(time.mktime(dt.utctimetuple()) * 1000 + dt.microsecond / 1000)
 
 
-def from_timestamp(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts / 1000, tz=DUBLIN_TZ)
+def from_timestamp(ts: int, tz: timezone) -> datetime:
+    return datetime.fromtimestamp(ts / 1000, tz=tz)
 
 
 class ExanteSession(requests.Session):
@@ -43,7 +48,7 @@ class ExanteSession(requests.Session):
 
     def candles(self, symbol: str, batch_size: int, duration: int) -> List:
         seconds = batch_size * duration
-        dt_to = datetime.now(tz=DUBLIN_TZ)
+        dt_to = datetime.now(tz=UTC_TZ)
         dt_from = dt_to - timedelta(seconds=seconds)
         params = {
             'from': to_timestamp(dt_from),
@@ -52,11 +57,13 @@ class ExanteSession(requests.Session):
             'type': 'trades'
         }
         url = f'{URL}/ohlc/{url_encode(symbol)}/{duration}'
-        LOG.debug(f'url: {url} from: {dt_from} to: {dt_to}')
+        LOG.debug(f'url: {url} from: {dt_format(dt_from)} to: {dt_format(dt_to)}')
         response = self.get(url=url, params=params)
         assert response.status_code == 200, response.text
         candles = response.json()
         for candle in candles:
-            candle['datetime'] = from_timestamp(candle['timestamp']).isoformat()
-        LOG.debug(f'received candles: {len(candles)} last: {candles[-1]["datetime"]}')
+            timestamp = candle['timestamp']
+            candle['utc'] = dt_format(from_timestamp(timestamp, UTC_TZ))
+            candle['dublin'] = dt_format(from_timestamp(timestamp, DUBLIN_TZ))
+        LOG.debug(f'received candles: {len(candles)} last: {candles[-1]["utc"]}')
         return candles
