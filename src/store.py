@@ -75,7 +75,7 @@ class DBSeries:
         create_collection(self.db, self.collection_name)
 
     def __enter__(self) -> 'DBSeries':
-        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=self.collection_name, lock_timeout=10)
+        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=self.collection_name)
         self.tnx_collection = self.tnx_db.collection(self.collection_name)
         return self
 
