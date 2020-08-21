@@ -18,7 +18,7 @@ def show_latest():
         pprint(latest)
 
 
-def main():
+def update_series():
     log.init(__file__, persist=False)
     symbols = ['EUR/USD.E.FX',
                'EUR/GBP.E.FX',
@@ -30,3 +30,11 @@ def main():
                'TSLA.NASDAQ']
     for symbol in symbols:
         receive_price_history(symbol)
+
+
+def reload_exchanges():
+    with store.FileStore('static-data') as content:
+        with session.ExanteSession() as exante:
+            for exchange in ['NYSE', 'NASDAQ']:
+                symbols = exante.symbols(exchange)
+                content[exchange] = symbols

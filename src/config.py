@@ -1,11 +1,15 @@
 import json
 import pathlib
+from datetime import timezone, timedelta
 from functools import lru_cache
 from typing import Tuple
 
 import jsonschema
 
 from src import config_schema
+
+UTC_TZ = timezone(timedelta(hours=0), 'GMT')
+DUBLIN_TZ = timezone(timedelta(hours=1), 'GMT')
 
 DURATION_1M = 60
 DURATION_5M = 5 * 60
