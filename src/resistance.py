@@ -30,8 +30,3 @@ def main():
                'TSLA.NASDAQ']
     for symbol in symbols:
         receive_price_history(symbol)
-
-
-if __name__ == '__main__':
-    main()
-    # print_latest()

@@ -41,8 +41,8 @@ class ExanteSession(requests.Session):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
 
-    def symbols(self):
-        response = self.get(f'{URL}/symbols')
+    def symbols(self, exchange: str):
+        response = self.get(f'{URL}/exchanges/{exchange}')
         assert response.status_code == 200, response.text
         return response.json()
 

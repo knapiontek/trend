@@ -112,7 +112,3 @@ def empty_series():
         if name.startswith('series'):
             collection = db.collection(name)
             collection.delete_match({})
-
-
-if __name__ == '__main__':
-    empty_series()
