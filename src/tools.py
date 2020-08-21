@@ -22,16 +22,18 @@ def dt_format(dt: datetime):
     return dt.strftime('%Y-%m-%d %H:%M:%S%z')
 
 
-def list_split(lst: List, chunk_size=5):
-    for i in range(0, len(lst), chunk_size):
-        yield lst[i:i + chunk_size]
+def list_split(lst: List, delta=5):
+    for i in range(0, len(lst), delta):
+        yield lst[i:i + delta]
 
 
-def time_slices(begin: datetime, delta: timedelta, end=datetime.now(tz=config.UTC_TZ)):
-    min_delta = timedelta(seconds=1)
-    start = begin
-    while start < end:
-        stop = start + delta
-        yield start + min_delta, stop
-        start = stop
-    return start, end
+def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, duration: int):
+    duration_delta = config.duration_delta(0)
+    start = dt_from
+    stop = start + delta
+    while stop < dt_to:
+        yield start + duration_delta, stop
+        duration_delta = config.duration_delta(duration)
+        start += delta
+        stop += delta
+    yield start + duration_delta, dt_to

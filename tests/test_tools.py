@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from src import tools
+from src import tools, config
 
 
 def test_list_split():
@@ -14,13 +14,14 @@ def test_list_split():
 
 
 def test_time_slices():
-    begin = datetime(2020, 2, 1)
-    end = datetime(2020, 2, 4)
+    dt_from = datetime(2020, 2, 1)
+    dt_to = datetime(2020, 2, 4)
     delta = timedelta(hours=21)
-    slices = [(tools.dt_format(start), tools.dt_format(stop)) for start, stop in tools.time_slices(begin, delta, end)]
+    slices = [(tools.dt_format(start), tools.dt_format(stop))
+              for start, stop in tools.time_slices(dt_from, dt_to, delta, config.DURATION_1H)]
     assert slices == [
-        ('2020-02-01 00:00:01', '2020-02-01 21:00:00'),
-        ('2020-02-01 21:00:01', '2020-02-02 18:00:00'),
-        ('2020-02-02 18:00:01', '2020-02-03 15:00:00'),
-        ('2020-02-03 15:00:01', '2020-02-04 12:00:00')
+        ('2020-02-01 00:00:00', '2020-02-01 21:00:00'),
+        ('2020-02-01 22:00:00', '2020-02-02 18:00:00'),
+        ('2020-02-02 19:00:00', '2020-02-03 15:00:00'),
+        ('2020-02-03 16:00:00', '2020-02-04 00:00:00')
     ]
