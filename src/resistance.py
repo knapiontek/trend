@@ -12,7 +12,7 @@ def receive_price_history(symbol: str):
             series += [{**c, **symbol_dict} for c in candles]
 
 
-def print_latest():
+def show_latest():
     with store.DBSeries(duration=config.DURATION_1D) as series:
         latest = series.latest()
         pprint(latest)
