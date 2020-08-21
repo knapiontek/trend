@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
 
 import requests
@@ -21,14 +21,13 @@ class ExanteSession(requests.Session):
         assert response.status_code == 200, response.text
         return response.json()
 
-    def candles(self, symbol: str, batch_size: int, duration: int) -> List:
-        seconds = batch_size * duration
-        dt_to = datetime.now(tz=config.UTC_TZ)
-        dt_from = dt_to - timedelta(seconds=seconds)
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, duration: int) -> List:
+        max_size = 1000
+        symbol_dict = {'symbol': symbol}
         params = {
             'from': tools.to_ts_ms(dt_from),
             'to': tools.to_ts_ms(dt_to),
-            'size': 1000,
+            'size': max_size,
             'type': 'trades'
         }
         url = f'{URL}/ohlc/{tools.url_encode(symbol)}/{duration}'
@@ -36,9 +35,11 @@ class ExanteSession(requests.Session):
         response = self.get(url=url, params=params)
         assert response.status_code == 200, response.text
         candles = response.json()
+        size = len(candles)
+        assert size < max_size
+        LOG.debug(f'received candles: {size}')
         for candle in candles:
             timestamp = candle['timestamp']
             candle['utc'] = tools.dt_format(tools.from_ts_ms(timestamp, config.UTC_TZ))
             candle['dublin'] = tools.dt_format(tools.from_ts_ms(timestamp, config.DUBLIN_TZ))
-        LOG.debug(f'received candles: {len(candles)} last: {candles[-1]["utc"]}')
-        return candles
+        return [{**c, **symbol_dict} for c in candles]  # add symbol

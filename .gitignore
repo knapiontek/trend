@@ -3,3 +3,4 @@
 /store/*.csv
 .idea/
 src/__pycache__/
+tests/__pycache__/

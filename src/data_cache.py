@@ -1,15 +1,17 @@
+from datetime import datetime
 from pprint import pprint
 
-import src.config
 from src import store, session, log, config
 
 
 def receive_price_history(symbol: str):
-    symbol_dict = {'symbol': symbol}
-    with store.DBSeries(duration=config.DURATION_1D) as series:
+    dt_from = datetime(2020, 1, 1, tzinfo=config.UTC_TZ)
+    dt_to = datetime.now(tz=config.UTC_TZ)
+
+    with store.DBSeries(duration=config.DURATION_1D) as db_series:
         with session.ExanteSession() as exante:
-            candles = exante.candles(symbol, batch_size=100, duration=src.config.DURATION_1D)
-            series += [{**c, **symbol_dict} for c in candles]
+            time_series = exante.series(symbol, dt_from, dt_to, duration=config.DURATION_1D)
+            db_series += time_series
 
 
 def show_latest():
