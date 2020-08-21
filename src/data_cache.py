@@ -9,8 +9,9 @@ def reload_price_history(symbol: str):
     dt_to = datetime.now(tz=config.UTC_TZ)
 
     with session.ExanteSession() as exante:
+        time_series = exante.series(symbol, dt_from, dt_to, config.DURATION_1D)
+
         with store.DBSeries(config.DURATION_1D) as db_series:
-            time_series = exante.series(symbol, dt_from, dt_to, config.DURATION_1D)
             db_series += time_series
 
 
