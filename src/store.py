@@ -1,11 +1,14 @@
 import json
+import logging
 from functools import lru_cache
 from typing import List, Dict
 
-from arango import ArangoClient
+from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
 
 from src import config
+
+LOG = logging.getLogger(__name__)
 
 
 class FileStore:
@@ -84,7 +87,12 @@ class DBSeries:
                 self.tnx_db.commit_transaction()
 
     def __add__(self, series: List):
-        self.tnx_collection.insert_many(series)
+        result = self.tnx_collection.insert_many(series)
+        errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
+        if len(errors):
+            error = json.dumps(errors, indent=2)
+            LOG.exception(error)
+            raise Exception(error)
 
     def latest(self) -> List:
         query = '''

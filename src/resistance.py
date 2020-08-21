@@ -33,5 +33,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    print_latest()
+    main()
+    # print_latest()
