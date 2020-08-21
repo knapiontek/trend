@@ -4,18 +4,18 @@ from pprint import pprint
 from src import store, session, log, config
 
 
-def receive_price_history(symbol: str):
+def reload_price_history(symbol: str):
     dt_from = datetime(2020, 1, 1, tzinfo=config.UTC_TZ)
     dt_to = datetime.now(tz=config.UTC_TZ)
 
-    with store.DBSeries(duration=config.DURATION_1D) as db_series:
-        with session.ExanteSession() as exante:
-            time_series = exante.series(symbol, dt_from, dt_to, duration=config.DURATION_1D)
+    with session.ExanteSession() as exante:
+        with store.DBSeries(config.DURATION_1D) as db_series:
+            time_series = exante.series(symbol, dt_from, dt_to, config.DURATION_1D)
             db_series += time_series
 
 
 def show_latest():
-    with store.DBSeries(duration=config.DURATION_1D) as series:
+    with store.DBSeries(config.DURATION_1D) as series:
         latest = series.latest()
         pprint(latest)
 
@@ -31,7 +31,7 @@ def update_series():
                'XOM.NYSE',
                'TSLA.NASDAQ']
     for symbol in symbols:
-        receive_price_history(symbol)
+        reload_price_history(symbol)
 
 
 def reload_exchanges():
