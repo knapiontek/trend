@@ -27,11 +27,11 @@ def list_split(lst: List, chunk_size=5):
         yield lst[i:i + chunk_size]
 
 
-def time_slices(since: datetime, delta: timedelta):
-    start = since
-    now = datetime.now(tz=config.UTC_TZ)
-    while start < now:
+def time_slices(begin: datetime, delta: timedelta, end=datetime.now(tz=config.UTC_TZ)):
+    min_delta = timedelta(seconds=1)
+    start = begin
+    while start < end:
         stop = start + delta
-        yield start, stop
+        yield start + min_delta, stop
         start = stop
-    return start, now
+    return start, end
