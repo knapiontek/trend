@@ -57,3 +57,5 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 - All 3 EMA's are parrallel
 - Enter trade when price dip and reverse from 50 EMA
 - Stop-loss at the lowest pull-back, enter trade when price cross back 50 EMA
+
+gdx, sil, silj
