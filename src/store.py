@@ -94,12 +94,12 @@ class DBSeries:
             LOG.exception(error)
             raise Exception(error)
 
-    def latest(self) -> List:
+    def time_range(self) -> List:
         query = '''
             FOR series IN series_1d
                 COLLECT symbol = series.symbol
-                AGGREGATE latest_utc = MAX(series.utc)
-                RETURN {symbol, latest_utc}
+                AGGREGATE min_utc = MIN(series.utc), max_utc = MAX(series.utc)
+                RETURN {symbol, min_utc, max_utc}
         '''
         result = self.tnx_db.aql.execute(query)
         return list(result)
