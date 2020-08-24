@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from pprint import pprint
 
-from src import store, session, log, config, tools
+from src import store, session, log, config, tools, holidays
 
 
 def show_symbol_range():
@@ -17,7 +17,7 @@ def reload_price_history(symbol: str):
     with session.ExanteSession() as exante:
         time_series = exante.series(symbol, dt_from, dt_to, config.DURATION_1D)
 
-        with store.DBSeries(config.DURATION_1D) as db_series:
+        with store.DBSeries(config.DURATION_1D, editable=True) as db_series:
             db_series += time_series
 
 
@@ -53,6 +53,37 @@ def update_series():
                     db_series += time_series
 
 
+def verify_series():
+    nyse = 'NYSE'
+    nasdaq = 'NASDAQ'
+    duration = config.DURATION_1D
+    delta = timedelta(days=1)
+    dt_from = datetime(2018, 1, 1, tzinfo=config.UTC_TZ)
+    dt_to = datetime.now(tz=config.UTC_TZ)
+
+    with store.DBSeries(duration) as series:
+        xom = series['XOM.NYSE']
+        tesla = series['TSLA.NASDAQ']
+
+    xom_utc_days = {daily['utc'] for daily in xom}
+    tesla_utc_days = {daily['utc'] for daily in tesla}
+
+    assert not xom_utc_days & holidays.HOLIDAYS[nyse]
+    assert not tesla_utc_days & holidays.HOLIDAYS[nasdaq]
+
+    daily_nyse = xom_utc_days | holidays.HOLIDAYS[nyse]
+    daily_nasdaq = tesla_utc_days | holidays.HOLIDAYS[nasdaq]
+
+    while dt_from < dt_to:
+        if dt_from.weekday() in (0, 1, 2, 3, 4):
+            formatted = tools.dt_format(dt_from)
+            if formatted not in daily_nyse:
+                print(f'NYSE: {formatted}')
+            if formatted not in daily_nasdaq:
+                print(f'NASDAQ: {formatted}')
+        dt_from += delta
+
+
 def reload_exchanges():
     with store.FileStore('exchanges') as content:
         with session.ExanteSession() as exante:
@@ -62,4 +93,5 @@ def reload_exchanges():
 
 
 if __name__ == '__main__':
-    update_series()
+    # update_series()
+    verify_series()

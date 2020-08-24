@@ -68,19 +68,21 @@ def create_collection(db: StandardDatabase, name: str):
 
 
 class DBSeries:
-    def __init__(self, duration: int):
+    def __init__(self, duration: int, editable=False):
+        self.editable = editable
         duration_name = config.duration_name(duration)
         self.collection_name = f'series_{duration_name}'
         self.db = db_connect()
         create_collection(self.db, self.collection_name)
 
     def __enter__(self) -> 'DBSeries':
-        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=self.collection_name)
+        write = self.collection_name if self.editable else None
+        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=write)
         self.tnx_collection = self.tnx_db.collection(self.collection_name)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.tnx_db:
+        if self.editable and self.tnx_db:
             if exc_type:
                 self.tnx_db.abort_transaction()
             else:
@@ -93,6 +95,15 @@ class DBSeries:
             error = json.dumps(errors, indent=2)
             LOG.exception(error)
             raise Exception(error)
+
+    def __getitem__(self, symbol) -> List:
+        query = '''
+            FOR series IN series_1d
+                FILTER series.symbol == @symbol
+                RETURN series
+        '''
+        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol})
+        return list(result)
 
     def time_range(self) -> List:
         query = '''
