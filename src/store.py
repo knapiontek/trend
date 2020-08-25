@@ -1,7 +1,7 @@
 import json
 import logging
 from functools import lru_cache
-from typing import List, Dict
+from typing import List
 
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
@@ -11,24 +11,29 @@ from src import config
 LOG = logging.getLogger(__name__)
 
 
-# there should be assert for editing if editable=False, changes is ignored now!
-
 class FileStore:
     def __init__(self, name: str, editable=False):
         self.editable = editable
         self.filename = config.STORE_PATH.joinpath(f'{name}.json')
         self.content = {}
 
-    def __enter__(self) -> Dict:
+    def __enter__(self) -> 'FileStore':
         if self.filename.exists():
             with self.filename.open() as read_io:
                 self.content = json.load(read_io)
-        return self.content
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not exc_type and self.editable:
+        if self.editable and not exc_type:
             with self.filename.open('w') as write_io:
                 json.dump(self.content, write_io, indent=2)
+
+    def __setitem__(self, key, value):
+        assert self.editable
+        self.content[key] = value
+
+    def __getitem__(self, key):
+        return self.content[key]
 
 
 CANDLE_SCHEMA = {
