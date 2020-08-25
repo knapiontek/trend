@@ -35,6 +35,9 @@ class FileStore:
     def __getitem__(self, key):
         return self.content[key]
 
+    def items(self):
+        return self.content.items()
+
 
 CANDLE_SCHEMA = {
     'message': 'candle-schema',
