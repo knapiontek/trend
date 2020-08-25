@@ -11,8 +11,11 @@ from src import config
 LOG = logging.getLogger(__name__)
 
 
+# there should be assert for editing if editable=False, changes is ignored now!
+
 class FileStore:
-    def __init__(self, name: str):
+    def __init__(self, name: str, editable=False):
+        self.editable = editable
         self.filename = config.STORE_PATH.joinpath(f'{name}.json')
         self.content = {}
 
@@ -23,7 +26,7 @@ class FileStore:
         return self.content
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not exc_type:
+        if not exc_type and self.editable:
             with self.filename.open('w') as write_io:
                 json.dump(self.content, write_io, indent=2)
 

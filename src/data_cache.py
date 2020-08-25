@@ -85,7 +85,7 @@ def verify_series():
 
 
 def reload_exchanges():
-    with store.FileStore('exchanges') as content:
+    with store.FileStore('exchanges', editable=True) as content:
         with session.ExanteSession() as exante:
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = exante.symbols(exchange)
