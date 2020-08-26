@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import List, Dict
 
 import dash
-import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -11,29 +10,54 @@ from dash.dependencies import Output, Input
 
 from src import store, config, tools
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 
 SYMBOL_COLUMNS = ["symbolId", "symbolType", "currency"]
 
-symbols_table = dash_table.DataTable(
+style_cell_conditional = [
+    {
+        'if': {'column_id': c},
+        'text-align': 'left'
+    } for c in ['symbolId', 'symbolType']
+]
+style_data_conditional = [
+    {
+        'if': {'row_index': 'odd'},
+        'background-color': 'rgb(229, 236, 246)'
+    }
+]
+style_header = {
+    'background-color': 'rgb(200, 212, 227)',
+    'font-weight': 'bold'
+}
+
+symbol_table = dash_table.DataTable(
     id='symbol-table',
     columns=[{'name': i.title(), 'id': i} for i in SYMBOL_COLUMNS],
-    data=[],
     filter_action='native',
-    row_selectable='single'
+    row_selectable='single',
+    style_cell_conditional=style_cell_conditional,
+    style_data_conditional=style_data_conditional,
+    style_header=style_header
 )
 
-fig = go.Figure(data=[])
-price_graph = dcc.Graph(id='price-graph', figure=fig, style={'height': '100%'})
+price_graph = dcc.Graph(id='price-graph')
+
+dashboard_style = {'height': '900px',
+                   'border-style': 'solid',
+                   'border-width': 'thin',
+                   'overflow-x': 'hidden',
+                   'overflow-y': 'auto'}
 
 dashboard = html.Div(
     [
         dcc.Store(id='trend-store', storage_type='local'),
-        dbc.Row([
-            dbc.Col(symbols_table, md=2),
-            dbc.Col(price_graph, md=8)
-        ])
-    ], style={'height': '100%', 'overflow-x': 'hidden', 'overflow-y': 'hidden'}
+        html.Div([
+            html.Div(symbol_table, className="three columns", style=dashboard_style),
+            html.Div(price_graph, className="nine columns", style=dashboard_style)
+        ], className='row'),
+    ],
+    style={'margin': '20px'}
 )
 
 app.layout = dashboard
@@ -44,7 +68,7 @@ app.layout = dashboard
 def cb_symbol_table(data):
     with store.FileStore('exchanges') as exchanges:
         symbols = sum([v for k, v in exchanges.items()], [])
-        return [{c: s[c] for c in SYMBOL_COLUMNS} for s in symbols][:30]
+        return [{c: s[c] for c in SYMBOL_COLUMNS} for s in symbols][:100]
 
 
 def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:
@@ -68,11 +92,11 @@ def cb_price_graph(data, selected_rows):
         _dates = [tools.from_ts_ms(s['timestamp'], tz=config.UTC_TZ) for s in time_series]
         params = transpose(time_series, ['open', 'high', 'low', 'close'])
         candles = go.Scatter(x=_dates, y=params['close'])
-        _fig = go.Figure(data=[candles])
-        # _fig.update_xaxes(range=['2020-03-01', '2020-03-15'])
-        return _fig
+        figure = go.Figure(data=[candles])
+        # figure.update_xaxes(range=['2020-03-01', '2020-03-15'])
+        return figure
 
-    return fig
+    return go.Figure(data=[])
 
 
 if __name__ == '__main__':
