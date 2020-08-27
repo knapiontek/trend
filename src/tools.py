@@ -41,17 +41,20 @@ def list_split(lst: List, delta=5):
 
 
 def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, duration: int):
-    duration_delta = config.duration_delta(0)
+    """
+    Generate mutually exclusive time slices.
+    :param dt_from:
+    :param dt_to:
+    :param delta: size of a slice, last slice maybe shorter
+    :param duration: distance between 2 subsequent slices
+    dt_from -> slice(delta) -> duration -> slice(delta) -> dt_to
+    """
     start = dt_from
-    stop = start + delta
-    while stop < dt_to:
-        yield start + duration_delta, stop
+    duration_delta = config.duration_delta(0)
+    while start <= dt_to:
+        yield start + duration_delta, min(start + delta, dt_to)
         duration_delta = config.duration_delta(duration)
         start += delta
-        stop += delta
-
-    if start + duration_delta < dt_to:
-        yield start + duration_delta, dt_to
 
 
 def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:

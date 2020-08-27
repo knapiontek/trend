@@ -61,3 +61,4 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 gdx, sil, silj
 zkb gold
 zkb silver
+trade break-outs with build-up
