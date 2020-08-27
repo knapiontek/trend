@@ -1,7 +1,8 @@
 import time
 import urllib.parse
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import List, Dict
 
 from src import config
 
@@ -48,4 +49,14 @@ def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, duration: 
         duration_delta = config.duration_delta(duration)
         start += delta
         stop += delta
-    yield start + duration_delta, dt_to
+
+    if start + duration_delta < dt_to:
+        yield start + duration_delta, dt_to
+
+
+def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:
+    dt = defaultdict(list)
+    for i in lst:
+        for k in keys:
+            dt[k].append(i[k])
+    return dt

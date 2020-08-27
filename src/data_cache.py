@@ -33,8 +33,12 @@ def update_series():
                'XOM.NYSE',
                'TSLA.NASDAQ'}
 
+    with store.FileStore('exchanges') as content:
+        data = content['NASDAQ']
+    symbols = [d['symbolId'] for d in data]
+
     duration = config.DURATION_1D
-    delta = timedelta(days=30)
+    delta = timedelta(days=1000)
     dt_from_default = datetime(2018, 1, 1, tzinfo=config.UTC_TZ)
     dt_to = datetime.now(tz=config.UTC_TZ)
 
@@ -49,7 +53,7 @@ def update_series():
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, duration):
                 time_series = exante.series(symbol, slice_from, slice_to, duration)
 
-                with store.DBSeries(duration) as db_series:
+                with store.DBSeries(duration, editable=True) as db_series:
                     db_series += time_series
 
 
@@ -93,5 +97,5 @@ def reload_exchanges():
 
 
 if __name__ == '__main__':
-    # update_series()
-    verify_series()
+    update_series()
+    # verify_series()
