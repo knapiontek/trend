@@ -1,3 +1,6 @@
+import re
+from typing import Dict, List
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,7 +17,7 @@ SYMBOL_COLUMNS = ["symbolId", "symbolType", "currency"]
 symbol_table = dash_table.DataTable(
     id='symbol-table',
     columns=[{'name': i.title(), 'id': i} for i in SYMBOL_COLUMNS],
-    filter_action='native',
+    filter_action='custom',
     row_selectable='single',
     **style.symbol_table(['symbolId', 'symbolType'])
 )
@@ -23,7 +26,6 @@ data_graph = dcc.Graph(id='data-graph', style=style.data_graph)
 
 dashboard = html.Div(
     [
-        dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
             html.Div(symbol_table, className="three columns", style=style.panel),
             html.Div(data_graph, className="nine columns", style=style.panel)
@@ -34,13 +36,36 @@ dashboard = html.Div(
 
 app.layout = dashboard
 
+PATTERN = re.compile('{(\\w+)} contains (.+)')
+
+
+def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
+    # example: {symbolType} contains b && {symbolId} contains a && {currency} contains c
+    if filter_query:
+        matches = [re.search(PATTERN, f) for f in filter_query.split(' && ')]
+        if all(matches):
+            # noinspection PyTypeChecker
+            columns = dict([m.groups() for m in matches])
+            # filter-phrase in value for all filter-columns
+            return [
+                s for s in instruments
+                if all(v.lower() in s[k].lower() for k, v in columns.items())
+            ]
+        else:
+            return []
+    else:
+        return instruments
+
 
 @app.callback(Output('symbol-table', 'data'),
-              [Input('nil-store', 'data')])
-def cb_symbol_table(data):
+              [Input('symbol-table', 'filter_query')])
+def cb_symbol_table(filter_query):
     with store.FileStore('exchanges') as exchanges:
-        symbols = sum([v for k, v in exchanges.items()], [])
-        return [{c: s[c] for c in SYMBOL_COLUMNS} for s in symbols]
+        instruments = sum([v for k, v in exchanges.items()], [])
+        return [
+            {c: s[c] for c in SYMBOL_COLUMNS}
+            for s in filter_instruments(instruments, filter_query)
+        ]
 
 
 @app.callback(Output('data-graph', 'figure'),
