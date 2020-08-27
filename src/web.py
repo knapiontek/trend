@@ -76,12 +76,12 @@ def cb_price_graph(data, selected_rows):
         row = data[selected_rows[0]]
         symbol = row['symbolId']
         with store.DBSeries(config.DURATION_1D) as series:
-            time_series = series['MCFT.NASDAQ']
+            time_series = series[symbol]
 
         dates = [tools.from_ts_ms(s['timestamp'], tz=config.UTC_TZ) for s in time_series]
         params = tools.transpose(time_series, ['close'])
         candles = go.Scatter(x=dates, y=params['close'])
-        figure = go.Figure(data=[candles], layout={'title': 'XOM.NYSE'})
+        figure = go.Figure(data=[candles], layout={'title': symbol})
         return figure
 
     return go.Figure(data=[])

@@ -4,8 +4,6 @@ from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 
-from src import config
-
 
 def url_encode(name: str) -> str:
     return urllib.parse.quote(name, safe='')
@@ -50,10 +48,10 @@ def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, duration: 
     dt_from -> slice(delta) -> duration -> slice(delta) -> dt_to
     """
     start = dt_from
-    duration_delta = config.duration_delta(0)
+    duration_delta = timedelta()
     while start <= dt_to:
         yield start + duration_delta, min(start + delta, dt_to)
-        duration_delta = config.duration_delta(duration)
+        duration_delta = timedelta(seconds=duration)
         start += delta
 
 

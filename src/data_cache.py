@@ -1,5 +1,5 @@
+import json
 from datetime import datetime, timedelta
-from pprint import pprint
 
 from src import store, session, log, config, tools, holidays
 
@@ -7,7 +7,7 @@ from src import store, session, log, config, tools, holidays
 def show_symbol_range():
     with store.DBSeries(config.DURATION_1D) as series:
         time_range = series.time_range()
-        pprint(time_range, width=120)
+        print(json.dumps(time_range))
 
 
 def reload_price_history(symbol: str):
@@ -33,19 +33,19 @@ def update_series():
                'XOM.NYSE',
                'TSLA.NASDAQ'}
 
-    with store.FileStore('exchanges') as content:
-        data = content['NASDAQ']
-    symbols = [d['symbolId'] for d in data]
+    with store.FileStore('exchanges') as exchanges:
+        instruments = sum([v for k, v in exchanges.items()], [])
+    symbols = [i['symbolId'] for i in instruments]
 
     duration = config.DURATION_1D
-    delta = timedelta(days=1000)
+    delta = timedelta(seconds=1000 * duration)
     dt_from_default = datetime(2018, 1, 1, tzinfo=config.UTC_TZ)
     dt_to = datetime.now(tz=config.UTC_TZ)
 
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
 
-    latest = {r['symbol']: tools.dt_parse(r['max_utc']) + config.duration_delta(duration) for r in time_range}
+    latest = {r['symbol']: tools.dt_parse(r['max_utc']) + timedelta(seconds=duration) for r in time_range}
     symbols_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
     with session.ExanteSession() as exante:

@@ -38,10 +38,6 @@ def duration_name(duration: int) -> str:
     }[duration]
 
 
-def duration_delta(duration: int) -> timedelta:
-    return timedelta(seconds=duration)
-
-
 @lru_cache(maxsize=1)
 def load_file():
     with CONFIG_FILE.open() as read_io:

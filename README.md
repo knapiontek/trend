@@ -62,3 +62,7 @@ gdx, sil, silj
 zkb gold
 zkb silver
 trade break-outs with build-up
+
+```bash
+time python src/run.py --entry show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
+```
