@@ -16,7 +16,7 @@ symbol_table = dash_table.DataTable(
     columns=[{'name': i.title(), 'id': i} for i in SYMBOL_COLUMNS],
     filter_action='native',
     row_selectable='single',
-    **style.symbol_table
+    **style.symbol_table(['symbolId', 'symbolType'])
 )
 
 data_graph = dcc.Graph(id='data-graph', style=style.data_graph)

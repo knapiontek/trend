@@ -59,3 +59,5 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 - Stop-loss at the lowest pull-back, enter trade when price cross back 50 EMA
 
 gdx, sil, silj
+zkb gold
+zkb silver
