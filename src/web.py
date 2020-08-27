@@ -7,6 +7,7 @@ import dash_html_components as html
 import dash_table
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input
+from plotly.subplots import make_subplots
 
 from src import store, config, tools, style
 
@@ -78,10 +79,18 @@ def cb_price_graph(data, selected_rows):
         with store.DBSeries(config.DURATION_1D) as series:
             time_series = series[symbol]
 
-        dates = [tools.from_ts_ms(s['timestamp'], tz=config.UTC_TZ) for s in time_series]
-        params = tools.transpose(time_series, ['close'])
-        candles = go.Scatter(x=dates, y=params['close'])
-        figure = go.Figure(data=[candles], layout={'title': symbol})
+        params = tools.transpose(time_series, ['timestamp', 'close', 'volume'])
+        dates = [tools.from_ts_ms(ts, tz=config.UTC_TZ) for ts in params['timestamp']]
+
+        prices = go.Scatter(x=dates, y=params['close'], name='Price')
+        volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+        figure = make_subplots(rows=2, cols=1,
+                               shared_xaxes=True,
+                               vertical_spacing=0.03,
+                               specs=[[{"type": "scatter"}], [{"type": "bar"}]])
+        figure.add_trace(prices, row=1, col=1)
+        figure.add_trace(volume, row=2, col=1)
+        figure.update_layout(showlegend=False, title_text=symbol)
         return figure
 
     return go.Figure(data=[])
