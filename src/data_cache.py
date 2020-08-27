@@ -45,11 +45,13 @@ def update_series():
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
 
-    latest = {r['symbol']: tools.dt_parse(r['max_utc']) + timedelta(seconds=duration) for r in time_range}
-    symbols_latest = {s: latest.get(s) or dt_from_default for s in symbols}
+    latest = {r['symbol']: tools.dt_parse(r['max_utc']) + timedelta(seconds=duration)
+              for r in time_range}
+    instruments_latest = {s: latest.get(s) or dt_from_default
+                          for s in symbols}
 
     with session.ExanteSession() as exante:
-        for symbol, dt_from in symbols_latest.items():
+        for symbol, dt_from in instruments_latest.items():
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, duration):
                 time_series = exante.series(symbol, slice_from, slice_to, duration)
 
