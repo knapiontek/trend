@@ -6,7 +6,7 @@ from typing import List
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
 
-from src import config
+from src import config, tools
 
 LOG = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def create_collection(db: StandardDatabase, name: str):
 class DBSeries:
     def __init__(self, duration: int, editable=False):
         self.editable = editable
-        duration_name = config.duration_name(duration)
+        duration_name = tools.duration_name(duration)
         self.collection_name = f'series_{duration_name}'
         self.db = db_connect()
         create_collection(self.db, self.collection_name)

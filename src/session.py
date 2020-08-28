@@ -40,6 +40,6 @@ class ExanteSession(requests.Session):
         LOG.debug(f'received candles: {size}')
         for candle in candles:
             timestamp = candle['timestamp']
-            candle['utc'] = tools.ts_format(timestamp, config.UTC_TZ)
-            candle['dublin'] = tools.ts_format(timestamp, config.DUBLIN_TZ)
+            candle['utc'] = tools.ts_format(timestamp, tools.UTC_TZ)
+            candle['dublin'] = tools.ts_format(timestamp, tools.DUBLIN_TZ)
         return [{**c, **symbol_dict} for c in candles]  # add symbol
