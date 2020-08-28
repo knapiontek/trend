@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from typing import List, Dict
 
 from src import store, session, log, tools, holidays
 
@@ -43,8 +44,10 @@ def update_series():
                     db_series += time_series
 
 
-def verify_instrument(symbol: str, exchange: str):
+def verify_instrument(symbol: str, exchange: str) -> Dict[str, List]:
     LOG.debug(f'testing instrument: {symbol}')
+
+    health = {}
 
     duration = tools.DURATION_1D
     dt_from = datetime(2018, 1, 1, tzinfo=tools.UTC_TZ)
@@ -54,17 +57,24 @@ def verify_instrument(symbol: str, exchange: str):
     with store.DBSeries(duration) as db_series:
         series = db_series[symbol]
 
-    series_days = {daily['utc'] for daily in series}
-    assert not series_days & holidays.HOLIDAYS[exchange]
-    all_days = series_days | holidays.HOLIDAYS[exchange]
+    db_dates = {daily['utc'] for daily in series}
+    overlap = db_dates & holidays.HOLIDAYS[exchange]
+    if overlap:
+        health['overlap'] = list(overlap)
+    all_days = db_dates | holidays.HOLIDAYS[exchange]
 
+    missing = []
     start = dt_from
     while start < dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
-            day = tools.dt_format(dt_from)
-            if day not in all_days:
-                print(f'Missing: {day} for {symbol}')
+            date = tools.dt_format(start)
+            if date not in all_days:
+                missing.append(date)
         start += time_delta
+    if missing:
+        health['missing'] = missing
+
+    return health
 
 
 def verify_series():
@@ -73,8 +83,13 @@ def verify_series():
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     LOG.debug(f'loaded instruments: {len(instruments)}')
-    for instrument in instruments:
-        verify_instrument(instrument['symbolId'], instrument['exchange'])
+
+    with store.FileStore('series-health', editable=True) as health:
+        for instrument in instruments:
+            symbol, exchange = instrument['symbolId'], instrument['exchange']
+            symbol_health = verify_instrument(symbol, exchange)
+            if symbol_health:
+                health[symbol] = symbol_health
 
 
 def reload_exchanges():
