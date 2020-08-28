@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from src import store, session, log, config, tools, holidays
 
 
-def show_symbol_range():
+def show_instrument_range():
     with store.DBSeries(config.DURATION_1D) as series:
         time_range = series.time_range()
         print(json.dumps(time_range))
@@ -24,35 +24,25 @@ def reload_price_history(symbol: str):
 def update_series():
     log.init(__file__, persist=False)
 
-    symbols = {'EUR/USD.E.FX',
-               'EUR/GBP.E.FX',
-               'XAG/USD.E.FX',
-               'PKO.WSE',
-               'KRU.WSE',
-               'CDR.WSE',
-               'XOM.NYSE',
-               'TSLA.NASDAQ'}
-
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
-    symbols = [i['symbolId'] for i in instruments]
+    symbols = [i['symbolId'] for i in instruments][:10]
 
     duration = config.DURATION_1D
-    delta = timedelta(seconds=1000 * duration)
-    dt_from_default = datetime(2018, 1, 1, tzinfo=config.UTC_TZ)
+    slice_delta = timedelta(seconds=1000 * duration)
+    time_delta = timedelta(seconds=duration)
+    dt_from_default = datetime(2017, 12, 31, tzinfo=config.UTC_TZ)
     dt_to = datetime.now(tz=config.UTC_TZ)
 
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
 
-    latest = {r['symbol']: tools.dt_parse(r['max_utc']) + timedelta(seconds=duration)
-              for r in time_range}
-    instruments_latest = {s: latest.get(s) or dt_from_default
-                          for s in symbols}
+    latest = {r['symbol']: tools.dt_parse(r['max_utc']) for r in time_range}
+    instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
     with session.ExanteSession() as exante:
         for symbol, dt_from in instruments_latest.items():
-            for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, duration):
+            for slice_from, slice_to in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
                 time_series = exante.series(symbol, slice_from, slice_to, duration)
 
                 with store.DBSeries(duration, editable=True) as db_series:

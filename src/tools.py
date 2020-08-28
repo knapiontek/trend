@@ -38,21 +38,12 @@ def list_split(lst: List, delta=5):
         yield lst[i:i + delta]
 
 
-def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, duration: int):
-    """
-    Generate mutually exclusive time slices.
-    :param dt_from:
-    :param dt_to:
-    :param delta: size of a slice, last slice maybe shorter
-    :param duration: distance between 2 subsequent slices
-    dt_from -> slice(delta) -> duration -> slice(delta) -> dt_to
-    """
+def time_slices(dt_from: datetime, dt_to: datetime, slice_delta: timedelta, time_delta: timedelta):
+    assert time_delta < slice_delta
     start = dt_from
-    duration_delta = timedelta()
-    while start <= dt_to:
-        yield start + duration_delta, min(start + delta, dt_to)
-        duration_delta = timedelta(seconds=duration)
-        start += delta
+    while start + time_delta < dt_to:
+        yield start + time_delta, min(start + slice_delta, dt_to)
+        start += slice_delta
 
 
 def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:
