@@ -18,7 +18,7 @@ def test_time_series():
         for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
             series = exante.series(symbol, start, stop, duration)
             time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
-            closing_prices += [(c['utc'], c['close'], c['volume']) for c in series]
+            closing_prices += [tuple(c[key] for key in ('utc', 'close', 'volume')) for c in series]
 
     assert time_ranges == [
         ('2020-02-03 00:00:00', '2020-02-03 14:00:00'),
