@@ -1,7 +1,7 @@
-dashboard = {'margin': '20px'}
+dashboard = {'margin': '20px', 'height': '85vh'}
 
 panel = {
-    'height': '900px',
+    'height': '100%',
     'borderStyle': 'solid',
     'borderWidth': 'thin',
     'overflowX': 'hidden',

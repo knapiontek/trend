@@ -43,35 +43,38 @@ def update_series():
                     db_series += time_series
 
 
-def verify_series():
-    nyse = 'NYSE'
-    nasdaq = 'NASDAQ'
+def verify_instrument(symbol: str, exchange: str):
+    LOG.debug(f'testing instrument: {symbol}')
+
     duration = tools.DURATION_1D
-    delta = timedelta(days=1)
     dt_from = datetime(2018, 1, 1, tzinfo=tools.UTC_TZ)
-    dt_to = datetime.now(tz=tools.UTC_TZ)
+    dt_to = tools.dt_truncate(datetime.now(tz=tools.UTC_TZ), duration)
+    time_delta = timedelta(seconds=duration)
 
-    with store.DBSeries(duration) as series:
-        xom = series['XOM.NYSE']
-        tesla = series['TSLA.NASDAQ']
+    with store.DBSeries(duration) as db_series:
+        series = db_series[symbol]
 
-    xom_utc_days = {daily['utc'] for daily in xom}
-    tesla_utc_days = {daily['utc'] for daily in tesla}
+    series_days = {daily['utc'] for daily in series}
+    assert not series_days & holidays.HOLIDAYS[exchange]
+    all_days = series_days | holidays.HOLIDAYS[exchange]
 
-    assert not xom_utc_days & holidays.HOLIDAYS[nyse]
-    assert not tesla_utc_days & holidays.HOLIDAYS[nasdaq]
+    start = dt_from
+    while start < dt_to:
+        if start.weekday() in (0, 1, 2, 3, 4):
+            day = tools.dt_format(dt_from)
+            if day not in all_days:
+                print(f'Missing: {day} for {symbol}')
+        start += time_delta
 
-    daily_nyse = xom_utc_days | holidays.HOLIDAYS[nyse]
-    daily_nasdaq = tesla_utc_days | holidays.HOLIDAYS[nasdaq]
 
-    while dt_from < dt_to:
-        if dt_from.weekday() in (0, 1, 2, 3, 4):
-            formatted = tools.dt_format(dt_from)
-            if formatted not in daily_nyse:
-                print(f'NYSE: {formatted}')
-            if formatted not in daily_nasdaq:
-                print(f'NASDAQ: {formatted}')
-        dt_from += delta
+def verify_series():
+    log.init(__file__, persist=False)
+
+    with store.FileStore('exchanges') as exchanges:
+        instruments = sum([v for k, v in exchanges.items()], [])
+    LOG.debug(f'loaded instruments: {len(instruments)}')
+    for instrument in instruments:
+        verify_instrument(instrument['symbolId'], instrument['exchange'])
 
 
 def reload_exchanges():
@@ -83,5 +86,5 @@ def reload_exchanges():
 
 
 if __name__ == '__main__':
-    update_series()
-    # verify_series()
+    # update_series()
+    verify_series()

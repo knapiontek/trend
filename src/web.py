@@ -27,11 +27,10 @@ data_graph = dcc.Graph(id='data-graph', style=style.data_graph)
 
 dashboard = html.Div(
     [
-        html.Div([
-            html.Div(symbol_table, className="three columns", style=style.panel),
-            html.Div(data_graph, className="nine columns", style=style.panel)
-        ], className='row'),
+        html.Div(symbol_table, className="three columns", style=style.panel),
+        html.Div(data_graph, className="nine columns", style=style.panel)
     ],
+    className='row',
     style=style.dashboard
 )
 
@@ -87,6 +86,7 @@ def cb_price_graph(data, selected_rows):
         figure = make_subplots(rows=2, cols=1,
                                shared_xaxes=True,
                                vertical_spacing=0.03,
+                               row_heights=[0.7, 0.3],
                                specs=[[{"type": "scatter"}], [{"type": "bar"}]])
         figure.add_trace(prices, row=1, col=1)
         figure.add_trace(volume, row=2, col=1)
