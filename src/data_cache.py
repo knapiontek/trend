@@ -1,7 +1,10 @@
 import json
+import logging
 from datetime import datetime, timedelta
 
 from src import store, session, log, config, tools, holidays
+
+LOG = logging.getLogger(__name__)
 
 
 def show_instrument_range():
@@ -10,32 +13,23 @@ def show_instrument_range():
         print(json.dumps(time_range))
 
 
-def reload_price_history(symbol: str):
-    dt_from = datetime(2020, 1, 1, tzinfo=config.UTC_TZ)
-    dt_to = datetime.now(tz=config.UTC_TZ)
-
-    with session.ExanteSession() as exante:
-        time_series = exante.series(symbol, dt_from, dt_to, config.DURATION_1D)
-
-        with store.DBSeries(config.DURATION_1D, editable=True) as db_series:
-            db_series += time_series
-
-
 def update_series():
     log.init(__file__, persist=False)
 
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
+    LOG.debug(f'loaded instruments: {len(instruments)}')
     symbols = [i['symbolId'] for i in instruments][:10]
 
     duration = config.DURATION_1D
     slice_delta = timedelta(seconds=1000 * duration)
     time_delta = timedelta(seconds=duration)
     dt_from_default = datetime(2017, 12, 31, tzinfo=config.UTC_TZ)
-    dt_to = datetime.now(tz=config.UTC_TZ)
+    dt_to = config.datetime_truncate(datetime.now(tz=config.UTC_TZ), duration)
 
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
+    LOG.debug(f'loaded time-range entries: {len(time_range)}')
 
     latest = {r['symbol']: tools.dt_parse(r['max_utc']) for r in time_range}
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}

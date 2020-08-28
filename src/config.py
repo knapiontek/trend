@@ -1,6 +1,6 @@
 import json
 import pathlib
-from datetime import timezone, timedelta
+from datetime import timezone, timedelta, datetime
 from functools import lru_cache
 from typing import Tuple
 
@@ -36,6 +36,18 @@ def duration_name(duration: int) -> str:
         DURATION_6H: '6h',
         DURATION_1D: '1d'
     }[duration]
+
+
+def datetime_truncate(dt: datetime, duration: int) -> datetime:
+    return {
+        DURATION_1M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_5M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_10M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_15M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_1H: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_6H: lambda: dt.replace(hour=dt.hour % 6, minute=0, second=0, microsecond=0),
+        DURATION_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    }[duration]()
 
 
 @lru_cache(maxsize=1)
