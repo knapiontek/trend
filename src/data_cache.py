@@ -44,20 +44,15 @@ def update_series():
                     db_series += time_series
 
 
-def verify_instrument(symbol: str, exchange: str) -> Dict[str, List]:
-    LOG.debug(f'testing instrument: {symbol}')
-
+def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration: int) -> Dict[str, List]:
     health = {}
-
-    duration = tools.DURATION_1D
-    dt_from = datetime(2018, 1, 1, tzinfo=tools.UTC_TZ)
-    dt_to = tools.dt_truncate(datetime.now(tz=tools.UTC_TZ), duration)
     time_delta = timedelta(seconds=duration)
-
     with store.DBSeries(duration) as db_series:
         series = db_series[symbol]
 
     db_dates = {daily['utc'] for daily in series}
+    split = symbol.split('.')
+    exchange = split[2] if len(split) == 3 else split[1]
     overlap = db_dates & holidays.HOLIDAYS[exchange]
     if overlap:
         health['overlap'] = list(overlap)
@@ -80,16 +75,19 @@ def verify_instrument(symbol: str, exchange: str) -> Dict[str, List]:
 def verify_series():
     log.init(__file__, persist=False)
 
-    with store.FileStore('exchanges') as exchanges:
-        instruments = sum([v for k, v in exchanges.items()], [])
-    LOG.debug(f'loaded instruments: {len(instruments)}')
+    duration = tools.DURATION_1D
+    with store.DBSeries(duration) as series:
+        time_range = series.time_range()
+    length = len(time_range)
+    LOG.debug(f'loaded time-range entries: {length}')
 
     with store.FileStore('series-health', editable=True) as health:
-        for instrument in instruments:
-            symbol, exchange = instrument['symbolId'], instrument['exchange']
-            symbol_health = verify_instrument(symbol, exchange)
+        for i, symbol_range in enumerate(time_range):
+            symbol, dt_from, dt_to = [symbol_range[r] for r in ('symbol', 'min_utc', 'max_utc')]
+            symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
             if symbol_health:
                 health[symbol] = symbol_health
+            tools.progress(i, length)
 
 
 def reload_exchanges():

@@ -1,3 +1,4 @@
+import sys
 import time
 import urllib.parse
 from collections import defaultdict
@@ -86,3 +87,8 @@ def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:
         for k in keys:
             dt[k].append(i[k])
     return dt
+
+
+def progress(i: int, length: int):
+    sys.stdout.write(f'\rcomplete: {100 * i / length:.1f}%')
+    sys.stdout.flush()
