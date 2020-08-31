@@ -28,19 +28,21 @@
 
 1. Histogram for Resistance/Support Areas
 2. MAEE strategy: Market, Area, Entry, Exit
-  - Area - support, resistance, EMA 50, 100, 200
-  - Exit - with success, with failure
+    - Area - support, resistance, EMA 50, 100, 200
+    - Exit - with success, with failure
 3. Dow strategy
-  - Enter on higher low with good risk/reward ratio (latest high and low)
+    - Enter on higher low with good risk/reward ratio (latest high and low)
 
 ## Notes
 
+```bash
 curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
 cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
 https://rapidapi.com/apidojo/api/yahoo-finance1
 
 https://towardsdatascience.com/best-5-free-stock-market-apis-in-2019-ad91dddec984
 curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
+```
 
 ### Price Action (bull market)
 
@@ -65,4 +67,10 @@ trade break-outs with build-up
 
 ```bash
 time python src/run.py --entry show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
+```
+
+```bash
+conda env create -n trend-py37 -f requirements.yml
+conda env update -n trend-py37 -f requirements.yml
+conda activate trend-py37
 ```
