@@ -21,7 +21,7 @@ def test_editable():
         assert False
 
 
-def test_columns():
+def test_stream():
     with store.FileStore('S&P500') as sp500:
         for symbol, security, location in sp500.stream(keys=('Symbol', 'Security', 'Headquarters Location')):
             if symbol == 'ZTS':

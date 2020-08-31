@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from src import store, session, log, tools, holidays, config
+from src import store, session, log, tools, holidays
 
 LOG = logging.getLogger(__name__)
 
@@ -96,15 +96,18 @@ def reload_exchanges():
                 content[exchange] = symbols
 
 
-def sp500():
+def reload_sp500():
     import pandas as pd
     table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
     df = table[0]
-    filename = config.STORE_PATH.joinpath('S&P500.json')
-    df.to_json(filename, orient='split')
+    df = df.where(pd.notnull(df), None)
+    dt = df.to_dict('split')
+    with store.FileStore('S&P500', editable=True) as sp500:
+        sp500['schema'] = dt['columns']
+        sp500['data'] = dt['data']
 
 
 if __name__ == '__main__':
     # update_series()
-    verify_series()
-    # sp500()
+    # verify_series()
+    reload_sp500()

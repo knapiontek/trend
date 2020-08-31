@@ -82,8 +82,10 @@ def time_slices(dt_from: datetime, dt_to: datetime, slice_delta: timedelta, time
 
 
 def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
-    # [{'key': 'value1'}, {'key': 'value2'}] => {'key': ['value1', 'value2']}
     dt = defaultdict(list)
+    '''
+        [{'key': 'v1'}, {'key': 'v2'}] => {'key': ['v1', 'v2']}
+    '''
     for i in lst:
         for k in keys:
             dt[k].append(i[k])
@@ -92,8 +94,11 @@ def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
 
 def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
     if isinstance(data, dict):
-        # {'columns': ['key1', 'key2'], 'data': [['value1', 'value2']]} => [{'key1': 'value1'}, {'key2': 'value2'}]
-        schema = data['columns']
+        '''
+            {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
+            [{'key1': 'v11', 'key2': 'v12'}, {'key1': 'v21', 'key2': 'v22'}]
+        '''
+        schema = data['schema']
         indices = [schema.index(c) for c in keys]
         for datum in data['data']:
             yield tuple([datum[i] for i in indices])

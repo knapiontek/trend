@@ -1,7 +1,7 @@
 import json
 import logging
 from functools import lru_cache
-from typing import List, Tuple, Iterable, Union, Dict
+from typing import List, Tuple, Iterable, Dict, Any
 
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
@@ -28,7 +28,7 @@ class FileStore(dict):
             with self.filename.open('w') as write_io:
                 json.dump(self, write_io, indent=2)
 
-    def __setitem__(self, key: str, value: Union[Dict, List]):
+    def __setitem__(self, key: str, value: Any):
         assert self.editable
         super(FileStore, self).__setitem__(key, value)
 
