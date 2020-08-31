@@ -41,11 +41,8 @@ class FileStore:
     def items(self):
         return self.content.items()
 
-    def read(self, columns: List[str]) -> Iterable[Tuple]:
-        schema = self.content['columns']
-        indices = [schema.index(c) for c in columns]
-        for datum in self.content['data']:
-            yield tuple([datum[i] for i in indices])
+    def stream(self, keys: Iterable[str]) -> Iterable[Tuple]:
+        return tools.stream(self.content, keys)
 
 
 CANDLE_SCHEMA = {
@@ -108,7 +105,7 @@ class DBSeries:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __add__(self, series: List):
+    def __add__(self, series: List[Dict]):
         result = self.tnx_collection.insert_many(series)
         errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
         if len(errors):
@@ -116,7 +113,7 @@ class DBSeries:
             LOG.exception(error)
             raise Exception(error)
 
-    def __getitem__(self, symbol) -> List:
+    def __getitem__(self, symbol) -> List[Dict]:
         query = '''
             FOR series IN series_1d
                 FILTER series.symbol == @symbol
@@ -125,7 +122,7 @@ class DBSeries:
         result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol})
         return list(result)
 
-    def time_range(self) -> List:
+    def time_range(self) -> List[Dict]:
         query = '''
             FOR series IN series_1d
                 COLLECT symbol = series.symbol

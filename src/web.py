@@ -78,7 +78,7 @@ def cb_price_graph(data, selected_rows):
         with store.DBSeries(tools.DURATION_1D) as series:
             time_series = series[symbol]
 
-        params = tools.transpose(time_series, ['timestamp', 'close', 'volume'])
+        params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
         dates = [tools.from_ts_ms(ts, tz=tools.UTC_TZ) for ts in params['timestamp']]
 
         prices = go.Scatter(x=dates, y=params['close'], name='Price')

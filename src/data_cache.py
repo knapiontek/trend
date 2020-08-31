@@ -81,8 +81,7 @@ def verify_series():
     LOG.debug(f'loaded time-range entries: {length}')
 
     with store.FileStore('series-health', editable=True) as health:
-        for i, symbol_range in enumerate(time_range):
-            symbol, dt_from, dt_to = [symbol_range[r] for r in ('symbol', 'min_utc', 'max_utc')]
+        for i, (symbol, dt_from, dt_to) in enumerate(tools.stream1(time_range, ('symbol', 'min_utc', 'max_utc'))):
             symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
             if symbol_health:
                 health[symbol] = symbol_health

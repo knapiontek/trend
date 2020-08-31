@@ -3,7 +3,7 @@ import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict
+from typing import List, Dict, Iterable, Tuple
 
 DURATION_1M = 60
 DURATION_5M = 5 * 60
@@ -81,12 +81,26 @@ def time_slices(dt_from: datetime, dt_to: datetime, slice_delta: timedelta, time
         start += slice_delta
 
 
-def transpose(lst: List[Dict], keys: List[str]) -> Dict[str, List]:
+def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
+    # [{'key': 'value1'}, {'key': 'value2'}] => {'key': ['value1', 'value2']}
     dt = defaultdict(list)
     for i in lst:
         for k in keys:
             dt[k].append(i[k])
     return dt
+
+
+def stream(dt: Dict, keys: Iterable[str]) -> Iterable[Tuple]:
+    # {'columns': ['key1', 'key2'], 'data': [['value1', 'value2']]} => [{'key1': 'value1'}, {'key2': 'value2'}]
+    schema = dt['columns']
+    indices = [schema.index(c) for c in keys]
+    for datum in dt['data']:
+        yield tuple([datum[i] for i in indices])
+
+
+def stream1(lst: List[Dict], keys: Iterable[str]) -> Iterable[Tuple]:
+    for i in lst:
+        yield tuple([i[k] for k in keys])
 
 
 def progress(i: int, length: int):
