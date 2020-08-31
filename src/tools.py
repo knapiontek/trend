@@ -3,7 +3,7 @@ import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Iterable, Tuple
+from typing import List, Dict, Iterable, Tuple, Union
 
 DURATION_1M = 60
 DURATION_5M = 5 * 60
@@ -90,17 +90,16 @@ def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
     return dt
 
 
-def stream(dt: Dict, keys: Iterable[str]) -> Iterable[Tuple]:
-    # {'columns': ['key1', 'key2'], 'data': [['value1', 'value2']]} => [{'key1': 'value1'}, {'key2': 'value2'}]
-    schema = dt['columns']
-    indices = [schema.index(c) for c in keys]
-    for datum in dt['data']:
-        yield tuple([datum[i] for i in indices])
-
-
-def stream1(lst: List[Dict], keys: Iterable[str]) -> Iterable[Tuple]:
-    for i in lst:
-        yield tuple([i[k] for k in keys])
+def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
+    if isinstance(data, dict):
+        # {'columns': ['key1', 'key2'], 'data': [['value1', 'value2']]} => [{'key1': 'value1'}, {'key2': 'value2'}]
+        schema = data['columns']
+        indices = [schema.index(c) for c in keys]
+        for datum in data['data']:
+            yield tuple([datum[i] for i in indices])
+    elif isinstance(data, Iterable):
+        for i in data:
+            yield tuple([i[k] for k in keys])
 
 
 def progress(i: int, length: int):

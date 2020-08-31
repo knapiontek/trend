@@ -11,38 +11,29 @@ from src import config, tools
 LOG = logging.getLogger(__name__)
 
 
-class FileStore:
+class FileStore(dict):
     def __init__(self, name: str, editable=False):
+        super(FileStore, self).__init__()
         self.editable = editable
         self.filename = config.STORE_PATH.joinpath(f'{name}.json')
-        self.content = {}
 
     def __enter__(self) -> 'FileStore':
         if self.filename.exists():
             with self.filename.open() as read_io:
-                self.content = json.load(read_io)
+                self.update(json.load(read_io))
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.editable and not exc_type:
             with self.filename.open('w') as write_io:
-                json.dump(self.content, write_io, indent=2)
+                json.dump(self, write_io, indent=2)
 
     def __setitem__(self, key: str, value: Union[Dict, List]):
         assert self.editable
-        self.content[key] = value
-
-    def __getitem__(self, key: str):
-        return self.content[key]
-
-    def __add__(self, lst: List):
-        self.content += lst
-
-    def items(self):
-        return self.content.items()
+        super(FileStore, self).__setitem__(key, value)
 
     def stream(self, keys: Iterable[str]) -> Iterable[Tuple]:
-        return tools.stream(self.content, keys)
+        return tools.stream(self, keys)
 
 
 CANDLE_SCHEMA = {
