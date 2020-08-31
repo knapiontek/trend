@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from src import tools, config
+from src import tools
 
 
 def test_list_split():

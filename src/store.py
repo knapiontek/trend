@@ -1,7 +1,7 @@
 import json
 import logging
 from functools import lru_cache
-from typing import List
+from typing import List, Tuple, Iterable, Union, Dict
 
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
@@ -28,15 +28,24 @@ class FileStore:
             with self.filename.open('w') as write_io:
                 json.dump(self.content, write_io, indent=2)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Union[Dict, List]):
         assert self.editable
         self.content[key] = value
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         return self.content[key]
+
+    def __add__(self, lst: List):
+        self.content += lst
 
     def items(self):
         return self.content.items()
+
+    def read(self, columns: List[str]) -> Iterable[Tuple]:
+        schema = self.content['columns']
+        indices = [schema.index(c) for c in columns]
+        for datum in self.content['data']:
+            yield tuple([datum[i] for i in indices])
 
 
 CANDLE_SCHEMA = {

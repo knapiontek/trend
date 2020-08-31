@@ -19,3 +19,11 @@ def test_editable():
         pass
     else:
         assert False
+
+
+def test_columns():
+    with store.FileStore('S&P500') as sp500:
+        for symbol, security, location in sp500.read(columns=['Symbol', 'Security', 'Headquarters Location']):
+            if symbol == 'ZTS':
+                assert security == 'Zoetis'
+                assert location == 'Florham Park, New Jersey'

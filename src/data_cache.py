@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from src import store, session, log, tools, holidays
+from src import store, session, log, tools, holidays, config
 
 LOG = logging.getLogger(__name__)
 
@@ -51,8 +51,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration:
         series = db_series[symbol]
 
     db_dates = {daily['utc'] for daily in series}
-    split = symbol.split('.')
-    exchange = split[2] if len(split) == 3 else split[1]
+    exchange = symbol.split('.')[-1]
     overlap = db_dates & holidays.HOLIDAYS[exchange]
     if overlap:
         health['overlap'] = list(overlap)
@@ -98,6 +97,15 @@ def reload_exchanges():
                 content[exchange] = symbols
 
 
+def sp500():
+    import pandas as pd
+    table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+    df = table[0]
+    filename = config.STORE_PATH.joinpath('S&P500.json')
+    df.to_json(filename, orient='split')
+
+
 if __name__ == '__main__':
     # update_series()
     verify_series()
+    # sp500()
