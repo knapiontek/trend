@@ -110,5 +110,5 @@ def reload_sp500():
 
 if __name__ == '__main__':
     # update_series()
-    verify_series()
+    # verify_series()
     reload_sp500()
