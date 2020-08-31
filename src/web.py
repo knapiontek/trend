@@ -12,26 +12,26 @@ from plotly.subplots import make_subplots
 from src import store, tools, style
 
 app = dash.Dash(external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
+app.title = 'trend'
 
-SYMBOL_COLUMNS = ["symbolId", "symbolType", "currency"]
+SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
-    columns=[{'name': i.title(), 'id': i} for i in SYMBOL_COLUMNS],
+    columns=[{'name': v, 'id': k} for k, v in SYMBOL_COLUMNS.items()],
     filter_action='custom',
     row_selectable='single',
     **style.symbol_table(['symbolId', 'symbolType'])
 )
 
-data_graph = dcc.Graph(id='data-graph', style=style.data_graph)
+data_graph = dcc.Graph(id='data-graph', className='graph')
 
 dashboard = html.Div(
     [
-        html.Div(symbol_table, className="three columns", style=style.panel),
-        html.Div(data_graph, className="nine columns", style=style.panel)
+        html.Div(symbol_table, className='three columns panel'),
+        html.Div(data_graph, className='nine columns panel')
     ],
-    className='row',
-    style=style.dashboard
+    className='dashboard row'
 )
 
 app.layout = dashboard
@@ -87,7 +87,7 @@ def cb_price_graph(data, selected_rows):
                                shared_xaxes=True,
                                vertical_spacing=0.03,
                                row_heights=[0.7, 0.3],
-                               specs=[[{"type": "scatter"}], [{"type": "bar"}]])
+                               specs=[[{'type': 'scatter'}], [{'type': 'bar'}]])
         figure.add_trace(prices, row=1, col=1)
         figure.add_trace(volume, row=2, col=1)
         figure.update_layout(showlegend=False, title_text=symbol)

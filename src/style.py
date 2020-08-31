@@ -1,15 +1,3 @@
-dashboard = {'margin': '20px', 'height': '85vh'}
-
-panel = {
-    'height': '100%',
-    'borderStyle': 'solid',
-    'borderWidth': 'thin',
-    'overflowX': 'hidden',
-    'overflowY': 'auto',
-    'padding': '2px'
-}
-
-
 def symbol_table(left_align):
     return dict(
         style_cell_conditional=[
@@ -33,6 +21,3 @@ def symbol_table(left_align):
         style_data={'border': '1px solid white'},
         style_filter={'border': '1px solid white'}
     )
-
-
-data_graph = {'width': '100%', 'height': '100%'}
