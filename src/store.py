@@ -103,6 +103,7 @@ class DBSeries:
             error = json.dumps(errors, indent=2)
             LOG.exception(error)
             raise Exception(error)
+        return self
 
     def __getitem__(self, symbol) -> List[Dict]:
         query = '''

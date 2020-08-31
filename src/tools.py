@@ -83,9 +83,6 @@ def time_slices(dt_from: datetime, dt_to: datetime, slice_delta: timedelta, time
 
 def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
     dt = defaultdict(list)
-    '''
-        [{'key': 'v1'}, {'key': 'v2'}] => {'key': ['v1', 'v2']}
-    '''
     for i in lst:
         for k in keys:
             dt[k].append(i[k])
@@ -94,10 +91,6 @@ def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
 
 def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
     if isinstance(data, dict):
-        '''
-            {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
-            [{'key1': 'v11', 'key2': 'v12'}, {'key1': 'v21', 'key2': 'v22'}]
-        '''
         schema = data['schema']
         indices = [schema.index(c) for c in keys]
         for datum in data['data']:
@@ -107,6 +100,15 @@ def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[T
             yield tuple([i[k] for k in keys])
 
 
-def progress(i: int, length: int):
-    sys.stdout.write(f'\rcomplete: {100 * i / length:.1f}%')
-    sys.stdout.flush()
+class Progress:
+    def __init__(self, length: int):
+        self.count = 0
+        self.length = length
+
+    def __add__(self, i: int):
+        self.count += i
+        sys.stdout.write(f'\rcomplete: {100 * self.count / self.length:.1f}%')
+        if self.count == self.length:
+            sys.stdout.write('\n')
+        sys.stdout.flush()
+        return self

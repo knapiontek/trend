@@ -80,12 +80,13 @@ def verify_series():
     length = len(time_range)
     LOG.debug(f'loaded time-range entries: {length}')
 
+    progress = tools.Progress(length)
     with store.FileStore('series-health', editable=True) as health:
-        for i, (symbol, dt_from, dt_to) in enumerate(tools.stream(time_range, ('symbol', 'min_utc', 'max_utc'))):
+        for symbol, dt_from, dt_to in tools.stream(time_range, ('symbol', 'min_utc', 'max_utc')):
             symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
             if symbol_health:
                 health[symbol] = symbol_health
-            tools.progress(i, length)
+            progress += 1
 
 
 def reload_exchanges():
@@ -109,5 +110,5 @@ def reload_sp500():
 
 if __name__ == '__main__':
     # update_series()
-    # verify_series()
+    verify_series()
     reload_sp500()

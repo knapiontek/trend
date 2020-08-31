@@ -46,3 +46,30 @@ def test_time_slices():
         ('2020-02-02 19:00:00', '2020-02-03 15:00:00'),
         ('2020-02-03 16:00:00', '2020-02-04 00:00:00')
     ]
+
+
+def test_transpose():
+    result = tools.transpose([{'key': 'v1'}, {'key': 'v2'}], ['key'])
+    assert result == {'key': ['v1', 'v2']}
+
+
+def test_stream():
+    frame1 = {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
+
+    result1 = [k1 for k1 in tools.stream(frame1, ['key1'])]
+    assert result1 == [('v11',), ('v21',)]
+
+    result2 = [(k1, k2) for k1, k2 in tools.stream(frame1, ['key1', 'key2'])]
+    assert result2 == [('v11', 'v12'), ('v21', 'v22')]
+
+    frame2 = [{'k1': 'v1', 'k2': 'v2'}]
+    for v1, v2 in tools.stream(frame2, ['k1', 'k2']):
+        assert v1 == 'v1'
+        assert v2 == 'v2'
+
+
+def test_progress():
+    progress = tools.Progress(length=2)
+    progress += 1
+    progress += 1
+    assert progress.count == progress.length
