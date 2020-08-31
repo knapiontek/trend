@@ -11,8 +11,7 @@ from plotly.subplots import make_subplots
 
 from src import store, tools, style
 
-app = dash.Dash(external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
-app.title = 'trend'
+app = dash.Dash(title='trend', external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
 
