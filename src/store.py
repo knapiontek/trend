@@ -1,12 +1,13 @@
 import json
 import logging
+from datetime import timedelta
 from functools import lru_cache
 from typing import List, Tuple, Iterable, Dict, Any
 
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
 
-from src import config, tools, exante
+from src import config, tools
 
 LOG = logging.getLogger(__name__)
 
@@ -79,10 +80,9 @@ def create_collection(db: StandardDatabase, name: str):
 
 
 class DBSeries:
-    def __init__(self, duration: int, editable=False):
+    def __init__(self, interval: timedelta, editable=False):
         self.editable = editable
-        duration_name = exante.duration_name(duration)
-        self.collection_name = f'series_{duration_name}'
+        self.collection_name = f'series_{tools.interval_name(interval)}'
         self.db = db_connect()
         create_collection(self.db, self.collection_name)
 

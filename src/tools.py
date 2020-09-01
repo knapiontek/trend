@@ -5,6 +5,31 @@ from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Iterable, Tuple, Union
 
+INTERVAL_1H = timedelta(hours=1)
+INTERVAL_1D = timedelta(days=1)
+INTERVAL_1W = timedelta(days=7)
+
+
+def interval_name(interval: timedelta) -> str:
+    return {
+        INTERVAL_1H: '1h',
+        INTERVAL_1D: '1d',
+        INTERVAL_1W: '1w'
+    }[interval]
+
+
+def last_sunday(dt: datetime):
+    d = dt.toordinal()
+    return datetime.fromordinal(d - (d % 7))
+
+
+def dt_round(dt: datetime, interval: timedelta) -> datetime:
+    return {
+        INTERVAL_1H: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        INTERVAL_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0),
+        INTERVAL_1W: last_sunday
+    }[interval]()
+
 
 def url_encode(name: str) -> str:
     return urllib.parse.quote(name, safe='')

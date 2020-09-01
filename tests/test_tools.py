@@ -3,6 +3,15 @@ from datetime import timedelta, datetime
 from src import tools, exante
 
 
+def test_last_sunday():
+    dt = datetime(2020, 9, 1)
+    assert tools.last_sunday(dt) == datetime(2020, 8, 30)
+
+
+def test_interval_name():
+    assert tools.interval_name(tools.INTERVAL_1D) == '1d'
+
+
 def test_list_split():
     lst = [1, 2, 3, 4, 5, 'PSLV.ARCA']
 

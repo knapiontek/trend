@@ -31,7 +31,7 @@ def duration_name(duration: int) -> str:
     }[duration]
 
 
-def dt_truncate(dt: datetime, duration: int) -> datetime:
+def dt_round(dt: datetime, duration: int) -> datetime:
     return {
         DURATION_1M: lambda: dt.replace(minute=0, second=0, microsecond=0),
         DURATION_5M: lambda: dt.replace(minute=0, second=0, microsecond=0),

@@ -3,13 +3,13 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from src import store, exante, log, tools, holidays
+from src import store, log, tools, holidays, yahoo, exante
 
 LOG = logging.getLogger(__name__)
 
 
 def show_instrument_range():
-    with store.DBSeries(exante.DURATION_1D) as series:
+    with store.DBSeries(tools.INTERVAL_1D) as series:
         time_range = series.time_range()
         print(json.dumps(time_range))
 
@@ -22,32 +22,31 @@ def update_series():
     LOG.debug(f'loaded instruments: {len(instruments)}')
     symbols = [i['symbolId'] for i in instruments][:10]
 
-    duration = exante.DURATION_1D
-    slice_delta = timedelta(seconds=1000 * duration)
-    time_delta = timedelta(seconds=duration)
+    interval = tools.INTERVAL_1D
+    slice_delta = timedelta(seconds=1000 * interval)
+    time_delta = timedelta(seconds=interval)
     dt_from_default = datetime(2017, 12, 31, tzinfo=tools.UTC_TZ)
-    dt_to = exante.dt_truncate(datetime.now(tz=tools.UTC_TZ), duration)
+    dt_to = tools.dt_round(datetime.now(tz=tools.UTC_TZ), interval)
 
-    with store.DBSeries(duration) as series:
+    with store.DBSeries(interval) as series:
         time_range = series.time_range()
     LOG.debug(f'loaded time-range entries: {len(time_range)}')
 
     latest = {r['symbol']: tools.dt_parse(r['max_utc']) for r in time_range}
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
-    with exante.Session() as session:
+    with yahoo.Session() as session:
         for symbol, dt_from in instruments_latest.items():
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
-                time_series = session.series(symbol, slice_from, slice_to, duration)
+                time_series = session.series(symbol, slice_from, slice_to, interval)
 
-                with store.DBSeries(duration, editable=True) as db_series:
+                with store.DBSeries(interval, editable=True) as db_series:
                     db_series += time_series
 
 
-def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration: int) -> Dict[str, List]:
+def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
     health = {}
-    time_delta = timedelta(seconds=duration)
-    with store.DBSeries(duration) as db_series:
+    with store.DBSeries(interval) as db_series:
         series = db_series[symbol]
 
     db_dates = {daily['utc'] for daily in series}
@@ -64,7 +63,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration:
             date = tools.dt_format(start)
             if date not in all_days:
                 missing.append(date)
-        start += time_delta
+        start += interval
     if missing:
         health['missing'] = missing
 
@@ -74,8 +73,8 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration:
 def verify_series():
     log.init(__file__, persist=False)
 
-    duration = exante.DURATION_1D
-    with store.DBSeries(duration) as series:
+    interval = tools.INTERVAL_1D
+    with store.DBSeries(interval) as series:
         time_range = series.time_range()
     length = len(time_range)
     LOG.debug(f'loaded time-range entries: {length}')
@@ -83,7 +82,7 @@ def verify_series():
     progress = tools.Progress('series-health', length)
     with store.FileStore('series-health', editable=True) as health:
         for symbol, dt_from, dt_to in tools.tuple_it(time_range, ('symbol', 'min_utc', 'max_utc')):
-            symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
+            symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), interval)
             if symbol_health:
                 health[symbol] = symbol_health
             progress += 1
