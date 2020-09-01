@@ -32,11 +32,11 @@ class FileStore(dict):
         assert self.editable
         super(FileStore, self).__setitem__(key, value)
 
-    def tuples(self, keys: Iterable[str]) -> Iterable[Tuple]:
-        return tools.tuples(self, keys)
+    def tuple_it(self, keys: Iterable[str]) -> Iterable[Tuple]:
+        return tools.tuple_it(self, keys)
 
-    def dicts(self, keys: Iterable[str]) -> Iterable[Dict]:
-        return tools.dicts(self, keys)
+    def dict_it(self, keys: Iterable[str]) -> Iterable[Dict]:
+        return tools.dict_it(self, keys)
 
 
 CANDLE_SCHEMA = {

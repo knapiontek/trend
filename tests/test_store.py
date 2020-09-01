@@ -21,17 +21,17 @@ def test_editable():
         assert False
 
 
-def test_tuples():
+def test_tuple_it():
     with store.FileStore('S&P500') as sp500:
-        for symbol, security, location in sp500.tuples(keys=('Symbol', 'Security', 'Headquarters Location')):
+        for symbol, security, location in sp500.tuple_it(keys=('Symbol', 'Security', 'Headquarters Location')):
             if symbol == 'ZTS':
                 assert security == 'Zoetis'
                 assert location == 'Florham Park, New Jersey'
 
 
-def test_dicts():
+def test_dict_it():
     with store.FileStore('S&P500') as sp500:
-        for item in sp500.dicts(keys=('Symbol', 'Security', 'Headquarters Location')):
-            if item['Symbol'] == 'ZTS':
-                assert item['Security'] == 'Zoetis'
-                assert item['Headquarters Location'] == 'Florham Park, New Jersey'
+        for dt in sp500.dict_it(keys=('Symbol', 'Security', 'Headquarters Location')):
+            if dt['Symbol'] == 'ZTS':
+                assert dt['Security'] == 'Zoetis'
+                assert dt['Headquarters Location'] == 'Florham Park, New Jersey'

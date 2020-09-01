@@ -57,27 +57,27 @@ FRAME1 = {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
 FRAME2 = [{'k1': 'v1', 'k2': 'v2'}]
 
 
-def test_tuples():
-    result1 = [k1 for k1 in tools.tuples(FRAME1, ['key1'])]
+def test_tuple_it():
+    result1 = [k1 for k1 in tools.tuple_it(FRAME1, ['key1'])]
     assert result1 == [('v11',), ('v21',)]
 
-    result2 = [(k1, k2) for k1, k2 in tools.tuples(FRAME1, ['key1', 'key2'])]
+    result2 = [(k1, k2) for k1, k2 in tools.tuple_it(FRAME1, ['key1', 'key2'])]
     assert result2 == [('v11', 'v12'), ('v21', 'v22')]
 
-    for v1, v2 in tools.tuples(FRAME2, ['k1', 'k2']):
+    for v1, v2 in tools.tuple_it(FRAME2, ['k1', 'k2']):
         assert v1 == 'v1'
         assert v2 == 'v2'
 
 
-def test_dicts():
-    result1 = [k1 for k1 in tools.dicts(FRAME1, ['key1'])]
+def test_dict_it():
+    result1 = [k1 for k1 in tools.dict_it(FRAME1, ['key1'])]
     assert result1 == [{'key1': 'v11'}, {'key1': 'v21'}]
 
-    result2 = [item for item in tools.dicts(FRAME1, ['key1', 'key2'])]
+    result2 = [dt for dt in tools.dict_it(FRAME1, ['key1', 'key2'])]
     assert result2 == [{'key1': 'v11', 'key2': 'v12'}, {'key1': 'v21', 'key2': 'v22'}]
 
-    for item in tools.dicts(FRAME2, ['k1']):
-        assert item == {'k1': 'v1'}
+    for dt in tools.dict_it(FRAME2, ['k1']):
+        assert dt == {'k1': 'v1'}
 
 
 def test_progress():
