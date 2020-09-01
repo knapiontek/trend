@@ -11,6 +11,7 @@ body {
 .panel {
     height: 100%;
     border-style: solid;
+    border-color: lightgrey;
     border-width: thin;
     overflow-x: hidden;
     overflow-y: auto;

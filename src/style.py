@@ -17,7 +17,7 @@ def symbol_table(left_align):
             'fontWeight': 'bold',
             'border': '1px solid white'
         },
-        style_cell={'padding': '6px'},
+        style_cell={'padding': '4px'},
         style_data={'border': '1px solid white'},
         style_filter={'border': '1px solid white'}
     )

@@ -14,12 +14,14 @@ from src import store, tools, style
 app = dash.Dash(title='trend', external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
+GRAPH_MARGIN = dict(l=15, r=15, t=40, b=15, pad=4)
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
     columns=[{'name': v, 'id': k} for k, v in SYMBOL_COLUMNS.items()],
     filter_action='custom',
     row_selectable='single',
+    page_size=31,
     **style.symbol_table(['symbolId', 'symbolType'])
 )
 
@@ -89,10 +91,10 @@ def cb_price_graph(data, selected_rows):
                                specs=[[{'type': 'scatter'}], [{'type': 'bar'}]])
         figure.add_trace(prices, row=1, col=1)
         figure.add_trace(volume, row=2, col=1)
-        figure.update_layout(showlegend=False, title_text=symbol)
+        figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
         return figure
 
-    return go.Figure(data=[])
+    return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
 
 
 if __name__ == '__main__':
