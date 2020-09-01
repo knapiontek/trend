@@ -3,7 +3,7 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 import yfinance as yf
 
-msft = yf.Ticker("MSFT")
+msft = yf.Ticker('tsla')
 
 # get stock info
 print(msft.info)

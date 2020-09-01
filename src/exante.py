@@ -11,7 +11,7 @@ LOG = logging.getLogger(__name__)
 URL = config.exante_url()
 
 
-class ExanteSession(requests.Session):
+class Session(requests.Session):
     def __init__(self):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()

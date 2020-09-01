@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from src import store, session, log, tools, holidays
+from src import store, exante, log, tools, holidays
 
 LOG = logging.getLogger(__name__)
 
@@ -35,10 +35,10 @@ def update_series():
     latest = {r['symbol']: tools.dt_parse(r['max_utc']) for r in time_range}
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
-    with session.ExanteSession() as exante:
+    with exante.Session() as session:
         for symbol, dt_from in instruments_latest.items():
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
-                time_series = exante.series(symbol, slice_from, slice_to, duration)
+                time_series = session.series(symbol, slice_from, slice_to, duration)
 
                 with store.DBSeries(duration, editable=True) as db_series:
                     db_series += time_series
@@ -80,7 +80,7 @@ def verify_series():
     length = len(time_range)
     LOG.debug(f'loaded time-range entries: {length}')
 
-    progress = tools.Progress(length)
+    progress = tools.Progress('series-health', length)
     with store.FileStore('series-health', editable=True) as health:
         for symbol, dt_from, dt_to in tools.stream(time_range, ('symbol', 'min_utc', 'max_utc')):
             symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
@@ -91,9 +91,9 @@ def verify_series():
 
 def reload_exchanges():
     with store.FileStore('exchanges', editable=True) as content:
-        with session.ExanteSession() as exante:
+        with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
-                symbols = exante.symbols(exchange)
+                symbols = session.symbols(exchange)
                 content[exchange] = symbols
 
 
@@ -110,5 +110,5 @@ def reload_sp500():
 
 if __name__ == '__main__':
     # update_series()
-    # verify_series()
+    verify_series()
     reload_sp500()

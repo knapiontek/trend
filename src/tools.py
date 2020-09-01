@@ -90,7 +90,7 @@ def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
 
 
 def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
-    if isinstance(data, dict):
+    if isinstance(data, Dict):
         schema = data['schema']
         indices = [schema.index(c) for c in keys]
         for datum in data['data']:
@@ -100,14 +100,26 @@ def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[T
             yield tuple([i[k] for k in keys])
 
 
+def items(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Dict]:
+    if isinstance(data, Dict):
+        schema = data['schema']
+        indices = [schema.index(c) for c in keys]
+        for datum in data['data']:
+            yield {schema[i]: datum[i] for i in indices}
+    elif isinstance(data, Iterable):
+        for i in data:
+            yield {k: i[k] for k in keys}
+
+
 class Progress:
-    def __init__(self, length: int):
+    def __init__(self, message: str, length: int):
         self.count = 0
+        self.message = message
         self.length = length
 
     def __add__(self, i: int):
         self.count += i
-        sys.stdout.write(f'\rcomplete: {100 * self.count / self.length:.1f}%')
+        sys.stdout.write(f'\r{self.message}: {100 * self.count / self.length:.1f}%')
         if self.count == self.length:
             sys.stdout.write('\n')
         sys.stdout.flush()

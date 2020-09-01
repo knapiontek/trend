@@ -63,13 +63,20 @@ def test_stream():
     assert result2 == [('v11', 'v12'), ('v21', 'v22')]
 
     frame2 = [{'k1': 'v1', 'k2': 'v2'}]
+
     for v1, v2 in tools.stream(frame2, ['k1', 'k2']):
         assert v1 == 'v1'
         assert v2 == 'v2'
 
 
+def test_items():
+    frame = [{'k1': 'v1', 'k2': 'v2'}]
+    for item in tools.items(frame, ['k1']):
+        assert item == {'k1': 'v1'}
+
+
 def test_progress():
-    progress = tools.Progress(length=2)
+    progress = tools.Progress(test_progress.__name__, length=2)
     progress += 1
     progress += 1
     assert progress.count == progress.length

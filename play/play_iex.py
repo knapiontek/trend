@@ -1,11 +1,16 @@
-from pprint import pprint
+from datetime import datetime
 
-import requests
+from iexfinance.stocks import get_historical_data
 
-from src import config
+from src import config, store
 
 TOKEN = config.iex_auth()
-URL = f'https://cloud.iexapis.com/stable/ref-data/exchanges?token={TOKEN}'
 
-response = requests.get(URL)
-pprint(response.json())
+start = datetime(2019, 1, 1)
+end = datetime.today()
+
+stocks = ['AAPL', 'AMZN']
+data = get_historical_data(stocks, start, end, token=TOKEN)
+
+with store.FileStore('iex_test', editable=True) as series:
+    series.update(data)

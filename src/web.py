@@ -25,17 +25,15 @@ symbol_table = dash_table.DataTable(
     **style.symbol_table(['symbolId', 'symbolType'])
 )
 
-data_graph = dcc.Graph(id='data-graph', className='graph')
+data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
 
-dashboard = html.Div(
+app.layout = html.Div(
     [
         html.Div(symbol_table, className='three columns panel'),
         html.Div(data_graph, className='nine columns panel')
     ],
     className='dashboard row'
 )
-
-app.layout = dashboard
 
 PATTERN = re.compile('{(\\w+)} contains (.+)')
 
@@ -49,8 +47,8 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
             columns = dict([m.groups() for m in matches])
             # filter-phrase in value for all filter-columns
             return [
-                s for s in instruments
-                if all(v.lower() in s[k].lower() for k, v in columns.items())
+                i for i in instruments
+                if all(v.lower() in i[k].lower() for k, v in columns.items())
             ]
         else:
             return []
@@ -61,12 +59,11 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
+    # TODO: filtering does not work when skipping pages
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
-        return [
-            {c: s[c] for c in SYMBOL_COLUMNS}
-            for s in filter_instruments(instruments, filter_query)
-        ]
+    filtered = filter_instruments(instruments, filter_query)
+    return [i for i in tools.items(filtered, SYMBOL_COLUMNS)]
 
 
 @app.callback(Output('data-graph', 'figure'),

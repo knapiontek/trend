@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from src import tools, session, config
+from src import tools, exante
 
 
 def test_time_series():
@@ -14,9 +14,9 @@ def test_time_series():
     time_ranges = []
     closing_prices = []
 
-    with session.ExanteSession() as exante:
+    with exante.Session() as session:
         for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
-            series = exante.series(symbol, start, stop, duration)
+            series = session.series(symbol, start, stop, duration)
             time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
             closing_prices += [tuple(c[key] for key in ('utc', 'close', 'volume')) for c in series]
 
