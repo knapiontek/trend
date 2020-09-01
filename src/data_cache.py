@@ -82,7 +82,7 @@ def verify_series():
 
     progress = tools.Progress('series-health', length)
     with store.FileStore('series-health', editable=True) as health:
-        for symbol, dt_from, dt_to in tools.stream(time_range, ('symbol', 'min_utc', 'max_utc')):
+        for symbol, dt_from, dt_to in tools.tuples(time_range, ('symbol', 'min_utc', 'max_utc')):
             symbol_health = verify_instrument(symbol, tools.dt_parse(dt_from), tools.dt_parse(dt_to), duration)
             if symbol_health:
                 health[symbol] = symbol_health

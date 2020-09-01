@@ -63,7 +63,7 @@ def cb_symbol_table(filter_query):
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
-    return [i for i in tools.items(filtered, SYMBOL_COLUMNS)]
+    return [i for i in tools.dicts(filtered, SYMBOL_COLUMNS)]
 
 
 @app.callback(Output('data-graph', 'figure'),

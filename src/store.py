@@ -32,8 +32,11 @@ class FileStore(dict):
         assert self.editable
         super(FileStore, self).__setitem__(key, value)
 
-    def stream(self, keys: Iterable[str]) -> Iterable[Tuple]:
-        return tools.stream(self, keys)
+    def tuples(self, keys: Iterable[str]) -> Iterable[Tuple]:
+        return tools.tuples(self, keys)
+
+    def dicts(self, keys: Iterable[str]) -> Iterable[Dict]:
+        return tools.dicts(self, keys)
 
 
 CANDLE_SCHEMA = {

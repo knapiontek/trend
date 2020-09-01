@@ -53,25 +53,30 @@ def test_transpose():
     assert result == {'key': ['v1', 'v2']}
 
 
-def test_stream():
-    frame1 = {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
+FRAME1 = {'schema': ['key1', 'key2'], 'data': [['v11', 'v12'], ['v21', 'v22']]}
+FRAME2 = [{'k1': 'v1', 'k2': 'v2'}]
 
-    result1 = [k1 for k1 in tools.stream(frame1, ['key1'])]
+
+def test_tuples():
+    result1 = [k1 for k1 in tools.tuples(FRAME1, ['key1'])]
     assert result1 == [('v11',), ('v21',)]
 
-    result2 = [(k1, k2) for k1, k2 in tools.stream(frame1, ['key1', 'key2'])]
+    result2 = [(k1, k2) for k1, k2 in tools.tuples(FRAME1, ['key1', 'key2'])]
     assert result2 == [('v11', 'v12'), ('v21', 'v22')]
 
-    frame2 = [{'k1': 'v1', 'k2': 'v2'}]
-
-    for v1, v2 in tools.stream(frame2, ['k1', 'k2']):
+    for v1, v2 in tools.tuples(FRAME2, ['k1', 'k2']):
         assert v1 == 'v1'
         assert v2 == 'v2'
 
 
-def test_items():
-    frame = [{'k1': 'v1', 'k2': 'v2'}]
-    for item in tools.items(frame, ['k1']):
+def test_dicts():
+    result1 = [k1 for k1 in tools.dicts(FRAME1, ['key1'])]
+    assert result1 == [{'key1': 'v11'}, {'key1': 'v21'}]
+
+    result2 = [item for item in tools.dicts(FRAME1, ['key1', 'key2'])]
+    assert result2 == [{'key1': 'v11', 'key2': 'v12'}, {'key1': 'v21', 'key2': 'v22'}]
+
+    for item in tools.dicts(FRAME2, ['k1']):
         assert item == {'k1': 'v1'}
 
 

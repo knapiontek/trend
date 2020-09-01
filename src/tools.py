@@ -89,7 +89,7 @@ def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
     return dt
 
 
-def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
+def tuples(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
     if isinstance(data, Dict):
         schema = data['schema']
         indices = [schema.index(c) for c in keys]
@@ -100,7 +100,7 @@ def stream(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[T
             yield tuple([i[k] for k in keys])
 
 
-def items(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Dict]:
+def dicts(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Dict]:
     if isinstance(data, Dict):
         schema = data['schema']
         indices = [schema.index(c) for c in keys]
