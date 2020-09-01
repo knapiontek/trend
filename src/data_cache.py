@@ -9,7 +9,7 @@ LOG = logging.getLogger(__name__)
 
 
 def show_instrument_range():
-    with store.DBSeries(tools.DURATION_1D) as series:
+    with store.DBSeries(exante.DURATION_1D) as series:
         time_range = series.time_range()
         print(json.dumps(time_range))
 
@@ -22,11 +22,11 @@ def update_series():
     LOG.debug(f'loaded instruments: {len(instruments)}')
     symbols = [i['symbolId'] for i in instruments][:10]
 
-    duration = tools.DURATION_1D
+    duration = exante.DURATION_1D
     slice_delta = timedelta(seconds=1000 * duration)
     time_delta = timedelta(seconds=duration)
     dt_from_default = datetime(2017, 12, 31, tzinfo=tools.UTC_TZ)
-    dt_to = tools.dt_truncate(datetime.now(tz=tools.UTC_TZ), duration)
+    dt_to = exante.dt_truncate(datetime.now(tz=tools.UTC_TZ), duration)
 
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
@@ -74,7 +74,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, duration:
 def verify_series():
     log.init(__file__, persist=False)
 
-    duration = tools.DURATION_1D
+    duration = exante.DURATION_1D
     with store.DBSeries(duration) as series:
         time_range = series.time_range()
     length = len(time_range)

@@ -10,6 +10,38 @@ LOG = logging.getLogger(__name__)
 
 URL = config.exante_url()
 
+DURATION_1M = 60
+DURATION_5M = 5 * 60
+DURATION_10M = 10 * 60
+DURATION_15M = 15 * 60
+DURATION_1H = 60 * 60
+DURATION_6H = 6 * 60 * 60
+DURATION_1D = 24 * 60 * 60
+
+
+def duration_name(duration: int) -> str:
+    return {
+        DURATION_1M: '1m',
+        DURATION_5M: '5m',
+        DURATION_10M: '10m',
+        DURATION_15M: '15m',
+        DURATION_1H: '1h',
+        DURATION_6H: '6h',
+        DURATION_1D: '1d'
+    }[duration]
+
+
+def dt_truncate(dt: datetime, duration: int) -> datetime:
+    return {
+        DURATION_1M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_5M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_10M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_15M: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_1H: lambda: dt.replace(minute=0, second=0, microsecond=0),
+        DURATION_6H: lambda: dt.replace(hour=dt.hour % 6, minute=0, second=0, microsecond=0),
+        DURATION_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    }[duration]()
+
 
 class Session(requests.Session):
     def __init__(self):

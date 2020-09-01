@@ -5,7 +5,7 @@ from src import tools, exante
 
 def test_time_series():
     symbol = 'XOM.NYSE'
-    duration = tools.DURATION_1H
+    duration = exante.DURATION_1H
     dt_from = datetime(2020, 2, 2, 23)
     dt_to = datetime(2020, 2, 4, 19)
     slice_delta = timedelta(hours=15)
