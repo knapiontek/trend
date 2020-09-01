@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from src import tools, exante
+from src import tools
 
 
 def test_last_sunday():
@@ -26,9 +26,8 @@ def test_time_slices_0():
     dt_from = datetime(2020, 8, 28)
     dt_to = datetime(2020, 8, 28, 10, 12, 10)
     slice_delta = timedelta(days=14)
-    time_delta = timedelta(seconds=exante.DURATION_1D)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta)]
+              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1D)]
     assert slices == []
 
 
@@ -36,9 +35,8 @@ def test_time_slices_1():
     dt_from = datetime(2020, 8, 28)
     dt_to = datetime(2020, 8, 28, 10, 12, 10)
     slice_delta = timedelta(hours=14)
-    time_delta = timedelta(seconds=exante.DURATION_1H)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta)]
+              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
     assert slices == [('2020-08-28 01:00:00', '2020-08-28 10:12:10')]
 
 
@@ -46,9 +44,8 @@ def test_time_slices():
     dt_from = datetime(2020, 2, 1)
     dt_to = datetime(2020, 2, 4)
     slice_delta = timedelta(hours=21)
-    time_delta = timedelta(seconds=exante.DURATION_1H)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta)]
+              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
     assert slices == [
         ('2020-02-01 01:00:00', '2020-02-01 21:00:00'),
         ('2020-02-01 22:00:00', '2020-02-02 18:00:00'),

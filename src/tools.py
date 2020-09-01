@@ -66,12 +66,12 @@ def list_split(lst: List, delta=5):
         yield lst[i:i + delta]
 
 
-def time_slices(dt_from: datetime, dt_to: datetime, slice_delta: timedelta, time_delta: timedelta):
-    assert time_delta < slice_delta
+def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, interval: timedelta):
+    assert interval < delta
     start = dt_from
-    while start + time_delta < dt_to:
-        yield start + time_delta, min(start + slice_delta, dt_to)
-        start += slice_delta
+    while start + interval < dt_to:
+        yield start + interval, min(start + delta, dt_to)
+        start += delta
 
 
 def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
