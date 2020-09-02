@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
 from src import store, log, tools, holidays, exante
@@ -45,8 +45,8 @@ def update_series():
 
     interval = tools.INTERVAL_1D
     delta = interval * 1000
-    dt_from_default = datetime(2017, 12, 31)
-    dt_to = tools.dt_round(datetime.utcnow(), interval)
+    dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
+    dt_to = tools.dt_round(tools.utc_now(), interval)
 
     with store.DBSeries(interval) as db_series:
         time_range = db_series.time_range()
@@ -110,8 +110,8 @@ def verify_series():
 
 
 if __name__ == '__main__':
-    log.init(__file__, persist=False)
+    log.init(__file__, to_screen=True)
 
-    reload_exchanges()
+    # reload_exchanges()
     update_series()
-    verify_series()
+    # verify_series()

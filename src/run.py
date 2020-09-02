@@ -6,24 +6,33 @@ from src import store, data_cache, log
 
 @lru_cache(maxsize=1)
 def get_args():
-    choices = ['reload-exchanges', 'show-instrument-range', 'empty-series', 'update-series']
     parser = argparse.ArgumentParser(description='Trend Tools')
-    parser.add_argument('--entry', required=True, choices=choices)
+
+    parser.add_argument('--reload-exchanges', action='store_true')
+    parser.add_argument('--show-instrument-range', action='store_true')
+    parser.add_argument('--empty-series', action='store_true')
+    parser.add_argument('--update-series', action='store_true')
+
+    parser.add_argument('--log-to-file', action='store_true')
+    parser.add_argument('--log-to-screen', action='store_true')
+    parser.add_argument('--debug', action='store_true')
+
     args, argv = parser.parse_known_args()
     return args
 
 
 def main():
-    log.init(__file__, persist=False)
-
     args = get_args()
-    if args.entry == 'reload-exchanges':
+
+    log.init(__file__, to_screen=args.log_to_screen, to_file=args.log_to_file, debug=args.debug)
+
+    if args.reload_exchanges:
         data_cache.reload_exchanges()
-    elif args.entry == 'show-instrument-range':
+    elif args.show_instrument_range:
         data_cache.show_instrument_range()
-    elif args.entry == 'empty-series':
+    elif args.empty_series:
         store.empty_series()
-    elif args.entry == 'update-series':
+    elif args.update_series:
         data_cache.update_series()
 
 

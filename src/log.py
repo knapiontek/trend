@@ -6,9 +6,11 @@ from logging.handlers import RotatingFileHandler
 from src import config
 
 
-def init(script_file: str, persist=False, debug=False):
-    handlers = [logging.StreamHandler(sys.stdout)]
-    if persist:
+def init(script_file: str, to_screen=False, to_file=False, debug=False):
+    handlers = []
+    if to_screen:
+        handlers.append(logging.StreamHandler(sys.stdout))
+    if to_file:
         stem = pathlib.Path(script_file).stem
         file_name = config.LOG_PATH.joinpath(f'{stem}.log')
         print(f'logging to file: {file_name}')

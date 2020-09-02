@@ -7,6 +7,8 @@ from types import coroutine
 
 from aiohttp import web
 
+from src import tools
+
 LOG = logging.getLogger(__name__)
 
 RUNNING = True  # False on_cleanup
@@ -14,8 +16,8 @@ RUNNING = True  # False on_cleanup
 
 async def sleep_until(dt: datetime):
     # sleep until the specified datetime
-    while dt > datetime.utcnow():
-        remaining = (dt - datetime.utcnow()).total_seconds()
+    while dt > tools.utc_now():
+        remaining = (dt - tools.utc_now()).total_seconds()
         await asyncio.sleep(remaining % (24 * 60 * 60))
         LOG.debug(f'{sleep_until.__name__} waken-up after {remaining} seconds')
 
@@ -58,7 +60,7 @@ def task_example():
 
 
 def schedule_topo_refresh_daily():
-    dt = datetime.utcnow()
+    dt = tools.utc_now()
     dt = dt.replace(hour=22, minute=13, second=0, microsecond=0)
     asyncio.create_task(run_daily_at(dt, task_example))
     LOG.info(f'Topo refresh scheduled daily starting at {dt}')

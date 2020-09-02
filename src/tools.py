@@ -18,9 +18,17 @@ def interval_name(interval: timedelta) -> str:
     }[interval]
 
 
+def url_encode(name: str) -> str:
+    return urllib.parse.quote(name, safe='')
+
+
 def last_sunday(dt: datetime):
     d = dt.toordinal()
     return datetime.fromordinal(d - (d % 7))
+
+
+def utc_now():
+    return datetime.now(tz=timezone.utc)
 
 
 def dt_round(dt: datetime, interval: timedelta) -> datetime:
@@ -29,10 +37,6 @@ def dt_round(dt: datetime, interval: timedelta) -> datetime:
         INTERVAL_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0),
         INTERVAL_1W: last_sunday
     }[interval]()
-
-
-def url_encode(name: str) -> str:
-    return urllib.parse.quote(name, safe='')
 
 
 def from_ts_ms(ts: int) -> datetime:

@@ -88,6 +88,6 @@ def test_dict_it():
 
 def test_progress():
     progress = tools.Progress(test_progress.__name__, length=2)
-    progress('test1')
-    progress('test2')
+    progress('start')
+    progress('end')
     assert progress.count == progress.length
