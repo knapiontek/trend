@@ -32,10 +32,10 @@ def utc_now():
 
 def dt_round(dt: datetime, interval: timedelta) -> datetime:
     return {
-        INTERVAL_1H: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        INTERVAL_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0),
+        INTERVAL_1H: lambda dt: dt.replace(minute=0, second=0, microsecond=0),
+        INTERVAL_1D: lambda dt: dt.replace(hour=0, minute=0, second=0, microsecond=0),
         INTERVAL_1W: last_sunday
-    }[interval]()
+    }[interval](dt)
 
 
 def from_ts_ms(ts: int) -> datetime:

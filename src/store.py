@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import timedelta
 from functools import lru_cache
 from typing import List, Tuple, Iterable, Dict, Any
 
@@ -78,9 +77,9 @@ def create_collection(db: StandardDatabase, name: str):
 
 
 class DBSeries:
-    def __init__(self, interval: timedelta, editable=False):
+    def __init__(self, collection_name: str, editable=False):
+        self.collection_name = collection_name
         self.editable = editable
-        self.collection_name = f'series_{tools.interval_name(interval)}'
         self.db = db_connect()
         create_collection(self.db, self.collection_name)
 
@@ -117,7 +116,7 @@ class DBSeries:
 
     def time_range(self) -> List[Dict]:
         query = '''
-            FOR series IN series_1d
+            FOR series IN yahoo_series_1d
                 COLLECT symbol = series.symbol
                 AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
                 RETURN {symbol, min_ts, max_ts}

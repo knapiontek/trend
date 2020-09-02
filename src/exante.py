@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Dict
 
 import requests
 
-from src import config, tools
+from src import config, tools, store
 
 LOG = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Session(requests.Session):
         assert response.status_code == 200, response.text
         return response.json()
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         max_size = 1000
         symbol_dict = {'symbol': symbol}
         params = {
@@ -65,3 +65,10 @@ class Session(requests.Session):
         size = len(candles)
         assert size < max_size
         return [{**c, **symbol_dict} for c in candles]  # add symbol
+
+
+class DBSeries(store.DBSeries):
+    def __init__(self, interval: timedelta, editable=False):
+        module = __name__.split('.')[-1]
+        name = f'{module}_series_{tools.interval_name(interval)}'
+        super(DBSeries, self).__init__(name, editable)
