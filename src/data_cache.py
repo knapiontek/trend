@@ -112,6 +112,6 @@ def verify_series():
 if __name__ == '__main__':
     log.init(__file__, to_screen=True)
 
-    # reload_exchanges()
-    update_series()
-    # verify_series()
+    reload_exchanges()
+    # update_series()
+    verify_series()

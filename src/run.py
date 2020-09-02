@@ -12,6 +12,7 @@ def get_args():
     parser.add_argument('--show-instrument-range', action='store_true')
     parser.add_argument('--empty-series', action='store_true')
     parser.add_argument('--update-series', action='store_true')
+    parser.add_argument('--verify-series', action='store_true')
 
     parser.add_argument('--log-to-file', action='store_true')
     parser.add_argument('--log-to-screen', action='store_true')
@@ -34,6 +35,8 @@ def main():
         store.empty_series()
     elif args.update_series:
         data_cache.update_series()
+    elif args.verify_series:
+        data_cache.verify_series()
 
 
 if __name__ == '__main__':

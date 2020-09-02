@@ -1,4 +1,3 @@
-import sys
 import time
 import urllib.parse
 from collections import defaultdict
@@ -114,8 +113,7 @@ class Progress:
 
     def __call__(self, message: str = ''):
         self.count += 1
-        sys.stdout.write(f'\r{self.title}: {100 * self.count / self.length:.1f}% {message}')
+        print(f'{self.title}: {100 * self.count / self.length:.1f}% {message}                               ', end='\r')
         if self.count == self.length:
-            sys.stdout.write('\n')
-        sys.stdout.flush()
+            print('\n')
         return self
