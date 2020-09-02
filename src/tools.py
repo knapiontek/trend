@@ -2,7 +2,7 @@ import sys
 import time
 import urllib.parse
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from typing import List, Dict, Iterable, Tuple, Union
 
 INTERVAL_1H = timedelta(hours=1)
@@ -35,16 +35,14 @@ def url_encode(name: str) -> str:
     return urllib.parse.quote(name, safe='')
 
 
-def from_ts_ms(ts: int, tz: timezone) -> datetime:
-    return datetime.fromtimestamp(ts / 1000, tz=tz)
+def from_ts_ms(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts / 1000)
 
 
 def to_ts_ms(dt: datetime) -> int:
     return int(time.mktime(dt.utctimetuple()) * 1000 + dt.microsecond / 1000)
 
 
-UTC_TZ = timezone(timedelta(hours=0), 'GMT')
-DUBLIN_TZ = timezone(timedelta(hours=1), 'GMT')
 DT_FORMAT = '%Y-%m-%d %H:%M:%S%z'
 
 
@@ -56,8 +54,8 @@ def dt_format(dt: datetime):
     return dt.strftime(DT_FORMAT)
 
 
-def ts_format(ts: int, tz: timezone):
-    dt = from_ts_ms(ts, tz)
+def ts_format(ts: int):
+    dt = from_ts_ms(ts)
     return dt_format(dt)
 
 

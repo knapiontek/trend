@@ -47,17 +47,15 @@ CANDLE_SCHEMA = {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
+            'symbol': {'type': 'string'},
             'timestamp': {'type': 'integer'},
             'open': {'type': 'string'},
-            'low': {'type': 'string'},
             'close': {'type': 'string'},
-            'volume': {'type': 'string', 'format': 'integer'},
+            'low': {'type': 'string'},
             'high': {'type': 'string'},
-            'utc': {'type': 'string'},
-            'dublin': {'type': 'string'},
-            'symbol': {'type': 'string'}
+            'volume': {'type': 'string', 'format': 'integer'}
         },
-        'required': ['close', 'dublin', 'high', 'low', 'open', 'symbol', 'timestamp', 'utc', 'volume']
+        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
     }
 }
 
@@ -108,7 +106,7 @@ class DBSeries:
             raise Exception(error)
         return self
 
-    def __getitem__(self, symbol) -> List[Dict]:
+    def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
             FOR series IN series_1d
                 FILTER series.symbol == @symbol
@@ -121,8 +119,8 @@ class DBSeries:
         query = '''
             FOR series IN series_1d
                 COLLECT symbol = series.symbol
-                AGGREGATE min_utc = MIN(series.utc), max_utc = MAX(series.utc)
-                RETURN {symbol, min_utc, max_utc}
+                AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
+                RETURN {symbol, min_ts, max_ts}
         '''
         result = self.tnx_db.aql.execute(query)
         return list(result)

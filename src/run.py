@@ -1,7 +1,7 @@
 import argparse
 from functools import lru_cache
 
-from src import store, data_cache
+from src import store, data_cache, log
 
 
 @lru_cache(maxsize=1)
@@ -14,6 +14,8 @@ def get_args():
 
 
 def main():
+    log.init(__file__, persist=False)
+
     args = get_args()
     if args.entry == 'reload-exchanges':
         data_cache.reload_exchanges()

@@ -5,20 +5,19 @@ from src import tools, exante
 
 def test_time_series():
     symbol = 'XOM.NYSE'
-    duration = exante.DURATION_1H
+    interval = tools.INTERVAL_1H
     dt_from = datetime(2020, 2, 2, 23)
     dt_to = datetime(2020, 2, 4, 19)
-    slice_delta = timedelta(hours=15)
-    time_delta = timedelta(seconds=duration)
+    delta = timedelta(hours=15)
 
     time_ranges = []
     closing_prices = []
 
     with exante.Session() as session:
-        for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, time_delta):
-            series = session.series(symbol, start, stop, duration)
+        for start, stop in tools.time_slices(dt_from, dt_to, delta, interval):
+            series = session.series(symbol, start, stop, interval)
             time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
-            closing_prices += [tuple(c[key] for key in ('utc', 'close', 'volume')) for c in series]
+            closing_prices += tools.tuple_it(series, ('timestamp', 'close', 'volume'))
 
     assert time_ranges == [
         ('2020-02-03 00:00:00', '2020-02-03 14:00:00'),
