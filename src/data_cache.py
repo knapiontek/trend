@@ -58,12 +58,12 @@ def update_series():
     with yahoo.Session() as session:
         progress = tools.Progress('series-update', len(instruments_latest))
         for symbol, dt_from in instruments_latest.items():
+            progress(symbol)
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, interval):
                 time_series = session.series(symbol, slice_from, slice_to, interval)
 
                 with yahoo.DBSeries(interval, editable=True) as db_series:
                     db_series += time_series
-            progress(symbol)
 
 
 def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:

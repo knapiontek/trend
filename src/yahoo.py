@@ -29,6 +29,8 @@ class Session:
 
     @staticmethod
     def series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+        if symbol in ('BF.B.NYSE', 'BRK.B.NYSE'):
+            return []
         yahoo_from = dt_to_yahoo(dt_from)
         yahoo_to = dt_to_yahoo(dt_to)
         yahoo_interval = interval_to_yahoo(interval)
@@ -43,23 +45,22 @@ class Session:
                                                    time_interval=yahoo_interval)
 
             for ticker, datum in data.items():
-                if 'timeZone' in datum and 'prices' in datum:
-                    offset = datum['timeZone']['gmtOffset']
-                    prices = datum['prices']
-                    keys = ('date', 'open', 'close', 'low', 'high', 'volume')
-                    for date, _open, close, low, high, volume in tools.tuple_it(prices, keys):
-                        item = {
-                            'symbol': symbol,
-                            'timestamp': (date + offset) * 1000,
-                            'open': _open,
-                            'close': close,
-                            'low': low,
-                            'high': high,
-                            'volume': volume
-                        }
-                        items.append(item)
+                offset = datum['timeZone']['gmtOffset']
+                prices = datum['prices']
+                keys = ('date', 'open', 'close', 'low', 'high', 'volume')
+                for date, _open, close, low, high, volume in tools.tuple_it(prices, keys):
+                    item = {
+                        'symbol': symbol,
+                        'timestamp': (date + offset) * 1000,
+                        'open': _open,
+                        'close': close,
+                        'low': low,
+                        'high': high,
+                        'volume': volume
+                    }
+                    items.append(item)
         except:
-            LOG.exception('Yahoo API problem')
+            LOG.exception(f'Yahoo API problem! Symbol: {symbol}')
 
         return items
 
