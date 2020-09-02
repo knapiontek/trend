@@ -2,7 +2,7 @@ import sys
 import time
 import urllib.parse
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Iterable, Tuple, Union
 
 INTERVAL_1H = timedelta(hours=1)
@@ -36,7 +36,7 @@ def url_encode(name: str) -> str:
 
 
 def from_ts_ms(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts / 1000)
+    return datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
 
 
 def to_ts_ms(dt: datetime) -> int:

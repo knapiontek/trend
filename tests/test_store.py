@@ -19,19 +19,3 @@ def test_editable():
         pass
     else:
         assert False
-
-
-def test_tuple_it():
-    with store.FileStore('S&P500') as sp500:
-        for symbol, security, location in sp500.tuple_it(keys=('Symbol', 'Security', 'Headquarters Location')):
-            if symbol == 'ZTS':
-                assert security == 'Zoetis'
-                assert location == 'Florham Park, New Jersey'
-
-
-def test_dict_it():
-    with store.FileStore('S&P500') as sp500:
-        for dt in sp500.dict_it(keys=('Symbol', 'Security', 'Headquarters Location')):
-            if dt['Symbol'] == 'ZTS':
-                assert dt['Security'] == 'Zoetis'
-                assert dt['Headquarters Location'] == 'Florham Park, New Jersey'

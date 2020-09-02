@@ -17,7 +17,10 @@ def test_time_series():
         for start, stop in tools.time_slices(dt_from, dt_to, delta, interval):
             series = session.series(symbol, start, stop, interval)
             time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
-            closing_prices += tools.tuple_it(series, ('timestamp', 'close', 'volume'))
+            closing_prices += [
+                (tools.ts_format(timestamp), close, volume)
+                for timestamp, close, volume in tools.tuple_it(series, ('timestamp', 'close', 'volume'))
+            ]
 
     assert time_ranges == [
         ('2020-02-03 00:00:00', '2020-02-03 14:00:00'),

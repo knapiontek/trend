@@ -70,19 +70,20 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval:
         series = db_series[symbol]
 
     exchange = symbol.split('.')[-1]
+    dt_holidays = {tools.dt_parse(d) for d in holidays.HOLIDAYS[exchange]}
     db_dates = {tools.from_ts_ms(s['timestamp']) for s in series}
-    overlap = db_dates & holidays.HOLIDAYS[exchange]
+
+    overlap = db_dates & dt_holidays
     if overlap:
-        health['overlap'] = list(overlap)
-    all_days = db_dates | holidays.HOLIDAYS[exchange]
+        health['overlap'] = [tools.dt_format(d) for d in overlap]
+    all_days = db_dates | dt_holidays
 
     missing = []
     start = dt_from
     while start < dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
-            date = tools.dt_format(start)
-            if date not in all_days:
-                missing.append(date)
+            if start not in all_days:
+                missing.append(tools.dt_format(start))
         start += interval
     if missing:
         health['missing'] = missing
@@ -109,6 +110,6 @@ def verify_series():
 if __name__ == '__main__':
     log.init(__file__, persist=False)
 
-    # reload_exchanges()
+    reload_exchanges()
     update_series()
-    # verify_series()
+    verify_series()
