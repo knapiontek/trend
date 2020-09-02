@@ -32,9 +32,9 @@ def reload_exchanges():
 
 
 def show_instrument_range():
-    with store.DBSeries(tools.INTERVAL_1D) as series:
-        time_range = series.time_range()
-        print(json.dumps(time_range))
+    with store.DBSeries(tools.INTERVAL_1D) as dt_series:
+        time_range = dt_series.time_range()
+        print(json.dumps(time_range, indent=2))
 
 
 def update_series():
@@ -56,12 +56,14 @@ def update_series():
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
     with exante.Session() as session:
+        progress = tools.Progress('series-update', len(instruments_latest))
         for symbol, dt_from in instruments_latest.items():
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, interval):
                 time_series = session.series(symbol, slice_from, slice_to, interval)
 
                 with store.DBSeries(interval, editable=True) as db_series:
                     db_series += time_series
+            progress(symbol)
 
 
 def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
@@ -98,13 +100,13 @@ def verify_series():
     length = len(time_range)
     LOG.debug(f'loaded time-range entries: {length}')
 
-    progress = tools.Progress('series-health', length)
     with store.FileStore('series-health', editable=True) as health:
+        progress = tools.Progress('series-health', length)
         for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
             symbol_health = verify_instrument(symbol, tools.from_ts_ms(ts_from), tools.from_ts_ms(ts_to), interval)
             if symbol_health:
                 health[symbol] = symbol_health
-            progress += 1
+            progress(symbol)
 
 
 if __name__ == '__main__':

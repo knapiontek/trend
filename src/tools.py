@@ -103,14 +103,14 @@ def dict_it(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[
 
 
 class Progress:
-    def __init__(self, message: str, length: int):
+    def __init__(self, title: str, length: int):
         self.count = 0
-        self.message = message
+        self.title = title
         self.length = length
 
-    def __add__(self, i: int):
-        self.count += i
-        sys.stdout.write(f'\r{self.message}: {100 * self.count / self.length:.1f}%')
+    def __call__(self, message: str = ''):
+        self.count += 1
+        sys.stdout.write(f'\r{self.title}: {100 * self.count / self.length:.1f}% {message}')
         if self.count == self.length:
             sys.stdout.write('\n')
         sys.stdout.flush()

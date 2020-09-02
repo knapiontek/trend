@@ -59,11 +59,9 @@ class Session(requests.Session):
         }
         duration = interval_to_duration(interval)
         url = f'{URL}/ohlc/{tools.url_encode(symbol)}/{duration}'
-        LOG.debug(f'url: {url} from: {tools.dt_format(dt_from)} to: {tools.dt_format(dt_to)}')
         response = self.get(url=url, params=params)
         assert response.status_code == 200, response.text
         candles = response.json()
         size = len(candles)
         assert size < max_size
-        LOG.debug(f'received candles: {size}')
         return [{**c, **symbol_dict} for c in candles]  # add symbol
