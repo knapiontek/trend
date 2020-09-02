@@ -29,8 +29,6 @@ class Session:
 
     @staticmethod
     def series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
-        if symbol in ('BF.B.NYSE', 'BRK.B.NYSE'):
-            return []
         yahoo_from = dt_to_yahoo(dt_from)
         yahoo_to = dt_to_yahoo(dt_to)
         yahoo_interval = interval_to_yahoo(interval)

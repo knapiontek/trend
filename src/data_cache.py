@@ -21,13 +21,15 @@ def read_sp500() -> Dict:
 
 
 def reload_exchanges():
+    exclude = ('BF.B.NYSE', 'BRK.B.NYSE')  # yahoo fails
     sp500 = read_sp500()
     sp500_symbols = [symbol for symbol, security in tools.tuple_it(sp500, ['Symbol', 'Security'])]
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = session.symbols(exchange)
-                content[exchange] = [s for s in symbols if s['ticker'] in sp500_symbols]
+                content[exchange] = [s for s in symbols
+                                     if s['ticker'] in sp500_symbols and s['symbolId'] not in exclude]
                 LOG.info(f'imported {len(content[exchange])} instruments from {exchange}')
 
 

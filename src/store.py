@@ -107,21 +107,21 @@ class DBSeries:
 
     def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
-            FOR series IN yahoo_series_1d
+            FOR series IN @@collection
                 FILTER series.symbol == @symbol
                 RETURN series
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol})
+        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.collection_name})
         return list(result)
 
     def time_range(self) -> List[Dict]:
         query = '''
-            FOR series IN yahoo_series_1d
+            FOR series IN @@collection
                 COLLECT symbol = series.symbol
                 AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
                 RETURN {symbol, min_ts, max_ts}
         '''
-        result = self.tnx_db.aql.execute(query)
+        result = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.collection_name})
         return list(result)
 
 

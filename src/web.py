@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, exante
+from src import store, tools, style, yahoo
 
 app = dash.Dash(title='trend', external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
 
@@ -73,7 +73,7 @@ def cb_price_graph(data, selected_rows):
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbolId']
-        with exante.DBSeries(tools.INTERVAL_1D) as series:
+        with yahoo.DBSeries(tools.INTERVAL_1D) as series:
             time_series = series[symbol]
 
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
