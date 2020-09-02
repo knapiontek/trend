@@ -107,7 +107,7 @@ class DBSeries:
 
     def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
-            FOR series IN series_1d
+            FOR series IN yahoo_series_1d
                 FILTER series.symbol == @symbol
                 RETURN series
         '''

@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 
 from yahoofinancials import YahooFinancials
 
 from src import tools, store
+
+LOG = logging.getLogger(__name__)
 
 
 def interval_to_yahoo(interval: timedelta):
@@ -31,27 +34,32 @@ class Session:
         yahoo_interval = interval_to_yahoo(interval)
 
         ticker = '.'.join(symbol.split('.')[:-1])
-        yahoo = YahooFinancials(ticker)
-        data = yahoo.get_historical_price_data(start_date=yahoo_from,
-                                               end_date=yahoo_to,
-                                               time_interval=yahoo_interval)
-
         items = []
-        for ticker, datum in data.items():
-            if 'timeZone' in datum and 'prices' in datum:
-                offset = datum['timeZone']['gmtOffset']
-                prices = datum['prices']
-                keys = ('date', 'open', 'close', 'low', 'high', 'volume')
-                for date, _open, close, low, high, volume in tools.tuple_it(prices, keys):
-                    item = {
-                        'symbol': symbol,
-                        'timestamp': (date + offset) * 1000,
-                        'open': _open,
-                        'close': close,
-                        'low': low,
-                        'high': high
-                    }
-                    items.append(item)
+
+        try:
+            yahoo = YahooFinancials(ticker)
+            data = yahoo.get_historical_price_data(start_date=yahoo_from,
+                                                   end_date=yahoo_to,
+                                                   time_interval=yahoo_interval)
+
+            for ticker, datum in data.items():
+                if 'timeZone' in datum and 'prices' in datum:
+                    offset = datum['timeZone']['gmtOffset']
+                    prices = datum['prices']
+                    keys = ('date', 'open', 'close', 'low', 'high', 'volume')
+                    for date, _open, close, low, high, volume in tools.tuple_it(prices, keys):
+                        item = {
+                            'symbol': symbol,
+                            'timestamp': (date + offset) * 1000,
+                            'open': _open,
+                            'close': close,
+                            'low': low,
+                            'high': high,
+                            'volume': volume
+                        }
+                        items.append(item)
+        except:
+            LOG.exception('Yahoo API problem')
 
         return items
 
