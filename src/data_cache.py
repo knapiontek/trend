@@ -21,14 +21,12 @@ def read_sp500() -> Dict:
 
 
 def reload_exchanges():
-    sp500 = read_sp500()
-    # TODO: replace tuple_it() with it(sp500, 'Symbol')
-    sp500_symbols = [symbol for symbol, security in tools.tuple_it(sp500, ('Symbol', 'Security'))]
+    sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = session.symbols(exchange)
-                content[exchange] = [s for s in symbols if s['ticker'] in sp500_symbols]
+                content[exchange] = [s for s in symbols if s['ticker'] in sp500]
                 LOG.info(f'imported {len(content[exchange])} instruments from {exchange}')
 
 
@@ -115,6 +113,6 @@ def verify_series():
 if __name__ == '__main__':
     log.init(__file__, to_screen=True)
 
-    # reload_exchanges()
-    update_series()
+    reload_exchanges()
+    # update_series()
     # verify_series()

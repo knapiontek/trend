@@ -3,7 +3,7 @@ import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Iterable, Tuple, Union
+from typing import List, Dict, Iterable, Tuple, Union, Any
 
 INTERVAL_1H = timedelta(hours=1)
 INTERVAL_1D = timedelta(days=1)
@@ -104,6 +104,17 @@ def dict_it(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[
     elif isinstance(data, Iterable):
         for i in data:
             yield {k: i[k] for k in keys}
+
+
+def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
+    if isinstance(data, Dict):
+        schema = data['schema']
+        index = schema.index(key)
+        for datum in data['data']:
+            yield datum[index]
+    elif isinstance(data, Iterable):
+        for datum in data:
+            yield datum[key]
 
 
 class Progress:

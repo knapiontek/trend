@@ -38,6 +38,9 @@ class FileStore(dict):
     def dict_it(self, keys: Iterable[str]) -> Iterable[Dict]:
         return tools.dict_it(self, keys)
 
+    def loop_it(self, key: str) -> Iterable[Any]:
+        return tools.loop_it(self, key)
+
 
 CANDLE_SCHEMA = {
     'message': 'candle-schema',

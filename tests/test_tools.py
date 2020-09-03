@@ -86,6 +86,14 @@ def test_dict_it():
         assert dt == {'k1': 'v1'}
 
 
+def test_loop_it():
+    result1 = [v1 for v1 in tools.loop_it(FRAME1, 'key1')]
+    assert result1 == ['v11', 'v21']
+
+    for v1 in tools.loop_it(FRAME2, 'k1'):
+        assert v1 == 'v1'
+
+
 def test_progress():
     progress = tools.Progress(test_progress.__name__, length=2)
     progress('start')
