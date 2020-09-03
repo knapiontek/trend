@@ -77,16 +77,16 @@ def create_collection(db: StandardDatabase, name: str):
 
 
 class DBSeries:
-    def __init__(self, collection_name: str, editable=False):
-        self.collection_name = collection_name
+    def __init__(self, name: str, editable=False):
+        self.name = name
         self.editable = editable
         self.db = db_connect()
-        create_collection(self.db, self.collection_name)
+        create_collection(self.db, self.name)
 
     def __enter__(self) -> 'DBSeries':
-        write = self.collection_name if self.editable else None
-        self.tnx_db = self.db.begin_transaction(read=self.collection_name, write=write)
-        self.tnx_collection = self.tnx_db.collection(self.collection_name)
+        write = self.name if self.editable else None
+        self.tnx_db = self.db.begin_transaction(read=self.name, write=write)
+        self.tnx_collection = self.tnx_db.collection(self.name)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -111,7 +111,7 @@ class DBSeries:
                 FILTER series.symbol == @symbol
                 RETURN series
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.collection_name})
+        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
         return list(result)
 
     def time_range(self) -> List[Dict]:
@@ -121,7 +121,7 @@ class DBSeries:
                 AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
                 RETURN {symbol, min_ts, max_ts}
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.collection_name})
+        result = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
         return list(result)
 
 

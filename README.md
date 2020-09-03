@@ -74,3 +74,9 @@ conda env create -n trend-py37 -f requirements.yml
 conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 ```
+
+### TODO
+
+- Parameterize code with data providers (yahoo, exante)
+- Fix Progress class issues with flush and complete
+- tuple_it() or a new function should work with single key

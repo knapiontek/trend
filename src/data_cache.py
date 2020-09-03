@@ -21,15 +21,14 @@ def read_sp500() -> Dict:
 
 
 def reload_exchanges():
-    exclude = ('BF.B.NYSE', 'BRK.B.NYSE')  # yahoo fails
     sp500 = read_sp500()
-    sp500_symbols = [symbol for symbol, security in tools.tuple_it(sp500, ['Symbol', 'Security'])]
+    # TODO: replace tuple_it() with it(sp500, 'Symbol')
+    sp500_symbols = [symbol for symbol, security in tools.tuple_it(sp500, ('Symbol', 'Security'))]
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = session.symbols(exchange)
-                content[exchange] = [s for s in symbols
-                                     if s['ticker'] in sp500_symbols and s['symbolId'] not in exclude]
+                content[exchange] = [s for s in symbols if s['ticker'] in sp500_symbols]
                 LOG.info(f'imported {len(content[exchange])} instruments from {exchange}')
 
 
@@ -70,7 +69,7 @@ def update_series():
 
 def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
     health = {}
-    with exante.DBSeries(interval) as db_series:
+    with yahoo.DBSeries(interval) as db_series:
         series = db_series[symbol]
 
     exchange = symbol.split('.')[-1]
@@ -97,18 +96,20 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval:
 
 def verify_series():
     interval = tools.INTERVAL_1D
-    with exante.DBSeries(interval) as series:
+    with yahoo.DBSeries(interval) as series:
         time_range = series.time_range()
     length = len(time_range)
     LOG.debug(f'loaded time-range entries: {length}')
 
-    with store.FileStore('series-health', editable=True) as health:
-        progress = tools.Progress('series-health', length)
+    name = f'series-yahoo-{tools.interval_name(interval)}-health'
+    with store.FileStore(name, editable=True) as health:
+        progress = tools.Progress(name, length)
         for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
+            progress(symbol)
             symbol_health = verify_instrument(symbol, tools.from_ts_ms(ts_from), tools.from_ts_ms(ts_to), interval)
             if symbol_health:
                 health[symbol] = symbol_health
-            progress(symbol)
+        progress()
 
 
 if __name__ == '__main__':
@@ -116,4 +117,4 @@ if __name__ == '__main__':
 
     reload_exchanges()
     update_series()
-    # verify_series()
+    verify_series()

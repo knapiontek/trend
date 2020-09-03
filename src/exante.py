@@ -70,5 +70,5 @@ class Session(requests.Session):
 class DBSeries(store.DBSeries):
     def __init__(self, interval: timedelta, editable=False):
         module = __name__.split('.')[-1]
-        name = f'{module}_series_{tools.interval_name(interval)}'
+        name = f'series_{module}_{tools.interval_name(interval)}'
         super(DBSeries, self).__init__(name, editable)
