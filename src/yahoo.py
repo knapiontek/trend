@@ -38,15 +38,29 @@ def timestamp_from_yahoo(date: str):
     return tools.to_ts_ms(dt)
 
 
+def float_from_yahoo(value: str) -> float:
+    try:
+        return float(value)
+    except:
+        return 0.0
+
+
+def int_from_yahoo(value: str) -> int:
+    try:
+        return int(value)
+    except:
+        return 0
+
+
 def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
     return {
         'symbol': symbol,
         'timestamp': timestamp_from_yahoo(dt['Date']),
-        'open': float(dt['Open']),
-        'close': float(dt['Close']),
-        'low': float(dt['Low']),
-        'high': float(dt['High']),
-        'volume': int(dt['Volume'])
+        'open': float_from_yahoo(dt['Open']),
+        'close': float_from_yahoo(dt['Close']),
+        'low': float_from_yahoo(dt['Low']),
+        'high': float_from_yahoo(dt['High']),
+        'volume': int_from_yahoo(dt['Volume'])
     }
 
 

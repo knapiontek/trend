@@ -16,9 +16,9 @@ def timestamp_from_yahoo(date: str):
     return int(time.mktime(dt.utctimetuple()))
 
 
-SYMBOLS = ['XOM', 'AAPL']
-PERIOD1 = timestamp_from_yahoo('2020-08-12')
-PERIOD2 = timestamp_from_yahoo('2020-08-22')
+SYMBOLS = ['XOM', 'VIAC']
+PERIOD1 = timestamp_from_yahoo('2018-12-01')
+PERIOD2 = timestamp_from_yahoo('2019-12-07')
 INTERVAL = '1d'
 
 QUOTE_URL = 'https://finance.yahoo.com/quote'
