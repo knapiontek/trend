@@ -3,7 +3,7 @@ import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Iterable, Tuple, Union, Any
+from typing import List, Dict, Iterable, Tuple, Union, Any, Sized
 
 INTERVAL_1H = timedelta(hours=1)
 INTERVAL_1D = timedelta(days=1)
@@ -118,12 +118,12 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
 
 
 class Progress:
-    def __init__(self, title: str, length: int):
-        self.count = 0
+    def __init__(self, title: str, sized: Sized):
+        self.count = -1
         self.title = title
-        self.length = length
+        self.length = len(sized)
 
-    def __call__(self, message: str = ''):
+    def __call__(self, message: str):
         self.count += 1
         sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% {message}                            \r')
         if self.count == self.length:

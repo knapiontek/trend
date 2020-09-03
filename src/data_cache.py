@@ -55,7 +55,7 @@ def update_series():
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
     with yahoo.Session() as session:
-        progress = tools.Progress('series-update', len(instruments_latest))
+        progress = tools.Progress('series-update', instruments_latest)
         for symbol, dt_from in instruments_latest.items():
             progress(symbol)
             for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, interval):
@@ -63,6 +63,7 @@ def update_series():
 
                 with yahoo.DBSeries(interval, editable=True) as db_series:
                     db_series += time_series
+        progress('done')
 
 
 def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
@@ -96,23 +97,22 @@ def verify_series():
     interval = tools.INTERVAL_1D
     with yahoo.DBSeries(interval) as series:
         time_range = series.time_range()
-    length = len(time_range)
-    LOG.debug(f'loaded time-range entries: {length}')
+    LOG.debug(f'loaded time-range entries: {len(time_range)}')
 
     name = f'series-yahoo-{tools.interval_name(interval)}-health'
     with store.FileStore(name, editable=True) as health:
-        progress = tools.Progress(name, length)
+        progress = tools.Progress(name, time_range)
         for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
             progress(symbol)
             symbol_health = verify_instrument(symbol, tools.from_ts_ms(ts_from), tools.from_ts_ms(ts_to), interval)
             if symbol_health:
                 health[symbol] = symbol_health
-        progress()
+        progress('done')
 
 
 if __name__ == '__main__':
     log.init(__file__, to_screen=True)
 
-    reload_exchanges()
-    # update_series()
-    # verify_series()
+    # reload_exchanges()
+    update_series()
+    verify_series()

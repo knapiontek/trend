@@ -78,4 +78,3 @@ conda activate trend-py37
 ### TODO
 
 - Parameterize code with data providers (yahoo, exante)
-- Fix Progress class issues with flush and complete
