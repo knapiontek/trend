@@ -1,12 +1,21 @@
+import csv
 import logging
+import re
+import time
 from datetime import datetime, timedelta
+from io import StringIO
 from typing import List, Dict
 
-from yahoofinancials import YahooFinancials
+import requests
 
 from src import tools, store
 
 LOG = logging.getLogger(__name__)
+
+DT_FORMAT = '%Y-%m-%d'
+QUOTE_URL = 'https://finance.yahoo.com/quote'
+SYMBOL_URL = 'https://query1.finance.yahoo.com/v7/finance/download/{symbol}'
+PATTERN = re.compile('"CrumbStore":{"crumb":"(.+?)"}')
 
 
 def symbol_to_yahoo(symbol: str):
@@ -14,56 +23,60 @@ def symbol_to_yahoo(symbol: str):
 
 
 def dt_to_yahoo(dt: datetime):
-    return dt.strftime('%Y-%m-%d')
+    return int(time.mktime(dt.utctimetuple()))
 
 
 def interval_to_yahoo(interval: timedelta):
     return {
-        tools.INTERVAL_1D: 'daily',
-        tools.INTERVAL_1W: 'weekly'
+        tools.INTERVAL_1D: '1d',
+        tools.INTERVAL_1W: '1wk'
     }[interval]
 
 
-class Session:
+def timestamp_from_yahoo(date: str):
+    dt = datetime.strptime(date, DT_FORMAT)
+    return tools.to_ts_ms(dt)
+
+
+def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
+    return {
+        'symbol': symbol,
+        'timestamp': timestamp_from_yahoo(dt['Date']),
+        'open': float(dt['Open']),
+        'close': float(dt['Close']),
+        'low': float(dt['Low']),
+        'high': float(dt['High']),
+        'volume': int(dt['Volume'])
+    }
+
+
+class Session(requests.Session):
     def __enter__(self) -> 'Session':
+        response = self.get(QUOTE_URL)
+        assert response.status_code == 200, response.text
+        found = re.search(PATTERN, response.text)
+        if not found:
+            raise RuntimeError('Yahoo API')
+        self.crumb = found.group(1)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    @staticmethod
-    def series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         yahoo_symbol = symbol_to_yahoo(symbol)
         yahoo_from = dt_to_yahoo(dt_from)
         yahoo_to = dt_to_yahoo(dt_to)
         yahoo_interval = interval_to_yahoo(interval)
-        items = []
 
-        try:
-            yahoo = YahooFinancials(yahoo_symbol)
-            prices = yahoo.get_historical_price_data(start_date=yahoo_from,
-                                                     end_date=yahoo_to,
-                                                     time_interval=yahoo_interval)
-
-            for s, datum in prices.items():
-                offset = datum['timeZone']['gmtOffset']
-                prices = datum['prices']
-                keys = ('date', 'open', 'close', 'low', 'high', 'volume')
-                for date, _open, close, low, high, volume in tools.tuple_it(prices, keys):
-                    item = {
-                        'symbol': symbol,
-                        'timestamp': (date + offset) * 1000,
-                        'open': _open,
-                        'close': close,
-                        'low': low,
-                        'high': high,
-                        'volume': volume
-                    }
-                    items.append(item)
-        except Exception:
-            LOG.exception(f'Yahoo Finance problem! Symbol: {symbol}')
-
-        return items
+        url = SYMBOL_URL.format(symbol=yahoo_symbol)
+        params = {
+            'period1': yahoo_from,
+            'period2': yahoo_to,
+            'interval': yahoo_interval,
+            'events': 'history',
+            'crumb': self.crumb
+        }
+        response = self.get(url, params=params)
+        assert response.status_code == 200, response.text
+        return [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
 
 
 class DBSeries(store.DBSeries):

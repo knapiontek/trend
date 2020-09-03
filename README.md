@@ -80,3 +80,5 @@ conda activate trend-py37
 - Parameterize code with data providers (yahoo, exante)
 - Fix Progress class issues with flush and complete
 - tuple_it() or a new function should work with single key
+- interval_to_yahoo and interval_name can be unified
+
