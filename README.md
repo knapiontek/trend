@@ -66,7 +66,7 @@ zkb silver
 trade break-outs with build-up
 
 ```bash
-time python src/run.py --entry show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
+time ./run.py --show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
 ```
 
 ```bash
@@ -77,4 +77,6 @@ conda activate trend-py37
 
 ### TODO
 
+- Create scheduler based on aiohttp
 - Parameterize code with data providers (yahoo, exante)
+- fix test_session() test
