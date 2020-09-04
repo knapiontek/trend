@@ -63,7 +63,6 @@ def schedule_topo_refresh_daily():
     dt = tools.utc_now()
     dt = dt.replace(hour=22, minute=13, second=0, microsecond=0)
     asyncio.create_task(run_daily_at(dt, task_example))
-    LOG.info(f'Topo refresh scheduled daily starting at {dt}')
 
 
 async def launch(app: web.Application) -> None:
@@ -71,7 +70,7 @@ async def launch(app: web.Application) -> None:
 
 
 async def shutdown(app: web.Application) -> None:
-    LOG.info("Shutting down scheduled tasks ...")
+    LOG.info("shutting down scheduled tasks ...")
     schedule_module = sys.modules[__name__]
     schedule_module.RUNNING = False
 
@@ -79,5 +78,5 @@ async def shutdown(app: web.Application) -> None:
         running_coros = {task._coro.__name__ for task in asyncio.Task.all_tasks() if not task.done()}
         if running_coros == {'_run_app'}:
             return
-        LOG.info(f"Waiting for running tasks {running_coros - {'_run_app'}}")
+        LOG.info(f"waiting for running tasks {running_coros - {'_run_app'}}")
         await asyncio.sleep(3)

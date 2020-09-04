@@ -104,7 +104,10 @@ def verify_series():
         progress = tools.Progress(name, time_range)
         for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
             progress(symbol)
-            symbol_health = verify_instrument(symbol, tools.from_timestamp(ts_from), tools.from_timestamp(ts_to), interval)
+            symbol_health = verify_instrument(symbol,
+                                              tools.from_timestamp(ts_from),
+                                              tools.from_timestamp(ts_to),
+                                              interval)
             if symbol_health:
                 health[symbol] = symbol_health
         progress('done')
@@ -115,4 +118,4 @@ if __name__ == '__main__':
 
     # reload_exchanges()
     update_series()
-    verify_series()
+    # verify_series()

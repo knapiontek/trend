@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
 from functools import lru_cache
 
 from src import store, data_cache, log
+
+LOG = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=1)
@@ -42,4 +45,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        LOG.exception('trend-app failed')

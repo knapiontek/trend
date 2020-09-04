@@ -56,7 +56,7 @@ class Session(session.Session):
         assert response.status_code == 200, response.text
         found = re.search(PATTERN, response.text)
         if not found:
-            raise RuntimeError('Yahoo API')
+            raise RuntimeError(f'expected response from the yahoo api: {PATTERN.pattern}')
         self.crumb = found.group(1)
         return self
 
