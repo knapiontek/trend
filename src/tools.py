@@ -1,5 +1,4 @@
 import sys
-import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -33,8 +32,8 @@ def utc_now():
 
 def dt_round(dt: datetime, interval: timedelta) -> datetime:
     return {
-        INTERVAL_1H: lambda dt: dt.replace(minute=0, second=0, microsecond=0),
-        INTERVAL_1D: lambda dt: dt.replace(hour=0, minute=0, second=0, microsecond=0),
+        INTERVAL_1H: lambda _dt: _dt.replace(minute=0, second=0, microsecond=0),
+        INTERVAL_1D: lambda _dt: _dt.replace(hour=0, minute=0, second=0, microsecond=0),
         INTERVAL_1W: last_sunday
     }[interval](dt)
 
@@ -44,7 +43,8 @@ def from_timestamp(ts: int) -> datetime:
 
 
 def to_timestamp(dt: datetime) -> int:
-    return int(time.mktime(dt.utctimetuple()))
+    assert dt.tzinfo
+    return int(dt.timestamp())
 
 
 DT_FORMAT = '%Y-%m-%d %H:%M:%S%z'

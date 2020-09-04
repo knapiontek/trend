@@ -1,7 +1,7 @@
 import csv
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict
 
@@ -32,7 +32,7 @@ def interval_to_yahoo(interval: timedelta):
 
 def timestamp_from_yahoo(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tools.to_timestamp(dt)
+    return tools.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
 def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
