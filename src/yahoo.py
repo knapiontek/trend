@@ -1,6 +1,7 @@
 import csv
 import logging
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict
@@ -74,6 +75,7 @@ class Session(session.Session):
             'events': 'history',
             'crumb': self.crumb
         }
+        time.sleep(0.6)
         response = self.get(url, params=params)
         assert response.status_code == 200, response.text
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]

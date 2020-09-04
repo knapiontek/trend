@@ -78,4 +78,3 @@ conda activate trend-py37
 ### TODO
 
 - Create scheduler based on aiohttp
-- yahoo config to file
