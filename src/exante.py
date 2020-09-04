@@ -8,7 +8,8 @@ from src import config, tools, store, session
 
 LOG = logging.getLogger(__name__)
 
-URL = config.exante_url()
+DATA_URL = 'https://api-live.exante.eu/md/3.0'
+TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
 def dt_to_exante(dt: datetime):
@@ -47,7 +48,7 @@ class Session(session.Session):
         self.auth = config.exante_auth()
 
     def symbols(self, exchange: str):
-        response = self.get(f'{URL}/exchanges/{exchange}')
+        response = self.get(f'{DATA_URL}/exchanges/{exchange}')
         assert response.status_code == 200, response.text
         return response.json()
 
@@ -56,7 +57,7 @@ class Session(session.Session):
         exante_to = dt_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)
 
-        url = f'{URL}/ohlc/{tools.url_encode(symbol)}/{exante_interval}'
+        url = f'{DATA_URL}/ohlc/{tools.url_encode(symbol)}/{exante_interval}'
         max_size = 1000
         params = {
             'from': exante_from,

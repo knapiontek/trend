@@ -22,12 +22,6 @@ def load_file():
         return config
 
 
-def exante_url() -> str:
-    config = load_file()
-    exante_config = config['exante']
-    return exante_config['data-url']
-
-
 def exante_auth() -> Tuple[str, str]:
     config = load_file()
     exante_config = config['exante']

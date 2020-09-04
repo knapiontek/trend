@@ -33,14 +33,6 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'data-url': {
-                    'type': 'string',
-                    'format': 'uri'
-                },
-                'trade-url': {
-                    'type': 'string',
-                    'format': 'uri'
-                },
                 'app': {
                     'type': 'string',
                     'format': 'uuid'
@@ -49,12 +41,7 @@ CONFIG_SCHEMA = {
                     'type': 'string'
                 }
             },
-            'required': [
-                'app',
-                'shared-key',
-                'trade-url',
-                'data-url'
-            ]
+            'required': ['app', 'shared-key']
         },
         'Quandl': {
             'type': 'object',
