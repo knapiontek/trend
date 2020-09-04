@@ -4,41 +4,44 @@ from typing import List, Dict
 
 import requests
 
-from src import config, tools, store
+from src import config, tools, store, session
 
 LOG = logging.getLogger(__name__)
 
 URL = config.exante_url()
 
-DURATION_1M = 60
-DURATION_5M = 5 * 60
-DURATION_10M = 10 * 60
-DURATION_15M = 15 * 60
-DURATION_1H = 60 * 60
-DURATION_6H = 6 * 60 * 60
-DURATION_1D = 24 * 60 * 60
+
+def dt_to_exante(dt: datetime):
+    return tools.to_timestamp(dt) * 1000
 
 
-def dt_round(dt: datetime, duration: int) -> datetime:
+def interval_to_exante(interval: timedelta):
     return {
-        DURATION_1M: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        DURATION_5M: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        DURATION_10M: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        DURATION_15M: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        DURATION_1H: lambda: dt.replace(minute=0, second=0, microsecond=0),
-        DURATION_6H: lambda: dt.replace(hour=dt.hour % 6, minute=0, second=0, microsecond=0),
-        DURATION_1D: lambda: dt.replace(hour=0, minute=0, second=0, microsecond=0)
-    }[duration]()
-
-
-def interval_to_duration(interval: timedelta):
-    return {
-        tools.INTERVAL_1H: DURATION_1H,
-        tools.INTERVAL_1D: DURATION_1D
+        tools.INTERVAL_1H: 60 * 60,
+        tools.INTERVAL_1D: 24 * 60 * 60
     }[interval]
 
 
-class Session(requests.Session):
+def timestamp_from_exante(ts: int):
+    return ts // 1000
+
+
+def price_from_exante(dt: Dict, symbol: str) -> Dict:
+    try:
+        return {
+            'symbol': symbol,
+            'timestamp': timestamp_from_exante(dt['timestamp']),
+            'open': float(dt['open']),
+            'close': float(dt['close']),
+            'low': float(dt['low']),
+            'high': float(dt['high']),
+            'volume': int(dt['volume'])
+        }
+    except:
+        return {}
+
+
+class Session(session.Session):
     def __init__(self):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
@@ -49,26 +52,28 @@ class Session(requests.Session):
         return response.json()
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+        exante_from = dt_to_exante(dt_from)
+        exante_to = dt_to_exante(dt_to)
+        exante_interval = interval_to_exante(interval)
+
+        url = f'{URL}/ohlc/{tools.url_encode(symbol)}/{exante_interval}'
         max_size = 1000
-        symbol_dict = {'symbol': symbol}
         params = {
-            'from': tools.to_ts_ms(dt_from),
-            'to': tools.to_ts_ms(dt_to),
+            'from': exante_from,
+            'to': exante_to,
             'size': max_size,
             'type': 'trades'
         }
-        duration = interval_to_duration(interval)
-        url = f'{URL}/ohlc/{tools.url_encode(symbol)}/{duration}'
-        response = self.get(url=url, params=params)
+        response = self.get(url, params=params)
         assert response.status_code == 200, response.text
-        candles = response.json()
-        size = len(candles)
+        data = response.json()
+        size = len(data)
         assert size < max_size
-        return [{**c, **symbol_dict} for c in candles]  # add symbol
+        return [price_from_exante(datum, symbol) for datum in data]
 
 
 class DBSeries(store.DBSeries):
     def __init__(self, interval: timedelta, editable=False):
         module = __name__.split('.')[-1]
         name = f'series_{module}_{tools.interval_name(interval)}'
-        super(DBSeries, self).__init__(name, editable)
+        super().__init__(name, editable)

@@ -51,7 +51,7 @@ def update_series():
         time_range = db_series.time_range()
     LOG.debug(f'loaded time-range entries: {len(time_range)}')
 
-    latest = {r['symbol']: tools.from_ts_ms(r['max_ts']) for r in time_range}
+    latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
     with yahoo.Session() as session:
@@ -73,7 +73,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval:
 
     exchange = symbol.split('.')[-1]
     dt_holidays = {tools.dt_parse(d) for d in holidays.HOLIDAYS[exchange]}
-    db_dates = {tools.from_ts_ms(s['timestamp']) for s in series}
+    db_dates = {tools.from_timestamp(s['timestamp']) for s in series}
 
     overlap = db_dates & dt_holidays
     if overlap:
@@ -104,7 +104,7 @@ def verify_series():
         progress = tools.Progress(name, time_range)
         for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
             progress(symbol)
-            symbol_health = verify_instrument(symbol, tools.from_ts_ms(ts_from), tools.from_ts_ms(ts_to), interval)
+            symbol_health = verify_instrument(symbol, tools.from_timestamp(ts_from), tools.from_timestamp(ts_to), interval)
             if symbol_health:
                 health[symbol] = symbol_health
         progress('done')

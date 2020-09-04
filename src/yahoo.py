@@ -1,14 +1,11 @@
 import csv
 import logging
 import re
-import time
 from datetime import datetime, timedelta
 from io import StringIO
 from typing import List, Dict
 
-import requests
-
-from src import tools, store
+from src import tools, store, session
 
 LOG = logging.getLogger(__name__)
 
@@ -23,7 +20,7 @@ def symbol_to_yahoo(symbol: str):
 
 
 def dt_to_yahoo(dt: datetime):
-    return int(time.mktime(dt.utctimetuple()))
+    return tools.to_timestamp(dt)
 
 
 def interval_to_yahoo(interval: timedelta):
@@ -35,7 +32,7 @@ def interval_to_yahoo(interval: timedelta):
 
 def timestamp_from_yahoo(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tools.to_ts_ms(dt)
+    return tools.to_timestamp(dt)
 
 
 def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
@@ -53,7 +50,7 @@ def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
         return {}
 
 
-class Session(requests.Session):
+class Session(session.Session):
     def __enter__(self) -> 'Session':
         response = self.get(QUOTE_URL)
         assert response.status_code == 200, response.text
@@ -87,4 +84,4 @@ class DBSeries(store.DBSeries):
     def __init__(self, interval: timedelta, editable=False):
         module = __name__.split('.')[-1]
         name = f'series_{module}_{tools.interval_name(interval)}'
-        super(DBSeries, self).__init__(name, editable)
+        super().__init__(name, editable)

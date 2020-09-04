@@ -39,12 +39,12 @@ def dt_round(dt: datetime, interval: timedelta) -> datetime:
     }[interval](dt)
 
 
-def from_ts_ms(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
+def from_timestamp(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts, tz=timezone.utc)
 
 
-def to_ts_ms(dt: datetime) -> int:
-    return int(time.mktime(dt.utctimetuple()) * 1000 + dt.microsecond / 1000)
+def to_timestamp(dt: datetime) -> int:
+    return int(time.mktime(dt.utctimetuple()))
 
 
 DT_FORMAT = '%Y-%m-%d %H:%M:%S%z'
@@ -59,7 +59,7 @@ def dt_format(dt: datetime):
 
 
 def ts_format(ts: int):
-    dt = from_ts_ms(ts)
+    dt = from_timestamp(ts)
     return dt_format(dt)
 
 

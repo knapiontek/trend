@@ -80,3 +80,5 @@ conda activate trend-py37
 - Create scheduler based on aiohttp
 - Parameterize code with data providers (yahoo, exante)
 - fix test_session() test
+- yahoo config to file
+

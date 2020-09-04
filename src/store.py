@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 
 class FileStore(dict):
     def __init__(self, name: str, editable=False):
-        super(FileStore, self).__init__()
+        super().__init__()
         self.editable = editable
         self.filename = config.STORE_PATH.joinpath(f'{name}.json')
 
@@ -30,7 +30,7 @@ class FileStore(dict):
 
     def __setitem__(self, key: str, value: Any):
         assert self.editable
-        super(FileStore, self).__setitem__(key, value)
+        super().__setitem__(key, value)
 
     def tuple_it(self, keys: Iterable[str]) -> Iterable[Tuple]:
         return tools.tuple_it(self, keys)
