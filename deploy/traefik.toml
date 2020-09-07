@@ -13,7 +13,7 @@ logLevel = "INFO"
     address = "127.0.0.1:1337"
     [entryPoints.admin.auth]
       [entryPoints.admin.auth.basic]
-        users = ["admin:$apr1$jVnQQ9Pi$3dXmaqu7A/O4vRGL84/ln1"]
+        users = ["admin:$apr1$TIvpJ2.c$bYGTekHTnDq9gExf/ycdl."]
 
 [api]
   entryPoint = "admin"
