@@ -1,4 +1,8 @@
 
+# TODO
+
+- Create scheduler based on aiohttp
+
 # Road Map
 
 ## Trading Engine
@@ -38,9 +42,6 @@
 ```bash
 curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
 cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
-https://rapidapi.com/apidojo/api/yahoo-finance1
-
-https://towardsdatascience.com/best-5-free-stock-market-apis-in-2019-ad91dddec984
 curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 ```
 
@@ -75,6 +76,11 @@ conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 ```
 
-### TODO
-
-- Create scheduler based on aiohttp
+```bash
+sudo apt install apache-utils
+echo $(htpasswd -nb <username> <password>) | sed -e s/\\$/\\$\\$/g
+docker run -d -p 8080:8080 -p 80:80 \
+-v $PWD/traefik.yml:/etc/traefik/traefik.yml \
+-v /var/run/docker.sock:/var/run/docker.sock \
+traefik:v2.0
+```
