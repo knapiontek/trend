@@ -5,7 +5,7 @@ mkdir ~/downloads
 
 # git
 ssh-keygen -t rsa -b 4096 -C "knapiontek@gmail.com"
-# add *.pub file to github
+# hint: add *.pub file to github account settings
 git clone git@github.com:knapiontek/trend.git
 
 # arangodb
@@ -32,7 +32,20 @@ sudo apt-get install authbind
 sudo touch /etc/authbind/byport/80
 sudo chmod 500 /etc/authbind/byport/80
 sudo chown $USER /etc/authbind/byport/80
-# re-login
-# deploy ~/.trend (see src/config_schema.py)
+# hint: re-login
+# hint: deploy ~/.trend (see src/config_schema.py)
 export PYTHONPATH=/home/ubuntu/trend
-authbind gunicorn src.web:server -b :80
+authbind gunicorn src.web:server -b :80 --daemon
+pkill gunicorn
+
+# certbot
+# hint: stop webserver to allow certbot to make a test on :80
+sudo certbot certonly --standalone
+sudo cat /etc/letsencrypt/live/gecko-code.info/privkey.pem
+sudo certbot renew --dry-run
+sudo certbot renew
+
+# copy letsencrypt certs
+cd ~/certs
+sudo cp -a /etc/letsencrypt/archive/gecko-code.info/. .
+sudo chown ubuntu:ubuntu *.pem
