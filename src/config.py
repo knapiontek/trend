@@ -8,6 +8,8 @@ import jsonschema
 from src import config_schema
 
 TREND_PATH = pathlib.Path(__file__).parent.parent
+SRC_PATH = TREND_PATH.joinpath('src')
+ASSETS_PATH = SRC_PATH.joinpath('assets')
 STORE_PATH = TREND_PATH.joinpath('store')
 LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()

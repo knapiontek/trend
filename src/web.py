@@ -9,9 +9,13 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, yahoo
+from src import store, tools, style, yahoo, config
 
-app = dash.Dash(title='trend', external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
+app = dash.Dash(title='trend',
+                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                assets_folder=config.ASSETS_PATH)
+server = app.server
+# gunicorn src.web:server -b :8000
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
 GRAPH_MARGIN = dict(l=15, r=15, t=40, b=15, pad=4)
