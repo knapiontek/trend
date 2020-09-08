@@ -32,6 +32,9 @@ sudo apt-get install authbind
 sudo touch /etc/authbind/byport/80
 sudo chmod 500 /etc/authbind/byport/80
 sudo chown $USER /etc/authbind/byport/80
+sudo touch /etc/authbind/byport/443
+sudo chmod 500 /etc/authbind/byport/443
+sudo chown $USER /etc/authbind/byport/443
 # hint: re-login
 # hint: deploy ~/.trend (see src/config_schema.py)
 export PYTHONPATH=/home/ubuntu/trend
