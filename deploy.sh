@@ -52,3 +52,4 @@ sudo certbot renew
 cd ~/certs
 sudo cp -a /etc/letsencrypt/archive/gecko-code.info/. .
 sudo chown ubuntu:ubuntu *.pem
+authbind gunicorn src.web:server --config gunicorn.py --daemon

@@ -3,6 +3,7 @@
 
 - implement dash_auth.BasicAuth
 - Create scheduler based on aiohttp
+- allow only TLS 1.3
 
 # Road Map
 
