@@ -94,5 +94,9 @@ def cb_price_graph(data, selected_rows):
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
 
 
+def run_dash(debug: bool):
+    return app.run_server(debug=debug)
+
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    run_dash(debug=True)

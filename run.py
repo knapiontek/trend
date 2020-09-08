@@ -4,7 +4,7 @@ import argparse
 import logging
 from functools import lru_cache
 
-from src import store, data_cache, log
+from src import store, data_cache, log, web
 
 LOG = logging.getLogger(__name__)
 
@@ -13,6 +13,7 @@ LOG = logging.getLogger(__name__)
 def get_args():
     parser = argparse.ArgumentParser(description='Trend Tools')
 
+    parser.add_argument('--web', action='store_true')
     parser.add_argument('--reload-exchanges', action='store_true')
     parser.add_argument('--show-instrument-range', action='store_true')
     parser.add_argument('--empty-series', action='store_true')
@@ -32,6 +33,8 @@ def main():
 
     log.init(__file__, to_screen=args.log_to_screen, to_file=args.log_to_file, debug=args.debug)
 
+    if args.web:
+        web.run_dash(args.debug)
     if args.reload_exchanges:
         data_cache.reload_exchanges()
     if args.show_instrument_range:

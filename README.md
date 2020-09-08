@@ -71,16 +71,9 @@ time ./run.py --show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
 ```
 
 ```bash
-conda env create -n trend-py37 -f requirements.yml
-conda env update -n trend-py37 -f requirements.yml
-conda activate trend-py37
-```
-
-```bash
-sudo apt install apache-utils
-echo $(htpasswd -nb <username> <password>) | sed -e s/\\$/\\$\\$/g
-docker run -d -p 8080:8080 -p 80:80 \
--v $PWD/traefik.yml:/etc/traefik/traefik.yml \
--v /var/run/docker.sock:/var/run/docker.sock \
-traefik:v2.0
+cat ~/.ssh/config
+Host lightsail
+  HostName 54.216.1.84
+    IdentityFile /home/kris/.ssh/lightsail
+    User ubuntu
 ```
