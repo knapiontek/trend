@@ -22,8 +22,16 @@ sudo service arangodb3 status
 wget -P ~/downloads/ https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh
 md5sum /home/ubuntu/downloads/Anaconda3-2020.07-Linux-x86_64.sh
 1046c40a314ab2531e4c099741530ada  /home/ubuntu/downloads/Anaconda3-2020.07-Linux-x86_64.sh
-mkdir ~/downloads
 bash Anaconda3-2020.07-Linux-x86_64.sh
 conda env create -n trend-py37 -f requirements.yml
 conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
+
+# run on port 80
+sudo apt-get install authbind
+sudo touch /etc/authbind/byport/80
+sudo chmod 500 /etc/authbind/byport/80
+sudo chown $USER /etc/authbind/byport/80
+# re-login
+export PYTHONPATH=/home/ubuntu/trend
+authbind gunicorn src.web:server -b :80
