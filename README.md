@@ -1,6 +1,7 @@
 
 # TODO
 
+- implement dash_auth.BasicAuth
 - Create scheduler based on aiohttp
 
 # Road Map
@@ -37,14 +38,6 @@
 3. Dow strategy
     - Enter on higher low with good risk/reward ratio (latest high and low)
 
-## Notes
-
-```bash
-curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
-cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
-curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
-```
-
 ### Price Action (bull market)
 
 - Green candles are bigger
@@ -66,9 +59,7 @@ zkb gold
 zkb silver
 trade break-outs with build-up
 
-```bash
-time ./run.py --show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
-```
+# CLI
 
 ```bash
 cat ~/.ssh/config
@@ -76,4 +67,8 @@ Host lightsail
   HostName 54.216.1.84
     IdentityFile /home/kris/.ssh/lightsail
     User ubuntu
+time ./run.py --show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
+curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
+cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
+curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 ```

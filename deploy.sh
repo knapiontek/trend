@@ -33,5 +33,6 @@ sudo touch /etc/authbind/byport/80
 sudo chmod 500 /etc/authbind/byport/80
 sudo chown $USER /etc/authbind/byport/80
 # re-login
+# deploy ~/.trend (see src/config_schema.py)
 export PYTHONPATH=/home/ubuntu/trend
 authbind gunicorn src.web:server -b :80
