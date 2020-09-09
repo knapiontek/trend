@@ -1,4 +1,4 @@
-sudo apt update
+sudo apt-get update
 mkdir /home/ubuntu/downloads
 
 # git
@@ -13,7 +13,7 @@ echo 'deb https://download.arangodb.com/arangodb37/DEBIAN/ /' | sudo tee /etc/ap
 sudo apt-get install apt-transport-https
 sudo apt-get update
 sudo apt-get install arangodb3=3.7.2-1
-root:rootpassword
+# hint: root:root
 sudo service arangodb3 status
 
 # anaconda
@@ -26,7 +26,7 @@ conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 
 # certbot
-sudo apt install certbot
+sudo apt-get install certbot
 # hint: stop webserver to allow certbot to make a test on :80
 sudo certbot certonly --standalone
 sudo cat /etc/letsencrypt/live/gecko-code.info/privkey.pem
@@ -37,7 +37,7 @@ sudo certbot renew
 sudo apt-get install nginx
 sudo unlink /etc/nginx/sites-enabled/default
 sudo cp nginx.conf /etc/nginx/sites-available/nginx.conf
-sudo link -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
+sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
 sudo service nginx configtest
 sudo service nginx restart
 
