@@ -25,6 +25,12 @@ conda env create -n trend-py37 -f requirements.yml
 conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 
+# run the app
+# hint: deploy /home/ubuntu/.trend (see src/config_schema.py)
+./run.py --reload-exchanges --update-series --log-to-screen
+./web.sh
+pkill --echo gunicorn
+
 # certbot
 sudo apt-get install certbot
 # hint: stop webserver to allow certbot to make a test on :80
@@ -43,8 +49,3 @@ sudo service nginx restart
 
 # finally
 sudo apt-get autoremove
-
-# run
-# hint: deploy /home/ubuntu/.trend (see src/config_schema.py)
-./run.sh
-pkill --echo gunicorn
