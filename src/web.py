@@ -2,6 +2,7 @@ import re
 from typing import Dict, List
 
 import dash
+import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -14,6 +15,7 @@ from src import store, tools, style, yahoo, config
 app = dash.Dash(title='trend',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
+auth = dash_auth.BasicAuth(app, {'admin': 'admin'})
 server = app.server  # gunicorn src.web:server -b :8000
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
@@ -32,7 +34,7 @@ data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='
 
 app.layout = html.Div(
     [
-        html.Div(symbol_table, className='three columns panel'),
+        html.Div(symbol_table, className='three columns panel scroll'),
         html.Div(data_graph, className='nine columns panel')
     ],
     className='dashboard row'
@@ -92,6 +94,7 @@ def cb_price_graph(data, selected_rows):
         figure.add_trace(prices, row=1, col=1)
         figure.add_trace(volume, row=2, col=1)
         figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
+        figure.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
         return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
