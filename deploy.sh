@@ -41,6 +41,9 @@ sudo link -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/ngin
 sudo service nginx configtest
 sudo service nginx restart
 
+# finally
+sudo apt-get autoremove
+
 # run
 # hint: deploy /home/ubuntu/.trend (see src/config_schema.py)
 ./run.sh
