@@ -1,3 +1,4 @@
+# hint: lightsail firewall ssh, http, https
 sudo apt-get update
 mkdir /home/ubuntu/downloads
 
