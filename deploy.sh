@@ -1,5 +1,5 @@
 sudo apt update
-mkdir ~/downloads
+mkdir /home/ubuntu/downloads
 
 # git
 ssh-keygen -t rsa -b 4096 -C "knapiontek@gmail.com"
@@ -17,27 +17,13 @@ root:rootpassword
 sudo service arangodb3 status
 
 # anaconda
-wget -P ~/downloads/ https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh
+wget -P /home/ubuntu/downloads/ https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh
 md5sum /home/ubuntu/downloads/Anaconda3-2020.07-Linux-x86_64.sh
 1046c40a314ab2531e4c099741530ada  /home/ubuntu/downloads/Anaconda3-2020.07-Linux-x86_64.sh
 bash Anaconda3-2020.07-Linux-x86_64.sh
 conda env create -n trend-py37 -f requirements.yml
 conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
-
-# run on port 80
-sudo apt-get install authbind
-sudo touch /etc/authbind/byport/80
-sudo chmod 500 /etc/authbind/byport/80
-sudo chown $USER /etc/authbind/byport/80
-sudo touch /etc/authbind/byport/443
-sudo chmod 500 /etc/authbind/byport/443
-sudo chown $USER /etc/authbind/byport/443
-# hint: re-login
-# hint: deploy ~/.trend (see src/config_schema.py)
-export PYTHONPATH=/home/ubuntu/trend
-authbind gunicorn src.web:server -b :80 --daemon
-pkill gunicorn
 
 # certbot
 sudo apt install certbot
@@ -47,8 +33,15 @@ sudo cat /etc/letsencrypt/live/gecko-code.info/privkey.pem
 sudo certbot renew --dry-run
 sudo certbot renew
 
-# copy letsencrypt certs
-cd ~/certs
-sudo cp -a /etc/letsencrypt/archive/gecko-code.info/. .
-sudo chown ubuntu:ubuntu *.pem
-authbind gunicorn src.web:server --config gunicorn.py --daemon
+# nginx
+sudo apt-get install nginx
+sudo unlink /etc/nginx/sites-enabled/default
+sudo cp nginx.conf /etc/nginx/sites-available/nginx.conf
+sudo link -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
+sudo service nginx configtest
+sudo service nginx restart
+
+# run
+# hint: deploy /home/ubuntu/.trend (see src/config_schema.py)
+./run.sh
+pkill --echo gunicorn
