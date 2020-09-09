@@ -1,6 +1,6 @@
 export PYTHONPATH=/home/ubuntu/trend
 
-pkill --echo --count gunicorn
+pkill --echo gunicorn
 sleep 3
 
 authbind gunicorn src.web:server \
