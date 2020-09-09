@@ -1,5 +1,8 @@
 export PYTHONPATH=/home/ubuntu/trend
 
+pkill --echo --count gunicorn
+sleep 3
+
 authbind gunicorn src.web:server \
   --bind :443 \
   --keyfile /home/ubuntu/certs/privkey1.pem \
