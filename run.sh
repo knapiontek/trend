@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export PYTHONPATH=/home/ubuntu/trend
 
 pkill --echo gunicorn
