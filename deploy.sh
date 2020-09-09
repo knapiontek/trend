@@ -1,6 +1,4 @@
 sudo apt update
-sudo apt install certbot
-
 mkdir ~/downloads
 
 # git
@@ -42,6 +40,7 @@ authbind gunicorn src.web:server -b :80 --daemon
 pkill gunicorn
 
 # certbot
+sudo apt install certbot
 # hint: stop webserver to allow certbot to make a test on :80
 sudo certbot certonly --standalone
 sudo cat /etc/letsencrypt/live/gecko-code.info/privkey.pem
