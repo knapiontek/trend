@@ -119,14 +119,21 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
 
 class Progress:
     def __init__(self, title: str, sized: Sized):
-        self.count = -1
+        self.count = 0
         self.title = title
         self.length = len(sized)
+
+    def __enter__(self) -> 'Progress':
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+        if not exc_type:
+            assert self.count == self.length
 
     def __call__(self, message: str):
         self.count += 1
         sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% {message}                            \r')
-        if self.count == self.length:
-            sys.stdout.write('\n')
         sys.stdout.flush()
         return self

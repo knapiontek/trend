@@ -95,8 +95,7 @@ def test_loop_it():
 
 
 def test_progress():
-    progress = tools.Progress(test_progress.__name__, [1, 2])
-    progress('1')
-    progress('2')
-    progress('done')
-    assert progress.count == progress.length
+    lst = [1, 2]
+    with tools.Progress(test_progress.__name__, lst) as progress:
+        progress('1')
+        progress('2')
