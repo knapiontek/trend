@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Dict, List
 
@@ -10,7 +11,9 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, yahoo, config
+from src import store, tools, style, yahoo, config, log
+
+LOG = logging.getLogger(__name__)
 
 app = dash.Dash(title='trend',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
@@ -65,6 +68,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
     # TODO: filtering does not work when skipping pages
+    LOG.info(f'load symbols for {filter_query}')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
@@ -78,6 +82,7 @@ def cb_price_graph(data, selected_rows):
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbolId']
+        LOG.info(f'load time series for {symbol}')
         with yahoo.DBSeries(tools.INTERVAL_1D) as series:
             time_series = series[symbol]
 
@@ -105,4 +110,6 @@ def run_dash(debug: bool):
 
 
 if __name__ == '__main__':
-    run_dash(debug=True)
+    debug = True
+    log.init(__file__, to_file=True, debug=debug)
+    run_dash(debug=debug)
