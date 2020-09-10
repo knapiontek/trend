@@ -6,7 +6,8 @@ from logging.handlers import RotatingFileHandler
 from src import config
 
 
-def init(script_file: str, to_screen=False, to_file=False, debug=False):
+def init(script_file: str, debug: bool, to_screen=False, to_file=False):
+    print(f'debug: {debug}')
     handlers = []
     if to_screen:
         handlers.append(logging.StreamHandler(sys.stdout))

@@ -29,7 +29,8 @@ symbol_table = dash_table.DataTable(
     columns=[{'name': v, 'id': k} for k, v in SYMBOL_COLUMNS.items()],
     filter_action='custom',
     row_selectable='single',
-    page_size=31,
+    page_action='none',
+    sort_action='native',
     **style.symbol_table(['symbolId', 'symbolType'])
 )
 
@@ -47,7 +48,7 @@ PATTERN = re.compile('{(\\w+)} contains (.+)')
 
 
 def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
-    # example: {symbolType} contains b && {symbolId} contains a && {currency} contains c
+    # example: {currency} contains usd && {symbolType} contains stock && {symbolId} contains xom
     if filter_query:
         matches = [re.search(PATTERN, f) for f in filter_query.split(' && ')]
         if all(matches):
@@ -109,7 +110,11 @@ def run_dash(debug: bool):
     return app.run_server(debug=debug)
 
 
-if __name__ == '__main__':
+def main():
     debug = True
-    log.init(__file__, to_file=True, debug=debug)
+    log.init(__file__, debug=debug, to_file=True)
     run_dash(debug=debug)
+
+
+if __name__ == '__main__':
+    main()

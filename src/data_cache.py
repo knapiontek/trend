@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
-from src import store, log, tools, holidays, exante, yahoo
+from src import store, tools, holidays, exante, yahoo, log
 
 LOG = logging.getLogger(__name__)
 
@@ -113,9 +113,12 @@ def verify_series():
         progress('done')
 
 
-if __name__ == '__main__':
-    log.init(__file__, to_screen=True)
-
-    # reload_exchanges()
+def main():
+    log.init(__file__, debug=True, to_screen=True)
+    reload_exchanges()
     update_series()
-    # verify_series()
+    verify_series()
+
+
+if __name__ == '__main__':
+    main()
