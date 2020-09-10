@@ -68,7 +68,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
     # TODO: filtering does not work when skipping pages
-    LOG.info(f'load symbols for {filter_query}')
+    LOG.info(f'load symbols with filter {filter_query}')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
