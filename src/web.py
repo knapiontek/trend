@@ -3,7 +3,6 @@ import re
 from typing import Dict, List
 
 import dash
-import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -18,7 +17,6 @@ LOG = logging.getLogger(__name__)
 app = dash.Dash(title='trend',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
-auth = dash_auth.BasicAuth(app, {'admin': 'admin'})
 
 
 def wsgi(environ, start_response):
