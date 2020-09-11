@@ -1,6 +1,5 @@
 import json
 import logging
-from functools import lru_cache
 from typing import List, Tuple, Iterable, Dict, Any
 
 from arango import ArangoClient, DocumentInsertError
@@ -62,7 +61,6 @@ CANDLE_SCHEMA = {
 }
 
 
-@lru_cache(maxsize=1)
 def db_connect() -> StandardDatabase:
     url, username, password, db_name = config.arango_db_auth()
     client = ArangoClient(hosts=url)

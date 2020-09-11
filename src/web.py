@@ -19,7 +19,12 @@ app = dash.Dash(title='trend',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
 auth = dash_auth.BasicAuth(app, {'admin': 'admin'})
-server = app.server  # gunicorn src.web:server -b :8000
+
+
+def wsgi(environ, start_response):
+    # gunicorn src.web:wsgi -b :8000
+    return app.server(environ, start_response)
+
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
 GRAPH_MARGIN = dict(l=15, r=15, t=40, b=15, pad=4)
