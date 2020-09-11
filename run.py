@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from src import store, data_cache, web, log
+from src import store, load, web, log
 
 LOG = logging.getLogger(__name__)
 
@@ -34,15 +34,15 @@ def main():
         if args.web:
             web.run_dash(args.debug)
         if args.reload_exchanges:
-            data_cache.reload_exchanges()
+            load.reload_exchanges()
         if args.show_instrument_range:
-            data_cache.show_instrument_range()
+            load.show_instrument_range()
         if args.empty_series:
             store.empty_series()
         if args.update_series:
-            data_cache.update_series()
+            load.update_series()
         if args.verify_series:
-            data_cache.verify_series()
+            load.verify_series()
     except:
         LOG.exception('trend-app failed')
 
