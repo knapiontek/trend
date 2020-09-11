@@ -8,6 +8,9 @@ ssh-keygen -t rsa -b 4096 -C "knapiontek@gmail.com"
 git clone git@github.com:knapiontek/trend.git
 
 # arangodb
+sudo cp arangodb-os /etc/init.d/arangodb-os
+sudo update-rc.d arangodb-db defaults
+sudo ./arangodb-os
 curl -OL https://download.arangodb.com/arangodb37/DEBIAN/Release.key
 sudo apt-key add - < Release.key
 echo 'deb https://download.arangodb.com/arangodb37/DEBIAN/ /' | sudo tee /etc/apt/sources.list.d/arangodb.list
