@@ -45,6 +45,8 @@ sudo certbot renew
 
 # nginx
 sudo apt-get install nginx
+sudo apt install apache2-utils
+sudo htpasswd -c /etc/nginx/.htpasswd admin
 sudo unlink /etc/nginx/sites-enabled/default
 sudo cp nginx.conf /etc/nginx/sites-available/nginx.conf
 sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
