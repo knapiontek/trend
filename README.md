@@ -3,7 +3,6 @@
 
 - Create scheduler based on aiohttp
 - nginx /trend /db /=404
-- css table width constant size
 
 # Road Map
 

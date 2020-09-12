@@ -16,6 +16,7 @@ from src import store, tools, style, yahoo, config, log
 LOG = logging.getLogger(__name__)
 
 app = dash.Dash(title='trend',
+                url_base_pathname='/trend/',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
 
