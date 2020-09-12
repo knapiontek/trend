@@ -2,7 +2,8 @@
 # TODO
 
 - Create scheduler based on aiohttp
-- allow only TLS 1.3
+- nginx /trend /db /=404
+- css table width constant size
 
 # Road Map
 

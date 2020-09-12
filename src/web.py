@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 from typing import Dict, List
 
 import dash
@@ -24,8 +25,14 @@ def wsgi(environ, start_response):
     return app.server(environ, start_response)
 
 
+if 'gunicorn' in sys.modules:
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+    LOG = app.logger
+
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
-GRAPH_MARGIN = dict(l=15, r=15, t=40, b=15, pad=4)
+GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -34,7 +41,7 @@ symbol_table = dash_table.DataTable(
     row_selectable='single',
     page_action='none',
     sort_action='native',
-    **style.symbol_table(['symbolId', 'symbolType'])
+    **style.symbol_table(left_align=['symbolId', 'symbolType'])
 )
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
@@ -71,7 +78,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
-    LOG.info(f'load symbols with filter: "{filter_query}"')
+    LOG.info(f'load symbols with filter: "{filter_query or "*"}"')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)

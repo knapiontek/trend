@@ -24,11 +24,12 @@ body {
 }
 
 .scroll::-webkit-scrollbar {
+    background-color: #EFEFEF;
     width: 10px;
 }
 
 .scroll::-webkit-scrollbar-thumb {
     background-color: #90A4AE;
     border-radius: 6px;
-    border: 2px solid white;
+    border: 2px solid #EFEFEF;
 }
