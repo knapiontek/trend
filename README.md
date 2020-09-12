@@ -2,7 +2,6 @@
 # TODO
 
 - Create scheduler based on aiohttp
-- nginx /trend /db /=404
 
 # Road Map
 
