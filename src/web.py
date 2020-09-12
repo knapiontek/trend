@@ -78,7 +78,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
-    LOG.info(f'load symbols with filter: "{filter_query or "*"}"')
+    LOG.debug(f'load symbols with filter: "{filter_query or "*"}"')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
@@ -92,7 +92,7 @@ def cb_price_graph(data, selected_rows):
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbolId']
-        LOG.info(f'load time series for symbol: {symbol}')
+        LOG.debug(f'load time series for symbol: {symbol}')
         with yahoo.DBSeries(tools.INTERVAL_1D) as series:
             time_series = series[symbol]
 
