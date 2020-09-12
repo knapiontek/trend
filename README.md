@@ -2,10 +2,6 @@
 # TODO
 
 - Create scheduler based on aiohttp
-- arango over nginx try this:
-// \[http\]
-// trusted-origin = *
-// trusted-origin = all
 
 # Road Map
 

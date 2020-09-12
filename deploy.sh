@@ -18,9 +18,9 @@ echo 'deb https://download.arangodb.com/arangodb37/DEBIAN/ /' | sudo tee /etc/ap
 sudo apt-get install apt-transport-https
 sudo apt-get update
 sudo apt-get install arangodb3=3.7.2-1
-## note: root:root
+## note: root:password
 sudo service arangodb3 status
-sudo vim /etc/arangodb3/arangod.conf
+sudo vim /etc/arangodb3/arangod.conf  # note: ./arangod.conf
 sudo service arangodb3 restart
 
 # anaconda
@@ -33,7 +33,7 @@ conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 
 # run the app
-## note: deploy ~/.trend (see src/config_schema.py)
+## note: deploy ~/.trend (see ./src/config_schema.py)
 ./run.py --reload-exchanges --update-series --log-to-screen
 ./web.sh
 pkill --echo gunicorn
@@ -51,7 +51,7 @@ sudo apt-get install nginx
 sudo apt install apache2-utils
 sudo htpasswd -c /etc/nginx/.htpasswd admin
 sudo unlink /etc/nginx/sites-enabled/default
-sudo cp nginx.conf /etc/nginx/sites-available/nginx.conf
+sudo cp ./nginx.conf /etc/nginx/sites-available/nginx.conf
 sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
 sudo service nginx configtest
 sudo service nginx restart
