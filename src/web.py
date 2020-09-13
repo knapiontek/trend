@@ -13,12 +13,12 @@ from plotly.subplots import make_subplots
 
 from src import store, tools, style, yahoo, config, log
 
-LOG = logging.getLogger(__name__)
-
 app = dash.Dash(title='trend',
                 url_base_pathname='/trend/',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
+app_log = app.logger
+app_log.setLevel(logging.DEBUG)
 
 
 def wsgi(environ, start_response):
@@ -30,7 +30,6 @@ if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    LOG = app.logger
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
@@ -79,7 +78,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
-    LOG.debug(f'load symbols with filter: "{filter_query or "*"}"')
+    app_log.debug(f'load symbols with filter: "{filter_query or "*"}"')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
@@ -93,7 +92,7 @@ def cb_price_graph(data, selected_rows):
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbolId']
-        LOG.debug(f'load time series for symbol: {symbol}')
+        app_log.debug(f'load time series for symbol: {symbol}')
         with yahoo.DBSeries(tools.INTERVAL_1D) as series:
             time_series = series[symbol]
 
@@ -122,7 +121,7 @@ def run_dash(debug: bool):
 
 def main():
     debug = True
-    log.init(__file__, debug=debug, to_file=True)
+    log.init(__file__, debug=debug, to_screen=True)
     run_dash(debug=debug)
 
 
