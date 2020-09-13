@@ -22,11 +22,16 @@ def read_sp500() -> Dict:
 
 def reload_exchanges():
     sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
+    short_allowance = exante.read_short_allowance()
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = session.symbols(exchange)
-                content[exchange] = [s for s in symbols if s['ticker'] in sp500]
+                content[exchange] = [
+                    {**s, **{'short-allowed': short_allowance.get(s['symbolId'])}}
+                    for s in symbols
+                    if s['ticker'] in sp500
+                ]
                 LOG.info(f'imported {len(content[exchange])} instruments from {exchange}')
 
 

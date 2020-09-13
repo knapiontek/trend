@@ -80,12 +80,18 @@ class DBSeries(store.DBSeries):
         super().__init__(name, editable)
 
 
-def read_short_allowance():
-    import pandas
-
+def read_short_allowance() -> Dict:
+    import re
+    import xlrd
     xls = config.EXANTE_PATH.joinpath('short-allowance.xls')
-    excel = pandas.read_excel(xls)
-    print(excel)
+    workbook = xlrd.open_workbook(xls)
+    sheet = workbook.sheet_by_name('main')
+    boolean = {'No': False, 'Yes': True}
+    pattern = re.compile('(.+?) / (.+?) / (.+)')
+    return {
+        re.sub(pattern, '\\3.\\2', sheet.cell(i, 0).value): boolean[sheet.cell(i, 1).value]
+        for i in range(1, sheet.nrows)
+    }
 
 
 if __name__ == '__main__':
