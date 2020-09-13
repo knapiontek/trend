@@ -78,3 +78,15 @@ class DBSeries(store.DBSeries):
         module = __name__.split('.')[-1]
         name = f'series_{module}_{tools.interval_name(interval)}'
         super().__init__(name, editable)
+
+
+def read_short_allowance():
+    import pandas
+
+    xls = config.EXANTE_PATH.joinpath('short-allowance.xls')
+    excel = pandas.read_excel(xls)
+    print(excel)
+
+
+if __name__ == '__main__':
+    read_short_allowance()

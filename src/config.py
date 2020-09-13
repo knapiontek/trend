@@ -11,6 +11,7 @@ TREND_PATH = pathlib.Path(__file__).parent.parent
 SRC_PATH = TREND_PATH.joinpath('src')
 ASSETS_PATH = SRC_PATH.joinpath('assets')
 STORE_PATH = TREND_PATH.joinpath('store')
+EXANTE_PATH = TREND_PATH.joinpath('exante')
 LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '%(asctime)s %(levelname)s %(module)s %(message)s'
