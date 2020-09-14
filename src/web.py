@@ -101,7 +101,7 @@ def cb_price_graph(data, selected_rows):
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
         dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
 
-        prices = go.Scatter(x=dates, y=params['close'], name='Price')
+        prices = go.Scatter(x=dates, y=params['close'], name='Price', line=dict(width=1.5))
         volume = go.Bar(x=dates, y=params['volume'], name='Volume')
         figure = make_subplots(rows=2, cols=1,
                                shared_xaxes=True,
