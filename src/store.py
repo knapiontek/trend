@@ -131,6 +131,6 @@ def empty_series():
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('series'):
-            LOG.info(f'emptying series: {name}')
+            LOG.info(f'Emptying series: {name}')
             collection = db.collection(name)
             collection.delete_match({})

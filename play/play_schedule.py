@@ -70,7 +70,7 @@ async def launch(app: web.Application) -> None:
 
 
 async def shutdown(app: web.Application) -> None:
-    LOG.info("shutting down scheduled tasks ...")
+    LOG.info("Shutting down scheduled tasks ...")
     schedule_module = sys.modules[__name__]
     schedule_module.RUNNING = False
 
@@ -78,5 +78,5 @@ async def shutdown(app: web.Application) -> None:
         running_coros = {task._coro.__name__ for task in asyncio.Task.all_tasks() if not task.done()}
         if running_coros == {'_run_app'}:
             return
-        LOG.info(f"waiting for running tasks {running_coros - {'_run_app'}}")
+        LOG.info(f"Waiting for running tasks {running_coros - {'_run_app'}}")
         await asyncio.sleep(3)

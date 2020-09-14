@@ -44,7 +44,7 @@ def main():
         if args.verify_series:
             load.verify_series()
     except:
-        LOG.exception('trend-app failed')
+        LOG.exception('TrendApp failed')
 
 
 if __name__ == '__main__':

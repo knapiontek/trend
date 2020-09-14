@@ -57,7 +57,7 @@ class Session(session.Session):
         assert response.status_code == 200, response.text
         found = re.search(PATTERN, response.text)
         if not found:
-            raise RuntimeError(f'expected response from the yahoo api: {PATTERN.pattern}')
+            raise RuntimeError(f'Expected response from the yahoo api: {PATTERN.pattern}')
         self.crumb = found.group(1)
         return self
 
@@ -77,7 +77,7 @@ class Session(session.Session):
         }
         time.sleep(0.6)
         response = self.get(url, params=params)
-        assert response.status_code == 200, response.text
+        assert response.status_code == 200, f'symbol: {symbol} error: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
         return [datum for datum in data if datum]
 

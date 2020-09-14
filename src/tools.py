@@ -21,9 +21,13 @@ def url_encode(name: str) -> str:
     return urllib.parse.quote(name, safe='')
 
 
-def last_sunday(dt: datetime):
+def last_sunday(dt: datetime) -> datetime:
     d = dt.toordinal()
     return datetime.fromordinal(d - (d % 7))
+
+
+def last_workday(dt: datetime) -> datetime:
+    return dt
 
 
 def utc_now():

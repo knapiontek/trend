@@ -32,7 +32,7 @@ def reload_exchanges():
                     for s in symbols
                     if s['ticker'] in sp500
                 ]
-                LOG.info(f'imported {len(content[exchange])} instruments from {exchange}')
+                LOG.info(f'Imported {len(content[exchange])} instruments from {exchange}')
 
 
 def show_instrument_range():
@@ -47,7 +47,7 @@ def show_instrument_range():
 def update_series():
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
-    LOG.info(f'loaded instruments: {len(instruments)}')
+    LOG.info(f'Loaded instruments: {len(instruments)}')
     symbols = [i['symbolId'] for i in instruments]
 
     interval = tools.INTERVAL_1D
@@ -57,7 +57,7 @@ def update_series():
 
     with yahoo.DBSeries(interval) as db_series:
         time_range = db_series.time_range()
-    LOG.info(f'loaded time-range entries: {len(time_range)}')
+    LOG.info(f'Loaded time-range entries: {len(time_range)}')
 
     latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
     instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
@@ -104,7 +104,7 @@ def verify_series():
     interval = tools.INTERVAL_1D
     with yahoo.DBSeries(interval) as series:
         time_range = series.time_range()
-    LOG.info(f'loaded time-range entries: {len(time_range)}')
+    LOG.info(f'Loaded time-range entries: {len(time_range)}')
 
     name = f'series-yahoo-{tools.interval_name(interval)}-health'
     with store.FileStore(name, editable=True) as health:
@@ -121,9 +121,9 @@ def verify_series():
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
-    show_instrument_range()
+    # show_instrument_range()
     # reload_exchanges()
-    # update_series()
+    update_series()
     # verify_series()
 
 
