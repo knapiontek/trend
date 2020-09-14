@@ -86,10 +86,9 @@ def read_short_allowance() -> Dict:
     xls = config.EXANTE_PATH.joinpath('short-allowance.xls')
     workbook = xlrd.open_workbook(xls)
     sheet = workbook.sheet_by_name('main')
-    boolean = {'No': False, 'Yes': True}
     pattern = re.compile('(.+?) / (.+?) / (.+)')
     return {
-        re.sub(pattern, '\\3.\\2', sheet.cell(i, 0).value): boolean[sheet.cell(i, 1).value]
+        re.sub(pattern, '\\3.\\2', sheet.cell(i, 0).value): sheet.cell(i, 1).value
         for i in range(1, sheet.nrows)
     }
 

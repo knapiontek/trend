@@ -1,10 +1,10 @@
-def symbol_table(left_align):
+def symbol_table(**kwargs):
     return dict(
         style_cell_conditional=[
             {
-                'if': {'column_id': c},
-                'textAlign': 'left',
-            } for c in left_align
+                'if': {'column_id': k},
+                'textAlign': v,
+            } for k, v in kwargs.items()
         ],
         style_data_conditional=[
             {

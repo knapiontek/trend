@@ -30,8 +30,10 @@ if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
+else:
+    app.logger.handlers = []
 
-SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'symbolType': 'Type', 'currency': 'Currency'}
+SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
 symbol_table = dash_table.DataTable(
@@ -41,7 +43,7 @@ symbol_table = dash_table.DataTable(
     row_selectable='single',
     page_action='none',
     sort_action='native',
-    **style.symbol_table(left_align=['symbolId', 'symbolType'])
+    **style.symbol_table(symbolId='left', shortAllowed='center')
 )
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
