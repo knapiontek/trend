@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
-from src import store, tools, holidays, exante, yahoo, log
+from src import store, tools, exante, yahoo, log
 
 LOG = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ def update_series():
     interval = tools.INTERVAL_1D
     delta = interval * 1000
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
-    dt_to = tools.dt_round(tools.utc_now(), interval)
 
     with yahoo.DBSeries(interval) as db_series:
         time_range = db_series.time_range()
@@ -66,6 +65,7 @@ def update_series():
         with tools.Progress('series-update', instruments_latest) as progress:
             for symbol, dt_from in instruments_latest.items():
                 progress(symbol)
+                dt_to = tools.dt_last(symbol, interval)
                 for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, interval):
                     time_series = session.series(symbol, slice_from, slice_to, interval)
 
@@ -79,7 +79,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval:
         series = db_series[symbol]
 
     exchange = symbol.split('.')[-1]
-    dt_holidays = holidays.dates(exchange)
+    dt_holidays = tools.holidays(exchange)
     db_dates = {tools.from_timestamp(s['timestamp']) for s in series}
 
     overlap = db_dates & dt_holidays

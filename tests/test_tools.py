@@ -1,11 +1,16 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
 from src import tools
 
 
 def test_last_sunday():
-    dt = datetime(2020, 9, 1)
-    assert tools.last_sunday(dt) == datetime(2020, 8, 30)
+    dt = datetime(2020, 9, 1, tzinfo=timezone.utc)
+    assert tools.last_sunday(dt) == datetime(2020, 8, 30, tzinfo=timezone.utc)
+
+
+def test_last_workday():
+    dt = datetime(2020, 1, 21, tzinfo=timezone.utc)
+    assert tools.last_workday('XOM.NYSE', dt) == datetime(2020, 1, 17, tzinfo=timezone.utc)
 
 
 def test_interval_name():
@@ -23,8 +28,8 @@ def test_list_split():
 
 
 def test_time_slices_0():
-    dt_from = datetime(2020, 8, 28)
-    dt_to = datetime(2020, 8, 28, 10, 12, 10)
+    dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
+    dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
     slice_delta = timedelta(days=14)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
               for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1D)]
@@ -32,25 +37,25 @@ def test_time_slices_0():
 
 
 def test_time_slices_1():
-    dt_from = datetime(2020, 8, 28)
-    dt_to = datetime(2020, 8, 28, 10, 12, 10)
+    dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
+    dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
     slice_delta = timedelta(hours=14)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
               for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
-    assert slices == [('2020-08-28 01:00:00', '2020-08-28 10:12:10')]
+    assert slices == [('2020-08-28 01:00:00+0000', '2020-08-28 10:12:10+0000')]
 
 
 def test_time_slices():
-    dt_from = datetime(2020, 2, 1)
-    dt_to = datetime(2020, 2, 4)
+    dt_from = datetime(2020, 2, 1, tzinfo=timezone.utc)
+    dt_to = datetime(2020, 2, 4, tzinfo=timezone.utc)
     slice_delta = timedelta(hours=21)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
               for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
     assert slices == [
-        ('2020-02-01 01:00:00', '2020-02-01 21:00:00'),
-        ('2020-02-01 22:00:00', '2020-02-02 18:00:00'),
-        ('2020-02-02 19:00:00', '2020-02-03 15:00:00'),
-        ('2020-02-03 16:00:00', '2020-02-04 00:00:00')
+        ('2020-02-01 01:00:00+0000', '2020-02-01 21:00:00+0000'),
+        ('2020-02-01 22:00:00+0000', '2020-02-02 18:00:00+0000'),
+        ('2020-02-02 19:00:00+0000', '2020-02-03 15:00:00+0000'),
+        ('2020-02-03 16:00:00+0000', '2020-02-04 00:00:00+0000')
     ]
 
 
