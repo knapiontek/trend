@@ -36,8 +36,11 @@ def reload_exchanges():
 
 
 def show_instrument_range():
-    with exante.DBSeries(tools.INTERVAL_1D) as db_series:
-        time_range = db_series.time_range()
+    with yahoo.DBSeries(tools.INTERVAL_1D) as db_series:
+        time_range = {
+            symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
+            for symbol, min_ts, max_ts in tools.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
+        }
         print(json.dumps(time_range, indent=2))
 
 
@@ -118,9 +121,10 @@ def verify_series():
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
-    reload_exchanges()
-    update_series()
-    verify_series()
+    show_instrument_range()
+    # reload_exchanges()
+    # update_series()
+    # verify_series()
 
 
 if __name__ == '__main__':
