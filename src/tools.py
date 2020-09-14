@@ -26,10 +26,6 @@ def last_sunday(dt: datetime) -> datetime:
     return datetime.fromordinal(d - (d % 7))
 
 
-def last_workday(dt: datetime) -> datetime:
-    return dt
-
-
 def utc_now():
     return datetime.now(tz=timezone.utc)
 

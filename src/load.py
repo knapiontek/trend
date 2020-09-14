@@ -79,7 +79,7 @@ def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval:
         series = db_series[symbol]
 
     exchange = symbol.split('.')[-1]
-    dt_holidays = {tools.dt_parse(d) for d in holidays.HOLIDAYS[exchange]}
+    dt_holidays = holidays.dates(exchange)
     db_dates = {tools.from_timestamp(s['timestamp']) for s in series}
 
     overlap = db_dates & dt_holidays

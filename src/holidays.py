@@ -1,4 +1,8 @@
-HOLIDAYS = {
+from functools import lru_cache
+
+from src import tools
+
+EXCHANGE_HOLIDAYS = {
     'NYSE': {
         '2018-01-01 00:00:00+0000',
         '2018-01-15 00:00:00+0000',
@@ -104,3 +108,8 @@ HOLIDAYS = {
         '2022-12-26 00:00:00+0000'
     }
 }
+
+
+@lru_cache(maxsize=16)
+def dates(exchange: str):
+    return {tools.dt_parse(d) for d in EXCHANGE_HOLIDAYS[exchange]}
