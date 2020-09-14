@@ -70,4 +70,5 @@ time ./run.py --show-symbol-range | jq '.[] | select(.symbol | contains("XOM"))'
 curl -s -u app_id:key https://api-demo.exante.eu/md/1.0/accounts
 cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
 curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
+./run.py --show-instrument-range|jq '."ZBRA.NASDAQ"'
 ```
