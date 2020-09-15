@@ -30,16 +30,16 @@ def test_list_split():
 def test_time_slices_0():
     dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
-    slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1D, 14)]
+    slices = [(tools.dt_format(slice_from), tools.dt_format(slice_to))
+              for slice_from, slice_to in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1D, 14)]
     assert slices == []
 
 
 def test_time_slices_1():
     dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
-    slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1H, 14)]
+    slices = [(tools.dt_format(slice_from), tools.dt_format(slice_to))
+              for slice_from, slice_to in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1H, 14)]
     assert slices == [('2020-08-28 01:00:00+0000', '2020-08-28 10:12:10+0000')]
 
 

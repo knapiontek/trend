@@ -13,9 +13,9 @@ def test_time_series():
     closing_prices = []
 
     with exante.Session() as session:
-        for start, stop in tools.time_slices(dt_from, dt_to, interval, 15):
-            series = session.series(symbol, start, stop, interval)
-            time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
+        for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 15):
+            series = session.series(symbol, slice_from, slice_to, interval)
+            time_ranges += [(tools.dt_format(slice_from), tools.dt_format(slice_to))]
             closing_prices += [
                 (tools.ts_format(timestamp), close, volume)
                 for timestamp, close, volume in tools.tuple_it(series, ('timestamp', 'close', 'volume'))
