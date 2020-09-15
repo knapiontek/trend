@@ -1,4 +1,4 @@
-import json
+import orjson as json
 import operator
 import time
 from datetime import timezone, timedelta, datetime

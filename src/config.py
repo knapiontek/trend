@@ -1,4 +1,4 @@
-import json
+import orjson as json
 import pathlib
 from functools import lru_cache
 from typing import Tuple, Any
@@ -20,7 +20,7 @@ LOG_FORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 @lru_cache(maxsize=1)
 def load_file():
     with CONFIG_FILE.open() as read_io:
-        config = json.load(read_io)
+        config = json.loads(read_io.read())
         jsonschema.validate(config, config_schema.CONFIG_SCHEMA)
         return config
 

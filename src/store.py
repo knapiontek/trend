@@ -1,7 +1,7 @@
-import json
 import logging
 from typing import List, Tuple, Iterable, Dict, Any
 
+import orjson as json
 from arango import ArangoClient, DocumentInsertError
 from arango.database import StandardDatabase
 
@@ -19,13 +19,13 @@ class FileStore(dict):
     def __enter__(self) -> 'FileStore':
         if self.filename.exists():
             with self.filename.open() as read_io:
-                self.update(json.load(read_io))
+                self.update(json.loads(read_io.read()))
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.editable and not exc_type:
-            with self.filename.open('w') as write_io:
-                json.dump(self, write_io, indent=2)
+            with self.filename.open('wb') as write_io:
+                write_io.write(json.dumps(self, option=json.OPT_INDENT_2))
 
     def __setitem__(self, key: str, value: Any):
         assert self.editable

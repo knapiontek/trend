@@ -1,5 +1,5 @@
 import csv
-import json
+import orjson as json
 import re
 import time
 from datetime import datetime
