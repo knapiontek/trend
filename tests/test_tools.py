@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timezone
 
 from src import tools
 
@@ -30,27 +30,24 @@ def test_list_split():
 def test_time_slices_0():
     dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
-    slice_delta = timedelta(days=14)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1D)]
+              for start, stop in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1D, 14)]
     assert slices == []
 
 
 def test_time_slices_1():
     dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
-    slice_delta = timedelta(hours=14)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
+              for start, stop in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1H, 14)]
     assert slices == [('2020-08-28 01:00:00+0000', '2020-08-28 10:12:10+0000')]
 
 
 def test_time_slices():
     dt_from = datetime(2020, 2, 1, tzinfo=timezone.utc)
     dt_to = datetime(2020, 2, 4, tzinfo=timezone.utc)
-    slice_delta = timedelta(hours=21)
     slices = [(tools.dt_format(start), tools.dt_format(stop))
-              for start, stop in tools.time_slices(dt_from, dt_to, slice_delta, tools.INTERVAL_1H)]
+              for start, stop in tools.time_slices(dt_from, dt_to, tools.INTERVAL_1H, 21)]
     assert slices == [
         ('2020-02-01 01:00:00+0000', '2020-02-01 21:00:00+0000'),
         ('2020-02-01 22:00:00+0000', '2020-02-02 18:00:00+0000'),

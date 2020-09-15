@@ -51,7 +51,6 @@ def update_series():
     symbols = [i['symbolId'] for i in instruments]
 
     interval = tools.INTERVAL_1D
-    delta = interval * 1000
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
 
     with yahoo.DBSeries(interval) as db_series:
@@ -66,7 +65,7 @@ def update_series():
             for symbol, dt_from in instruments_latest.items():
                 progress(symbol)
                 dt_to = tools.dt_last(symbol, interval)
-                for slice_from, slice_to in tools.time_slices(dt_from, dt_to, delta, interval):
+                for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
                     time_series = session.series(symbol, slice_from, slice_to, interval)
 
                     with yahoo.DBSeries(interval, editable=True) as db_series:

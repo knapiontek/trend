@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timezone
 
 from src import tools, exante
 
@@ -8,13 +8,12 @@ def test_time_series():
     interval = tools.INTERVAL_1H
     dt_from = datetime(2020, 2, 2, 23, tzinfo=timezone.utc)
     dt_to = datetime(2020, 2, 4, 19, tzinfo=timezone.utc)
-    delta = timedelta(hours=15)
 
     time_ranges = []
     closing_prices = []
 
     with exante.Session() as session:
-        for start, stop in tools.time_slices(dt_from, dt_to, delta, interval):
+        for start, stop in tools.time_slices(dt_from, dt_to, interval, 15):
             series = session.series(symbol, start, stop, interval)
             time_ranges += [(tools.dt_format(start), tools.dt_format(stop))]
             closing_prices += [

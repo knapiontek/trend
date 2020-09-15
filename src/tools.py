@@ -196,9 +196,9 @@ def dt_last(symbol: str, interval: timedelta) -> datetime:
         return last_sunday()
 
 
-def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, interval: timedelta):
-    assert interval < delta
+def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: int):
     start = dt_from
+    delta = interval * size
     while start + interval < dt_to:
         yield start + interval, min(start + delta, dt_to)
         start += delta
