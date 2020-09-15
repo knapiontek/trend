@@ -82,8 +82,8 @@ class Session(session.Session):
         assert response.status_code == 200, f'symbol: {symbol} error: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
         data = [datum for datum in data if datum]
-        if data[-2]['timestamp'] == data[-1]['timestamp']:
-            data = data[:-1]  # yahoo returns minimum 2 rows with duplicated values
+        if len(data) == 2 and data[0]['timestamp'] == data[1]['timestamp']:
+            data = data[0:1]  # if yahoo returns 2 rows with duplicated values
         return data
 
 
