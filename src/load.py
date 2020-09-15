@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import orjson as json
 
@@ -22,9 +22,12 @@ def read_sp500() -> Dict:
 
 
 def reload_exchanges():
+    LOG.info(f'>> {reload_exchanges.__name__}')
+
     boolean = ['-', '+']
     sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
     short_allowance = exante.read_short_allowance()
+
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in ['NYSE', 'NASDAQ']:
@@ -44,7 +47,9 @@ def reload_exchanges():
                 LOG.info(f'Imported {len(content[exchange])} instruments from {exchange}')
 
 
-def scope_series():
+def series_range():
+    LOG.info(f'>> {series_range.__name__}')
+
     with yahoo.DBSeries(tools.INTERVAL_1D) as db_series:
         time_range = {
             symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
@@ -53,7 +58,9 @@ def scope_series():
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-def update_series():
+def series_update():
+    LOG.info(f'>> {series_update.__name__}')
+
     interval = tools.INTERVAL_1D
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
 
@@ -81,8 +88,7 @@ def update_series():
                                 db_series += time_series
 
 
-def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
-    health = {}
+def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Tuple[List, List]:
     with yahoo.DBSeries(interval) as db_series:
         series = db_series[symbol]
 
@@ -90,49 +96,52 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
     dt_holidays = tools.holidays(exchange)
     db_dates = {tools.from_timestamp(s['timestamp']) for s in series}
 
-    overlap = db_dates & dt_holidays
-    if overlap:
-        health['overlap'] = [tools.dt_format(d) for d in overlap]
-    all_days = db_dates | dt_holidays
+    overlap = [tools.dt_format(d) for d in db_dates & dt_holidays]
 
     missing = []
+    all_days = db_dates | dt_holidays
     start = dt_from
-    while start < dt_to:
+    while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
             if start not in all_days:
                 missing.append(tools.dt_format(start))
         start += interval
-    if missing:
-        health['missing'] = missing
 
-    return health
+    return overlap, missing
 
 
-def verify_series():
+def series_verify():
+    LOG.info(f'>> {series_verify.__name__}')
+
     interval = tools.INTERVAL_1D
     with yahoo.DBSeries(interval) as series:
         time_range = series.time_range()
-    LOG.info(f'Time range entries: {len(time_range)}')
+        LOG.info(f'Time range entries: {len(time_range)}')
 
     name = f'series-yahoo-{tools.interval_name(interval)}-health'
     with store.FileStore(name, editable=True) as health:
         with tools.Progress(name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
                 progress(symbol)
-                symbol_health = verify_symbol_series(symbol,
-                                                     tools.from_timestamp(ts_from),
-                                                     tools.from_timestamp(ts_to),
-                                                     interval)
-                if symbol_health:
-                    health[symbol] = symbol_health
+                overlap, missing = verify_symbol_series(symbol,
+                                                        tools.from_timestamp(ts_from),
+                                                        tools.from_timestamp(ts_to),
+                                                        interval)
+                info = {}
+                if overlap:
+                    info['overlap'] = overlap
+                if missing:
+                    info['missing'] = missing
+                if info:
+                    health[symbol] = info
 
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
     reload_exchanges()
-    scope_series()
-    update_series()
-    verify_series()
+    series_range()
+    series_update()
+    series_verify()
 
 
 if __name__ == '__main__':

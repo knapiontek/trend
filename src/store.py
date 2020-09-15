@@ -126,7 +126,7 @@ class DBSeries:
         return list(result)
 
 
-def empty_series():
+def series_empty():
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:

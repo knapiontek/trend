@@ -14,10 +14,10 @@ def get_args():
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--reload-exchanges', action='store_true')
 
-    parser.add_argument('--empty-series', action='store_true')
-    parser.add_argument('--scope-series', action='store_true')
-    parser.add_argument('--update-series', action='store_true')
-    parser.add_argument('--verify-series', action='store_true')
+    parser.add_argument('--series-empty', action='store_true')
+    parser.add_argument('--series-range', action='store_true')
+    parser.add_argument('--series-update', action='store_true')
+    parser.add_argument('--series-verify', action='store_true')
 
     parser.add_argument('--log-to-file', action='store_true')
     parser.add_argument('--log-to-screen', action='store_true')
@@ -37,14 +37,14 @@ def main():
         if args.reload_exchanges:
             load.reload_exchanges()
 
-        if args.empty_series:
-            store.empty_series()
-        if args.scope_series:
-            load.scope_series()
-        if args.update_series:
-            load.update_series()
-        if args.verify_series:
-            load.verify_series()
+        if args.series_empty:
+            store.series_empty()
+        if args.series_range:
+            load.series_range()
+        if args.series_update:
+            load.series_update()
+        if args.series_verify:
+            load.series_verify()
     except:
         LOG.exception('TrendApp failed')
 
