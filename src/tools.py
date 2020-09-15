@@ -188,11 +188,12 @@ def last_workday(symbol: str, dt=utc_now()) -> datetime:
 
 
 def dt_last(symbol: str, interval: timedelta) -> datetime:
-    return {
-        INTERVAL_1H: utc_now().replace(minute=0, second=0, microsecond=0),
-        INTERVAL_1D: last_workday(symbol),
-        INTERVAL_1W: last_sunday()
-    }[interval]
+    if interval == INTERVAL_1H:
+        return utc_now().replace(minute=0, second=0, microsecond=0)
+    if interval == INTERVAL_1D:
+        return last_workday(symbol)
+    if interval == INTERVAL_1W:
+        return last_sunday()
 
 
 def time_slices(dt_from: datetime, dt_to: datetime, delta: timedelta, interval: timedelta):
