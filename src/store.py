@@ -127,6 +127,8 @@ class DBSeries:
 
 
 def series_empty():
+    LOG.info(f'>> {series_empty.__name__}')
+
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
