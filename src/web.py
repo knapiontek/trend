@@ -33,7 +33,7 @@ if 'gunicorn' in sys.modules:
 else:
     app.logger.handlers = []
 
-SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'total': 'Total'}
+SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
 symbol_table = dash_table.DataTable(
@@ -43,7 +43,7 @@ symbol_table = dash_table.DataTable(
     row_selectable='single',
     page_action='none',
     sort_action='native',
-    **style.symbol_table(symbolId='left', shortAllowed='center')
+    **style.symbol_table(symbolId='left', shortAllowed='center', health='center')
 )
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')

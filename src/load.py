@@ -28,7 +28,14 @@ def reload_exchanges():
             for exchange in ['NYSE', 'NASDAQ']:
                 symbols = session.symbols(exchange)
                 content[exchange] = [
-                    {**s, **{'shortAllowed': short_allowance.get(s['symbolId']), 'total': 0.0}}
+                    {
+                        **s,
+                        **{
+                            'shortAllowed': '+' if short_allowance.get(s['symbolId']) else '-',
+                            'health': '+',
+                            'total': 0.0
+                        }
+                    }
                     for s in symbols
                     if s['ticker'] in sp500
                 ]
