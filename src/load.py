@@ -21,6 +21,7 @@ def read_sp500() -> Dict:
 
 
 def reload_exchanges():
+    boolean = ['-', '+']
     sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
     short_allowance = exante.read_short_allowance()
     with store.FileStore('exchanges', editable=True) as content:
@@ -31,8 +32,8 @@ def reload_exchanges():
                     {
                         **s,
                         **{
-                            'shortAllowed': '+' if short_allowance.get(s['symbolId']) else '-',
-                            'health': '+',
+                            'shortAllowed': boolean[short_allowance.get(s['symbolId'])],
+                            'health': boolean[True],
                             'total': 0.0
                         }
                     }
