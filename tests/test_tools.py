@@ -3,14 +3,14 @@ from datetime import datetime, timezone
 from src import tools
 
 
-def test_last_sunday():
-    dt = datetime(2020, 9, 1, tzinfo=timezone.utc)
-    assert tools.last_sunday(dt) == datetime(2020, 8, 30, tzinfo=timezone.utc)
-
-
 def test_last_workday():
     dt = datetime(2020, 1, 21, tzinfo=timezone.utc)
     assert tools.last_workday('XOM.NYSE', dt) == datetime(2020, 1, 17, tzinfo=timezone.utc)
+
+
+def test_last_sunday():
+    dt = datetime(2020, 9, 1, tzinfo=timezone.utc)
+    assert tools.last_sunday(dt) == datetime(2020, 8, 30, tzinfo=timezone.utc)
 
 
 def test_interval_name():

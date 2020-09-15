@@ -64,7 +64,7 @@ class Session(session.Session):
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         yahoo_symbol = symbol_to_yahoo(symbol)
         yahoo_from = dt_to_yahoo(dt_from)
-        yahoo_to = dt_to_yahoo(dt_to)
+        yahoo_to = dt_to_yahoo(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)
@@ -81,7 +81,10 @@ class Session(session.Session):
             return []
         assert response.status_code == 200, f'symbol: {symbol} error: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
-        return [datum for datum in data if datum]
+        data = [datum for datum in data if datum]
+        if data[-2]['timestamp'] == data[-1]['timestamp']:
+            data = data[:-1]  # yahoo returns minimum 2 rows with duplicated values
+        return data
 
 
 class DBSeries(store.DBSeries):

@@ -170,11 +170,6 @@ def holidays(exchange: str):
     return {dt_parse(d) for d in EXCHANGE_HOLIDAYS[exchange]}
 
 
-def last_sunday(dt=utc_now()) -> datetime:
-    d = dt.toordinal()
-    return datetime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
-
-
 def last_workday(symbol: str, dt=utc_now()) -> datetime:
     exchange = symbol.split('.')[-1]
     exchange_holidays = holidays(exchange)
@@ -187,7 +182,16 @@ def last_workday(symbol: str, dt=utc_now()) -> datetime:
             return day
 
 
+def last_sunday(dt=utc_now()) -> datetime:
+    d = dt.toordinal()
+    return datetime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
+
+
 def dt_last(symbol: str, interval: timedelta) -> datetime:
+    """
+    It returns datetime where all fields smaller than interval are set to zero.
+    It is up to a data driver to modify it to meet a provider requirements.
+    """
     if interval == INTERVAL_1H:
         return utc_now().replace(minute=0, second=0, microsecond=0)
     if interval == INTERVAL_1D:
