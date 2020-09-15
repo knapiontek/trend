@@ -54,31 +54,31 @@ def scope_series():
 
 
 def update_series():
-    with store.FileStore('exchanges') as exchanges:
-        instruments = sum([v for k, v in exchanges.items()], [])
-    LOG.info(f'Loaded instruments: {len(instruments)}')
-    symbols = [i['symbolId'] for i in instruments]
-
     interval = tools.INTERVAL_1D
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
 
     with yahoo.DBSeries(interval) as db_series:
         time_range = db_series.time_range()
-    LOG.info(f'Loaded time-range entries: {len(time_range)}')
+        LOG.info(f'Time range entries: {len(time_range)}')
+        latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
 
-    latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
-    instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
+    with store.FileStore('exchanges') as exchanges:
+        for exchange, instruments in exchanges.items():
+            LOG.info(f'Updating exchange: {exchange} instruments: {len(instruments)}')
+            symbols = [i['symbolId'] for i in instruments]
 
-    with yahoo.Session() as session:
-        with tools.Progress('series-update', instruments_latest) as progress:
-            for symbol, dt_from in instruments_latest.items():
-                progress(symbol)
-                dt_to = tools.dt_last(symbol, interval)
-                for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
-                    time_series = session.series(symbol, slice_from, slice_to, interval)
+            instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
 
-                    with yahoo.DBSeries(interval, editable=True) as db_series:
-                        db_series += time_series
+            with yahoo.Session() as session:
+                with tools.Progress(f'series-update: {exchange}', instruments_latest) as progress:
+                    for symbol, dt_from in instruments_latest.items():
+                        progress(symbol)
+                        dt_to = tools.dt_last(exchange, interval)
+                        for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
+                            time_series = session.series(symbol, slice_from, slice_to, interval)
+
+                            with yahoo.DBSeries(interval, editable=True) as db_series:
+                                db_series += time_series
 
 
 def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
@@ -112,7 +112,7 @@ def verify_series():
     interval = tools.INTERVAL_1D
     with yahoo.DBSeries(interval) as series:
         time_range = series.time_range()
-    LOG.info(f'Loaded time-range entries: {len(time_range)}')
+    LOG.info(f'Time range entries: {len(time_range)}')
 
     name = f'series-yahoo-{tools.interval_name(interval)}-health'
     with store.FileStore(name, editable=True) as health:
