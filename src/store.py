@@ -101,7 +101,7 @@ class DBSeries:
         result = self.tnx_collection.insert_many(series)
         errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
         if len(errors):
-            error = json.dumps(errors, indent=2)
+            error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
             LOG.exception(error)
             raise Exception(error)
         return self

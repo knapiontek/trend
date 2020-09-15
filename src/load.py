@@ -1,7 +1,8 @@
-import orjson as json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
+
+import orjson as json
 
 from src import store, tools, exante, yahoo, log
 
@@ -49,7 +50,7 @@ def show_instrument_range():
             symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
             for symbol, min_ts, max_ts in tools.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
         }
-        print(json.dumps(time_range, indent=2))
+        print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
 def update_series():

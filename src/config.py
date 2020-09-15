@@ -1,9 +1,9 @@
-import orjson as json
 import pathlib
 from functools import lru_cache
 from typing import Tuple, Any
 
 import jsonschema
+import orjson as json
 
 from src import config_schema
 

@@ -54,6 +54,6 @@ with requests.Session() as session:
             }
             response = session.get(url, params=params)
             data = [from_yahoo(item) for item in csv.DictReader(StringIO(response.text))]
-            print(json.dumps(data, indent=2))
+            print(json.dumps(data, option=json.OPT_INDENT_2).encode('utf-8'))
     else:
         print('Problem')
