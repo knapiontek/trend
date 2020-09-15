@@ -50,11 +50,11 @@ CANDLE_SCHEMA = {
         'properties': {
             'symbol': {'type': 'string'},
             'timestamp': {'type': 'integer'},
-            'open': {'type': 'string'},
-            'close': {'type': 'string'},
-            'low': {'type': 'string'},
-            'high': {'type': 'string'},
-            'volume': {'type': 'string', 'format': 'integer'}
+            'open': {'type': 'float'},
+            'close': {'type': 'float'},
+            'low': {'type': 'float'},
+            'high': {'type': 'float'},
+            'volume': {'type': 'integer'}
         },
         'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
     }

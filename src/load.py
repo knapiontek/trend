@@ -44,7 +44,7 @@ def reload_exchanges():
                 LOG.info(f'Imported {len(content[exchange])} instruments from {exchange}')
 
 
-def show_instrument_range():
+def scope_series():
     with yahoo.DBSeries(tools.INTERVAL_1D) as db_series:
         time_range = {
             symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
@@ -81,7 +81,7 @@ def update_series():
                         db_series += time_series
 
 
-def verify_instrument(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
+def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Dict[str, List]:
     health = {}
     with yahoo.DBSeries(interval) as db_series:
         series = db_series[symbol]
@@ -119,20 +119,20 @@ def verify_series():
         with tools.Progress(name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
                 progress(symbol)
-                symbol_health = verify_instrument(symbol,
-                                                  tools.from_timestamp(ts_from),
-                                                  tools.from_timestamp(ts_to),
-                                                  interval)
+                symbol_health = verify_symbol_series(symbol,
+                                                     tools.from_timestamp(ts_from),
+                                                     tools.from_timestamp(ts_to),
+                                                     interval)
                 if symbol_health:
                     health[symbol] = symbol_health
 
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
-    # show_instrument_range()
-    # reload_exchanges()
+    reload_exchanges()
+    scope_series()
     update_series()
-    # verify_series()
+    verify_series()
 
 
 if __name__ == '__main__':

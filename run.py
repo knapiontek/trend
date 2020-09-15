@@ -13,8 +13,9 @@ def get_args():
 
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--reload-exchanges', action='store_true')
-    parser.add_argument('--show-instrument-range', action='store_true')
+
     parser.add_argument('--empty-series', action='store_true')
+    parser.add_argument('--scope-series', action='store_true')
     parser.add_argument('--update-series', action='store_true')
     parser.add_argument('--verify-series', action='store_true')
 
@@ -35,10 +36,11 @@ def main():
             web.run_dash(args.debug)
         if args.reload_exchanges:
             load.reload_exchanges()
-        if args.show_instrument_range:
-            load.show_instrument_range()
+
         if args.empty_series:
             store.empty_series()
+        if args.scope_series:
+            load.scope_series()
         if args.update_series:
             load.update_series()
         if args.verify_series:
