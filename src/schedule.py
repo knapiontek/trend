@@ -28,7 +28,7 @@ else:
 scheduler = BackgroundScheduler(daemon=True)
 
 
-@app.route("/schedule")
+@app.route("/schedule/")
 def list_scheduled_jobs():
     jobs = [
         {
