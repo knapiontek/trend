@@ -22,7 +22,7 @@ app_log.setLevel(logging.DEBUG)
 
 
 def wsgi(environ, start_response):
-    # gunicorn src.web:wsgi -b :8000
+    # gunicorn src.web:wsgi -b :8881
     return app.server(environ, start_response)
 
 
