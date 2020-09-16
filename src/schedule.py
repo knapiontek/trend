@@ -1,13 +1,23 @@
-import sched
-from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
 
 
-def update_series():
-    pass
+def task():
+    """ Function for test purposes. """
+    print("Scheduler is alive!")
 
 
-def execute():
-    s = sched.scheduler()
-    dt = datetime.today()
-    s.enterabs(dt, 0, update_series())
-    s.run()
+schedule = BackgroundScheduler(daemon=True)
+schedule.add_job(task, 'interval', seconds=10)
+schedule.start()
+
+app = Flask(__name__)
+
+
+@app.route("/home")
+def home():
+    return "Welcome Home :) !"
+
+
+if __name__ == "__main__":
+    app.run()
