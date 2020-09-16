@@ -1,11 +1,11 @@
 
 # TODO
 
-- Create scheduler based on aiohttp
-- Negative filter for the table
-- New column to show that verification pass
+- Create scheduler/flask/gunicorn
+- exchanges/symbols to arangodb
+- improve log for ./run.py
 - Make strategies and present them
-- pass or yes should be replaced with checkbox in boolean columns
+- "pass" or "yes" should be replaced with checkbox in boolean columns
 
 # Road Map
 
