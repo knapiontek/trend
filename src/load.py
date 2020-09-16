@@ -37,7 +37,7 @@ def reload_exchanges():
                         **s,
                         **{
                             'shortAllowed': boolean[short_allowance.get(s['symbolId'])],
-                            'health': boolean[True],
+                            'health': boolean[False],
                             'total': 0.0
                         }
                     }
@@ -118,9 +118,9 @@ def series_verify():
         time_range = series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
-    name = f'series-yahoo-{tools.interval_name(interval)}-health'
-    with store.FileStore(name, editable=True) as health:
-        with tools.Progress(name, time_range) as progress:
+    health_name = f'series-yahoo-{tools.interval_name(interval)}-health'
+    with store.FileStore(health_name, editable=True) as health:
+        with tools.Progress(health_name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
                 progress(symbol)
                 overlap, missing = verify_symbol_series(symbol,
@@ -134,6 +134,15 @@ def series_verify():
                     info['missing'] = missing
                 if info:
                     health[symbol] = info
+
+    # update exchanges with health
+    boolean = ['-', '+']
+    with store.FileStore(health_name) as health:
+        with store.FileStore('exchanges', editable=True) as exchanges:
+            for exchange, instruments in exchanges.items():
+                for instrument in instruments:
+                    symbol = instrument['symbolId']
+                    instrument['health'] = boolean[bool(not health.get(symbol))]
 
 
 def main():
