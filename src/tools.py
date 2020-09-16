@@ -202,7 +202,7 @@ def dt_last(exchange: str, interval: timedelta) -> datetime:
 def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: int):
     start = dt_from
     delta = interval * size
-    while start + interval < dt_to:
+    while start + interval <= dt_to:
         yield start + interval, min(start + delta, dt_to)
         start += delta
 
