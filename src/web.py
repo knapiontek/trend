@@ -13,12 +13,12 @@ from plotly.subplots import make_subplots
 
 from src import store, tools, style, yahoo, config, log
 
+LOG = logging.getLogger(__name__)
+
 app = dash.Dash(title='trend',
                 url_base_pathname='/trend/',
                 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
                 assets_folder=config.ASSETS_PATH)
-app_log = app.logger
-app_log.setLevel(logging.DEBUG)
 
 
 def wsgi(environ, start_response):
@@ -27,11 +27,10 @@ def wsgi(environ, start_response):
 
 
 if 'gunicorn' in sys.modules:
+    logging.getLogger('urllib3').setLevel(logging.INFO)
     gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
-else:
-    app.logger.handlers = []
+    logging.basicConfig(level=gunicorn_logger.level,
+                        handlers=gunicorn_logger.handlers)
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
@@ -80,7 +79,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
-    app_log.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
+    LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
     with store.FileStore('exchanges') as exchanges:
         instruments = sum([v for k, v in exchanges.items()], [])
     filtered = filter_instruments(instruments, filter_query)
@@ -94,7 +93,7 @@ def cb_price_graph(data, selected_rows):
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbolId']
-        app_log.debug(f'Loading time series for symbol: {symbol}')
+        LOG.debug(f'Loading time series for symbol: {symbol}')
         with yahoo.DBSeries(tools.INTERVAL_1D) as series:
             time_series = series[symbol]
 

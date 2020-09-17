@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from src import store, load, web, log
+from src import store, load, web, log, schedule
 
 LOG = logging.getLogger(__name__)
 
@@ -12,6 +12,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='Trend Tools')
 
     parser.add_argument('-w', '--web', action='store_true')
+    parser.add_argument('-c', '--schedule', action='store_true')
     parser.add_argument('-x', '--reload-exchanges', action='store_true')
 
     parser.add_argument('-e', '--series-empty', action='store_true')
@@ -34,6 +35,9 @@ def main():
     try:
         if args.web:
             web.run_dash(args.debug)
+        if args.schedule:
+            schedule.run_schedule(args.debug)
+
         if args.reload_exchanges:
             load.reload_exchanges()
 

@@ -48,7 +48,7 @@ def shutdown():
     scheduler.shutdown()
 
 
-@scheduler.scheduled_job('interval', seconds=30)
+@scheduler.scheduled_job('cron', hour=2)
 def load_trading_data():
     LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
     load.reload_exchanges()
