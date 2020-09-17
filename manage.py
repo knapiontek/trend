@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from src import store, load, web, log, schedule
+from src import log, load, store
 
 LOG = logging.getLogger(__name__)
 
@@ -34,8 +34,10 @@ def main():
 
     try:
         if args.web:
+            from src import web
             web.run_dash(args.debug)
         if args.schedule:
+            from src import schedule
             schedule.run_schedule(args.debug)
 
         if args.reload_exchanges:
