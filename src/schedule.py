@@ -19,10 +19,9 @@ def wsgi(environ, start_response):
 
 
 if 'gunicorn' in sys.modules:
-    logging.getLogger('urllib3').setLevel(logging.INFO)
     gunicorn_logger = logging.getLogger('gunicorn.error')
-    logging.basicConfig(level=gunicorn_logger.level,
-                        handlers=gunicorn_logger.handlers)
+    logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
+    logging.getLogger('urllib3').setLevel(logging.INFO)
 
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()

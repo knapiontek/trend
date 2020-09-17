@@ -159,14 +159,14 @@ class Exchange(Series):
         result = self.tnx_collection.insert_many(series)
         return self.handle_insert_result(result)
 
-    def __getitem__(self, exchange: str) -> Dict:
+    def __getitem__(self, exchange: str) -> List[Dict]:
         query = '''
             FOR series IN @@collection
                 FILTER series.exchange == @exchange
                 RETURN series
         '''
         result = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
-        return dict(result)
+        return list(result)
 
 
 def series_empty():

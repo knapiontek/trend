@@ -18,6 +18,6 @@ def init(script_file: str, debug: bool, to_screen=False, to_file=False):
                                            maxBytes=2e6,
                                            backupCount=5)
         handlers.append(file_handler)
-    logging.getLogger('urllib3').setLevel(logging.INFO)
     level = [logging.INFO, logging.DEBUG][debug]
     logging.basicConfig(level=level, format=config.LOG_FORMAT, handlers=handlers)
+    logging.getLogger('urllib3').setLevel(logging.INFO)

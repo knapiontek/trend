@@ -27,10 +27,9 @@ def wsgi(environ, start_response):
 
 
 if 'gunicorn' in sys.modules:
-    logging.getLogger('urllib3').setLevel(logging.INFO)
     gunicorn_logger = logging.getLogger('gunicorn.error')
-    logging.basicConfig(level=gunicorn_logger.level,
-                        handlers=gunicorn_logger.handlers)
+    logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
+    logging.getLogger('urllib3').setLevel(logging.INFO)
 
 SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
@@ -80,8 +79,8 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
-    with store.FileStore('exchanges') as exchanges:
-        instruments = sum([v for k, v in exchanges.items()], [])
+    with store.Exchange() as store_exchange:
+        instruments = store_exchange['NYSE'] + store_exchange['NASDAQ']
     filtered = filter_instruments(instruments, filter_query)
     return [i for i in tools.dict_it(filtered, SYMBOL_COLUMNS)]
 
