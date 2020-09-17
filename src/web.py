@@ -94,8 +94,8 @@ def cb_price_graph(data, selected_rows):
         row = data[selected_rows[0]]
         symbol = row['symbolId']
         LOG.debug(f'Loading time series for symbol: {symbol}')
-        with yahoo.DBSeries(tools.INTERVAL_1D) as series:
-            time_series = series[symbol]
+        with yahoo.TimeSeries(tools.INTERVAL_1D) as db_series:
+            time_series = db_series[symbol]
 
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
         dates = [tools.from_timestamp(ts) for ts in params['timestamp']]

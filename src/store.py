@@ -93,14 +93,14 @@ def create_collection(db: StandardDatabase, name: str):
         collection.add_hash_index(fields=['symbol', 'timestamp'], unique=True)
 
 
-class DBList:
+class Series:
     def __init__(self, name: str, editable=False):
         self.name = name
         self.editable = editable
         self.db = db_connect()
         create_collection(self.db, self.name)
 
-    def __enter__(self) -> 'DBList':
+    def __enter__(self) -> 'Series':
         write = self.name if self.editable else None
         self.tnx_db = self.db.begin_transaction(read=self.name, write=write)
         self.tnx_collection = self.tnx_db.collection(self.name)
@@ -113,19 +113,19 @@ class DBList:
             else:
                 self.tnx_db.commit_transaction()
 
-
-class DBSeries(DBList):
-    def __init__(self, name: str, editable=False):
-        super().__init__(name, editable)
-
-    def __add__(self, series: List[Dict]):
-        result = self.tnx_collection.insert_many(series)
+    def handle_insert_result(self, result: List) -> 'Series':
         errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
         if len(errors):
             error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
             LOG.exception(error)
             raise Exception(error)
         return self
+
+
+class TimeSeries(Series):
+    def __add__(self, series: List[Dict]):
+        result = self.tnx_collection.insert_many(series)
+        return self.handle_insert_result(result)
 
     def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
@@ -147,26 +147,22 @@ class DBSeries(DBList):
         return list(result)
 
 
-class DBExchange(DBList):
-    def __init__(self, name: str, editable=False):
-        super().__init__(name, editable)
+class Exchange(Series):
+    def __init__(self, editable=False):
+        super().__init__('exchange', editable)
 
-    def __add__(self, series: List[Dict]):
+    def __setitem__(self, exchange: str, series: List[Dict]):
+        self.tnx_collection.delete_match({'exchange': exchange})
         result = self.tnx_collection.insert_many(series)
-        errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
-        if len(errors):
-            error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
-            LOG.exception(error)
-            raise Exception(error)
-        return self
+        return self.handle_insert_result(result)
 
-    def __getitem__(self, symbol: str) -> Dict:
+    def __getitem__(self, exchange: str) -> Dict:
         query = '''
             FOR series IN @@collection
-                FILTER series.symbol == @symbol
+                FILTER series.exchange == @exchange
                 RETURN series
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
+        result = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
         return dict(result)
 
 

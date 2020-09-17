@@ -87,7 +87,7 @@ class Session(session.Session):
         return data
 
 
-class DBSeries(store.DBSeries):
+class TimeSeries(store.TimeSeries):
     def __init__(self, interval: timedelta, editable=False):
         module = __name__.split('.')[-1]
         name = f'series_{module}_{tools.interval_name(interval)}'
