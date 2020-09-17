@@ -11,18 +11,20 @@ LOG = logging.getLogger(__name__)
 def get_args():
     parser = argparse.ArgumentParser(description='Trend Tools')
 
-    parser.add_argument('-w', '--web', action='store_true')
-    parser.add_argument('-c', '--schedule', action='store_true')
-    parser.add_argument('-x', '--reload-exchanges', action='store_true')
+    parser.add_argument('--web', action='store_true')
+    parser.add_argument('--schedule', action='store_true')
+    parser.add_argument('--reload-exchanges', action='store_true')
 
-    parser.add_argument('-e', '--series-empty', action='store_true')
-    parser.add_argument('-r', '--series-range', action='store_true')
-    parser.add_argument('-u', '--series-update', action='store_true')
-    parser.add_argument('-v', '--series-verify', action='store_true')
+    parser.add_argument('--series-empty', action='store_true')
+    parser.add_argument('--exchange-empty', action='store_true')
 
-    parser.add_argument('-f', '--log-to-file', action='store_true')
-    parser.add_argument('-s', '--log-to-screen', action='store_true')
-    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('--series-range', action='store_true')
+    parser.add_argument('--series-update', action='store_true')
+    parser.add_argument('--series-verify', action='store_true')
+
+    parser.add_argument('--log-to-file', action='store_true')
+    parser.add_argument('--log-to-screen', action='store_true')
+    parser.add_argument('--debug', action='store_true')
 
     args, argv = parser.parse_known_args()
     return args
@@ -45,6 +47,9 @@ def main():
 
         if args.series_empty:
             store.series_empty()
+        if args.exchange_empty:
+            store.exchange_empty()
+
         if args.series_range:
             load.series_range()
         if args.series_update:

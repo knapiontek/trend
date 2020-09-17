@@ -41,8 +41,8 @@ class FileStore(dict):
         return tools.loop_it(self, key)
 
 
-CANDLE_SCHEMA = {
-    'message': 'candle-schema',
+SERIES_SCHEMA = {
+    'message': 'series-schema',
     'level': 'strict',
     'rule': {
         'type': 'object',
@@ -57,6 +57,22 @@ CANDLE_SCHEMA = {
             'volume': {'type': 'integer'}
         },
         'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
+    }
+}
+
+EXCHANGE_SCHEMA = {
+    'message': 'exchange-schema',
+    'level': 'strict',
+    'rule': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'exchange': {'type': 'string'},
+            'symbol': {'type': 'integer'},
+            'short-allowance': {'type': 'float'},
+            'health': {'type': 'float'}
+        },
+        'required': ['exchange', 'symbol', 'short-allowence', 'health']
     }
 }
 
@@ -77,14 +93,14 @@ def create_collection(db: StandardDatabase, name: str):
         collection.add_hash_index(fields=['symbol', 'timestamp'], unique=True)
 
 
-class DBSeries:
+class DBList:
     def __init__(self, name: str, editable=False):
         self.name = name
         self.editable = editable
         self.db = db_connect()
         create_collection(self.db, self.name)
 
-    def __enter__(self) -> 'DBSeries':
+    def __enter__(self) -> 'DBList':
         write = self.name if self.editable else None
         self.tnx_db = self.db.begin_transaction(read=self.name, write=write)
         self.tnx_collection = self.tnx_db.collection(self.name)
@@ -96,6 +112,11 @@ class DBSeries:
                 self.tnx_db.abort_transaction()
             else:
                 self.tnx_db.commit_transaction()
+
+
+class DBSeries(DBList):
+    def __init__(self, name: str, editable=False):
+        super().__init__(name, editable)
 
     def __add__(self, series: List[Dict]):
         result = self.tnx_collection.insert_many(series)
@@ -126,6 +147,29 @@ class DBSeries:
         return list(result)
 
 
+class DBExchange(DBList):
+    def __init__(self, name: str, editable=False):
+        super().__init__(name, editable)
+
+    def __add__(self, series: List[Dict]):
+        result = self.tnx_collection.insert_many(series)
+        errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
+        if len(errors):
+            error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
+            LOG.exception(error)
+            raise Exception(error)
+        return self
+
+    def __getitem__(self, symbol: str) -> Dict:
+        query = '''
+            FOR series IN @@collection
+                FILTER series.symbol == @symbol
+                RETURN series
+        '''
+        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
+        return dict(result)
+
+
 def series_empty():
     LOG.info(f'>> {series_empty.__name__}')
 
@@ -134,5 +178,17 @@ def series_empty():
     for name in names:
         if name.startswith('series'):
             LOG.info(f'Emptying series: {name}')
+            collection = db.collection(name)
+            collection.delete_match({})
+
+
+def exchange_empty():
+    LOG.info(f'>> {exchange_empty.__name__}')
+
+    db = db_connect()
+    names = [c['name'] for c in db.collections()]
+    for name in names:
+        if name.startswith('exchange'):
+            LOG.info(f'Emptying exchange: {name}')
             collection = db.collection(name)
             collection.delete_match({})
