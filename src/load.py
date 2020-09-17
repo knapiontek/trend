@@ -143,6 +143,8 @@ def series_verify():
                 for instrument in instruments:
                     symbol = instrument['symbolId']
                     instrument['health'] = boolean[bool(not health.get(symbol))]
+                with store.Exchange(editable=True) as store_exchange:
+                    store_exchange[exchange] = instruments
 
 
 def main():

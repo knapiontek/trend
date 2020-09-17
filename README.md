@@ -76,3 +76,14 @@ cat symbols1.json|jq -c '.[]|select(.ticker == "XOM" and .type == "STOCK")'|jq .
 curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
 ./run.py --show-instrument-range|jq '."ZBRA.NASDAQ"'
 ```
+
+```
+            FOR series IN series_yahoo_1d
+                COLLECT symbol = series.symbol
+                AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
+                RETURN {symbol, min_ts, max_ts}
+
+            FOR series IN series_yahoo_1d
+                FILTER series.timestamp == 1600214400
+                REMOVE series IN series_yahoo_1d
+```
