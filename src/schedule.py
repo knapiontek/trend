@@ -6,11 +6,11 @@ import orjson as json
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
 
-from src import load, tools
+from src import load, tools, log
+
+LOG = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app_log = app.logger
-app_log.setLevel(logging.DEBUG)
 
 
 def wsgi(environ, start_response):
@@ -19,17 +19,18 @@ def wsgi(environ, start_response):
 
 
 if 'gunicorn' in sys.modules:
+    logging.getLogger('urllib3').setLevel(logging.INFO)
     gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
-else:
-    app.logger.handlers = []
+    logging.basicConfig(level=gunicorn_logger.level,
+                        handlers=gunicorn_logger.handlers)
 
 scheduler = BackgroundScheduler(daemon=True)
+scheduler.start()
 
 
 @app.route("/schedule/")
 def list_scheduled_jobs():
+    LOG.info('Listing scheduled tasks')
     jobs = [
         {
             'name': job.name,
@@ -43,17 +44,27 @@ def list_scheduled_jobs():
 
 @atexit.register
 def shutdown():
+    LOG.info('Shutting down the scheduler')
     scheduler.shutdown()
 
 
-@scheduler.scheduled_job('cron', hour=2)
+@scheduler.scheduled_job('interval', seconds=30)
 def load_trading_data():
+    LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
     load.reload_exchanges()
     load.series_update()
     load.series_verify()
 
 
-scheduler.start()
+def run_schedule(debug: bool):
+    return app.run(debug=debug)
+
+
+def main():
+    debug = True
+    log.init(__file__, debug=debug, to_screen=True)
+    run_schedule(debug=debug)
+
 
 if __name__ == "__main__":
-    app.run()
+    main()
