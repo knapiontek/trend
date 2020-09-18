@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from src import log, load, store
+from src import log, data, store
 
 LOG = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def main():
             schedule.run_schedule(args.debug)
 
         if args.reload_exchanges:
-            load.reload_exchanges()
+            data.reload_exchanges()
 
         if args.series_empty:
             store.series_empty()
@@ -51,11 +51,11 @@ def main():
             store.exchange_empty()
 
         if args.series_range:
-            load.series_range()
+            data.series_range()
         if args.series_update:
-            load.series_update()
+            data.series_update()
         if args.series_verify:
-            load.series_verify()
+            data.series_verify()
     except:
         LOG.exception('TrendApp failed')
 
