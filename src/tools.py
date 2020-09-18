@@ -3,7 +3,7 @@ import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import List, Dict, Iterable, Tuple, Union, Any, Sized
+from typing import List, Dict, Iterable, Tuple, Union, Any, Sized, Set
 
 
 def url_encode(name: str) -> str:
@@ -166,7 +166,7 @@ EXCHANGE_HOLIDAYS = {
 
 
 @lru_cache(maxsize=16)
-def holidays(exchange: str):
+def holidays(exchange: str) -> Set[str]:
     return {dt_parse(d) for d in EXCHANGE_HOLIDAYS[exchange]}
 
 

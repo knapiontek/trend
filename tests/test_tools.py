@@ -1,6 +1,12 @@
 from datetime import datetime, timezone
 
-from src import tools
+from src import tools, config
+
+
+def test_holidays():
+    for exchange in config.ACTIVE_EXCHANGES:
+        result = tools.holidays(exchange)
+        assert isinstance(result, set)
 
 
 def test_last_workday():

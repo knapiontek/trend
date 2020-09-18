@@ -80,7 +80,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
 def cb_symbol_table(filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
     with store.Exchange() as store_exchange:
-        instruments = store_exchange['NYSE'] + store_exchange['NASDAQ']
+        instruments = sum([store_exchange[exchange] for exchange in config.ACTIVE_EXCHANGES], [])
     filtered = filter_instruments(instruments, filter_query)
     return [i for i in tools.dict_it(filtered, SYMBOL_COLUMNS)]
 

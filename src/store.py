@@ -87,14 +87,14 @@ def db_connect() -> StandardDatabase:
     return db
 
 
-def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple[str]):
+def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple):
     if not db.has_collection(name):
         collection = db.create_collection(name)
         collection.add_hash_index(fields=unique_fields, unique=True)
 
 
 class Series:
-    def __init__(self, name: str, editable: bool, unique_fields: Tuple[str]):
+    def __init__(self, name: str, editable: bool, unique_fields: Tuple):
         self.name = name
         self.editable = editable
         self.db = db_connect()
@@ -155,7 +155,8 @@ class Exchange(Series):
         super().__init__('exchange', editable, ('exchange', 'ticker'))
 
     def __setitem__(self, exchange: str, series: List[Dict]):
-        self.tnx_collection.delete_match({'exchange': exchange})
+        removed = self.tnx_collection.delete_match({'exchange': exchange})
+        LOG.info(f'Removed {removed} items from {exchange}')
         result = self.tnx_collection.insert_many(series)
         return self.handle_insert_result(result)
 
@@ -190,4 +191,6 @@ def exchange_empty():
         if name.startswith('exchange'):
             LOG.info(f'Emptying exchange: {name}')
             collection = db.collection(name)
-            collection.delete_match({})
+            for exchange in config.ACTIVE_EXCHANGES:
+                removed = collection.delete_match({'exchange': exchange})
+                LOG.info(f'Removed {removed} items from {exchange}')

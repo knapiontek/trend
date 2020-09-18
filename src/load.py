@@ -4,7 +4,7 @@ from typing import List, Dict, Tuple
 
 import orjson as json
 
-from src import store, tools, exante, yahoo, log
+from src import store, tools, exante, yahoo, log, config
 
 LOG = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def reload_exchanges():
 
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
-            for exchange in ['NYSE', 'NASDAQ']:
+            for exchange in config.ACTIVE_EXCHANGES:
                 symbols = session.symbols(exchange)
                 content[exchange] = [
                     {
@@ -137,6 +137,7 @@ def series_verify():
 
     # update exchanges with health
     boolean = ['-', '+']
+    store.exchange_empty()
     with store.FileStore(health_name) as health:
         with store.FileStore('exchanges', editable=True) as exchanges:
             for exchange, instruments in exchanges.items():
