@@ -5,41 +5,20 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'exante': {
-                    '$ref': '#/definitions/Exante'
-                },
-                'quandl': {
-                    '$ref': '#/definitions/Quandl'
-                },
-                'iex': {
-                    '$ref': '#/definitions/IEX'
-                },
-                'notify-run': {
-                    '$ref': '#/definitions/NotifyRun'
-                },
-                'arango-db': {
-                    '$ref': '#/definitions/ArangoDB'
-                }
+                'exante': {'$ref': '#/definitions/Exante'},
+                'quandl': {'$ref': '#/definitions/Quandl'},
+                'iex': {'$ref': '#/definitions/IEX'},
+                'notify-run': {'$ref': '#/definitions/NotifyRun'},
+                'arango-db': {'$ref': '#/definitions/ArangoDB'}
             },
-            'required': [
-                'exante',
-                'quandl',
-                'iex',
-                'notify-run',
-                'arango-db'
-            ]
+            'required': ['exante', 'quandl', 'iex', 'notify-run', 'arango-db']
         },
         'Exante': {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'app': {
-                    'type': 'string',
-                    'format': 'uuid'
-                },
-                'shared-key': {
-                    'type': 'string'
-                }
+                'app': {'type': 'string', 'format': 'uuid'},
+                'shared-key': {'type': 'string'}
             },
             'required': ['app', 'shared-key']
         },
@@ -47,9 +26,7 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'shared-key': {
-                    'type': 'string'
-                }
+                'shared-key': {'type': 'string'}
             },
             'required': ['shared-key']
         },
@@ -57,9 +34,7 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'shared-key': {
-                    'type': 'string'
-                }
+                'shared-key': {'type': 'string'}
             },
             'required': ['shared-key']
         },
@@ -67,14 +42,9 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'channel': {
-                    'type': 'string',
-                    'format': 'uri'
-                }
+                'channel': {'type': 'string', 'format': 'uri'}
             },
-            'required': [
-                'channel'
-            ]
+            'required': ['channel']
         },
         'ArangoDB': {
             'type': 'object',
