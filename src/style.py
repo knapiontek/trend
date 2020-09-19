@@ -16,8 +16,8 @@ def symbol_table(**kwargs):
             'backgroundColor': 'rgb(200, 212, 227)',
             'fontWeight': 'bold',
             'border': '1px solid white',
-            'paddingLeft': '10px',
-            'textAlign': 'center'
+            'paddingLeft': '3px',
+            'textAlign': 'left'
         },
         style_cell={'padding': '4px'},
         style_data={'border': '1px solid white'},
