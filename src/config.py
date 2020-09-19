@@ -5,7 +5,7 @@ from typing import Tuple, Any
 import jsonschema
 import orjson as json
 
-from src import config_schema
+from src import schema
 
 TREND_PATH = pathlib.Path(__file__).parent.parent
 SRC_PATH = TREND_PATH.joinpath('src')
@@ -23,7 +23,7 @@ ACTIVE_EXCHANGES = ['NYSE', 'NASDAQ']
 def load_file():
     with CONFIG_FILE.open() as read_io:
         config = json.loads(read_io.read())
-        jsonschema.validate(config, config_schema.CONFIG_SCHEMA)
+        jsonschema.validate(config, schema.CONFIG_SCHEMA)
         return config
 
 

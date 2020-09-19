@@ -33,7 +33,7 @@ conda env update -n trend-py37 -f requirements.yml
 conda activate trend-py37
 
 # run the app
-## note: deploy ~/.trend (see ./src/config_schema.py)
+## note: deploy ~/.trend (see ./src/schema.py)
 ./run.py --reload-exchanges --update-series --log-to-screen
 ./web.sh
 pkill --echo gunicorn
