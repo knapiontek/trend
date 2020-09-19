@@ -10,4 +10,4 @@ def test_exchanges():
             instruments = content[exchange]
             assert len(instruments) > 100
             for instrument in instruments:
-                jsonschema.validate(instrument, store.EXCHANGE_SCHEMA)
+                jsonschema.validate(instrument, store.EXCHANGE_SCHEMA['rule'])

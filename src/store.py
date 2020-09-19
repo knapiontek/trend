@@ -50,10 +50,10 @@ SERIES_SCHEMA = {
         'properties': {
             'symbol': {'type': 'string'},
             'timestamp': {'type': 'integer'},
-            'open': {'type': 'float'},
-            'close': {'type': 'float'},
-            'low': {'type': 'float'},
-            'high': {'type': 'float'},
+            'open': {'type': 'number', 'format': 'float'},
+            'close': {'type': 'number', 'format': 'float'},
+            'low': {'type': 'number', 'format': 'float'},
+            'high': {'type': 'number', 'format': 'float'},
             'volume': {'type': 'integer'}
         },
         'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
@@ -76,7 +76,7 @@ EXCHANGE_SCHEMA = {
             'short-symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
             'health': {'type': 'boolean'},
-            'total': {'type': 'float'}
+            'total': {'type': 'number', 'format': 'float'}
 
         },
         'required': ['symbol',
