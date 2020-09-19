@@ -28,18 +28,15 @@ def timestamp_from_exante(ts: int):
 
 
 def price_from_exante(dt: Dict, symbol: str) -> Dict:
-    try:
-        return {
-            'symbol': symbol,
-            'timestamp': timestamp_from_exante(dt['timestamp']),
-            'open': float(dt['open']),
-            'close': float(dt['close']),
-            'low': float(dt['low']),
-            'high': float(dt['high']),
-            'volume': int(dt['volume'])
-        }
-    except:
-        return {}
+    return {
+        'symbol': symbol,
+        'timestamp': timestamp_from_exante(dt['timestamp']),
+        'open': float(dt['open']),
+        'close': float(dt['close']),
+        'low': float(dt['low']),
+        'high': float(dt['high']),
+        'volume': int(dt['volume'])
+    }
 
 
 class Session(session.Session):
@@ -47,10 +44,17 @@ class Session(session.Session):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
 
-    def symbols(self, exchange: str):
+    def instruments(self, exchange: str) -> List[Dict]:
         response = self.get(f'{DATA_URL}/exchanges/{exchange}')
         assert response.status_code == 200, response.text
-        return response.json()
+        keys = {'symbol': 'symbolId',
+                'type': 'symbolType',
+                'exchange': 'exchange',
+                'currency': 'currency',
+                'name': 'name',
+                'description': 'description',
+                'short-symbol': 'ticker'}
+        return [{k: item[v] for k, v in keys.items()} for item in response.json()]
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         exante_from = dt_to_exante(dt_from)
@@ -80,7 +84,7 @@ class TimeSeries(store.TimeSeries):
         super().__init__(name, editable)
 
 
-def read_short_allowance() -> Dict[str, bool]:
+def read_shortables() -> Dict[str, bool]:
     import re
     import xlrd
     xls = config.EXANTE_PATH.joinpath('short-allowance.xls')
@@ -95,4 +99,4 @@ def read_short_allowance() -> Dict[str, bool]:
 
 
 if __name__ == '__main__':
-    read_short_allowance()
+    read_shortables()

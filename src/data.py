@@ -24,25 +24,20 @@ def read_sp500() -> Dict:
 def reload_exchanges():
     LOG.info(f'>> {reload_exchanges.__name__}')
 
-    boolean = ['-', '+']
     sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
-    short_allowance = exante.read_short_allowance()
+    shortables = exante.read_shortables()
 
     with store.FileStore('exchanges', editable=True) as content:
         with exante.Session() as session:
             for exchange in config.ACTIVE_EXCHANGES:
-                symbols = session.symbols(exchange)
+                instruments = session.instruments(exchange)
                 content[exchange] = [
-                    {
-                        **s,
-                        **{
-                            'shortAllowed': boolean[short_allowance.get(s['symbolId'])],
-                            'health': boolean[False],
-                            'total': 0.0
-                        }
-                    }
-                    for s in symbols
-                    if s['ticker'] in sp500
+                    dict(**instrument,
+                         shortable=bool(shortables.get(instrument['symbol'])),
+                         health=False,
+                         total=0.0)
+                    for instrument in instruments
+                    if instrument['short-symbol'] in sp500
                 ]
                 LOG.info(f'Imported {len(content[exchange])} instruments from {exchange}')
 
@@ -67,18 +62,17 @@ def series_update():
     with yahoo.TimeSeries(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
-        latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
+        series_latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
 
     with store.FileStore('exchanges') as exchanges:
         for exchange, instruments in exchanges.items():
             LOG.info(f'Updating exchange: {exchange} instruments: {len(instruments)}')
-            symbols = [i['symbolId'] for i in instruments]
-
-            instruments_latest = {s: latest.get(s) or dt_from_default for s in symbols}
+            symbols = tools.loop_it(instruments, 'symbol')
+            latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
             with yahoo.Session() as session:
-                with tools.Progress(f'series-update: {exchange}', instruments_latest) as progress:
-                    for symbol, dt_from in instruments_latest.items():
+                with tools.Progress(f'series-update: {exchange}', latest) as progress:
+                    for symbol, dt_from in latest.items():
                         progress(symbol)
                         dt_to = tools.dt_last(exchange, interval)
                         for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
@@ -136,14 +130,13 @@ def series_verify():
                     health[symbol] = info
 
     # update exchanges with health
-    boolean = ['-', '+']
     store.exchange_empty()
     with store.FileStore(health_name) as health:
         with store.FileStore('exchanges', editable=True) as exchanges:
             for exchange, instruments in exchanges.items():
                 for instrument in instruments:
-                    symbol = instrument['symbolId']
-                    instrument['health'] = boolean[bool(not health.get(symbol))]
+                    symbol = instrument['symbol']
+                    instrument['health'] = bool(not health.get(symbol))
                 with store.Exchange(editable=True) as store_exchange:
                     store_exchange[exchange] = instruments
 

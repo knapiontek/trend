@@ -67,12 +67,28 @@ EXCHANGE_SCHEMA = {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
+            'symbol': {'type': 'string'},
+            'type': {'type': 'string'},
             'exchange': {'type': 'string'},
-            'symbol': {'type': 'integer'},
-            'short-allowance': {'type': 'float'},
-            'health': {'type': 'float'}
+            'currency': {'type': 'string'},
+            'name': {'type': 'string'},
+            'description': {'type': 'string'},
+            'short-symbol': {'type': 'string'},
+            'shortable': {'type': 'boolean'},
+            'health': {'type': 'boolean'},
+            'total': {'type': 'float'}
+
         },
-        'required': ['exchange', 'symbol', 'short-allowence', 'health']
+        'required': ['symbol',
+                     'type',
+                     'exchange',
+                     'currency',
+                     'name',
+                     'description',
+                     'short-symbol',
+                     'shortable',
+                     'health',
+                     'total']
     }
 }
 
@@ -152,7 +168,7 @@ class TimeSeries(Series):
 
 class Exchange(Series):
     def __init__(self, editable=False):
-        super().__init__('exchange', editable, ('exchange', 'ticker'))
+        super().__init__('exchange', editable, ('exchange', 'short-symbol'))
 
     def __setitem__(self, exchange: str, series: List[Dict]):
         removed = self.tnx_collection.delete_match({'exchange': exchange})

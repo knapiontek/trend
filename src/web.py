@@ -31,7 +31,7 @@ if 'gunicorn' in sys.modules:
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
-SYMBOL_COLUMNS = {'symbolId': 'Symbol', 'shortAllowed': 'Short', 'health': 'Health', 'total': 'Total'}
+SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
 symbol_table = dash_table.DataTable(
@@ -41,7 +41,7 @@ symbol_table = dash_table.DataTable(
     row_selectable='single',
     page_action='none',
     sort_action='native',
-    **style.symbol_table(symbolId='left', shortAllowed='center', health='center')
+    **style.symbol_table(symbol='left', shortable='center', health='center')
 )
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
@@ -58,7 +58,6 @@ PATTERN = re.compile('{(\\w+)} contains (.+)')
 
 
 def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
-    # example: {currency} contains usd && {symbolType} contains stock && {symbolId} contains xom
     if filter_query:
         matches = [re.search(PATTERN, f) for f in filter_query.split(' && ')]
         if all(matches):
@@ -67,7 +66,7 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
             # filter-phrase in value for all filter-columns
             return [
                 i for i in instruments
-                if all(v.lower() in i[k].lower() for k, v in columns.items())
+                if all(v.lower() in str(i[k]).lower() for k, v in columns.items())
             ]
         else:
             return []
@@ -82,7 +81,7 @@ def cb_symbol_table(filter_query):
     with store.Exchange() as store_exchange:
         instruments = sum([store_exchange[exchange] for exchange in config.ACTIVE_EXCHANGES], [])
     filtered = filter_instruments(instruments, filter_query)
-    return [i for i in tools.dict_it(filtered, SYMBOL_COLUMNS)]
+    return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
 
 
 @app.callback(Output('data-graph', 'figure'),
@@ -91,7 +90,7 @@ def cb_price_graph(data, selected_rows):
     if selected_rows:
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
-        symbol = row['symbolId']
+        symbol = row['symbol']
         LOG.debug(f'Loading time series for symbol: {symbol}')
         with yahoo.TimeSeries(tools.INTERVAL_1D) as db_series:
             time_series = db_series[symbol]
