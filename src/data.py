@@ -21,8 +21,8 @@ def read_sp500() -> Dict:
     }
 
 
-def reload_exchanges():
-    LOG.info(f'>> {reload_exchanges.__name__}')
+def exchange_update():
+    LOG.info(f'>> {exchange_update.__name__}')
 
     sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
     shortables = exante.read_shortables()
@@ -144,7 +144,7 @@ def series_verify():
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
-    reload_exchanges()
+    exchange_update()
     series_range()
     series_update()
     series_verify()

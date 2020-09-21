@@ -13,11 +13,11 @@ def get_args():
 
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--schedule', action='store_true')
-    parser.add_argument('--reload-exchanges', action='store_true')
+
+    parser.add_argument('--exchange-empty', action='store_true')
+    parser.add_argument('--exchange-update', action='store_true')
 
     parser.add_argument('--series-empty', action='store_true')
-    parser.add_argument('--exchange-empty', action='store_true')
-
     parser.add_argument('--series-range', action='store_true')
     parser.add_argument('--series-update', action='store_true')
     parser.add_argument('--series-verify', action='store_true')
@@ -42,14 +42,13 @@ def main():
             from src import schedule
             schedule.run_schedule(args.debug)
 
-        if args.reload_exchanges:
-            data.reload_exchanges()
+        if args.exchange_empty:
+            store.exchange_empty()
+        if args.exchange_update:
+            data.exchange_update()
 
         if args.series_empty:
             store.series_empty()
-        if args.exchange_empty:
-            store.exchange_empty()
-
         if args.series_range:
             data.series_range()
         if args.series_update:

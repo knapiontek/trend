@@ -4,7 +4,7 @@ from src import data, store, config
 
 
 def test_exchanges():
-    data.reload_exchanges()
+    data.exchange_update()
     with store.FileStore('exchanges') as content:
         for exchange in config.ACTIVE_EXCHANGES:
             instruments = content[exchange]
