@@ -65,16 +65,16 @@ def series_update():
         series_latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
 
     with store.FileStore('exchanges') as exchanges:
-        for exchange, instruments in exchanges.items():
-            LOG.info(f'Updating exchange: {exchange} instruments: {len(instruments)}')
+        for exchange_name, instruments in exchanges.items():
+            LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
             symbols = tools.loop_it(instruments, 'symbol')
             latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
             with yahoo.Session() as session:
-                with tools.Progress(f'series-update: {exchange}', latest) as progress:
+                with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
                     for symbol, dt_from in latest.items():
                         progress(symbol)
-                        dt_to = tools.dt_last(exchange, interval)
+                        dt_to = tools.dt_last(exchange_name, interval)
                         for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
                             time_series = session.series(symbol, slice_from, slice_to, interval)
 
@@ -112,7 +112,8 @@ def series_verify():
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
-    health_name = f'series-yahoo-{tools.interval_name(interval)}-health'
+    module = yahoo.__name__.split('.')[-1]
+    health_name = f'series-{module}-{tools.interval_name(interval)}-health'
     with store.FileStore(health_name, editable=True) as health:
         with tools.Progress(health_name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
@@ -133,12 +134,12 @@ def series_verify():
     store.exchange_empty()
     with store.FileStore(health_name) as health:
         with store.FileStore('exchanges', editable=True) as exchanges:
-            for exchange, instruments in exchanges.items():
+            for exchange_name, instruments in exchanges.items():
                 for instrument in instruments:
                     symbol = instrument['symbol']
                     instrument['health'] = bool(not health.get(symbol))
-                with store.Exchange(editable=True) as store_exchange:
-                    store_exchange[exchange] = instruments
+                with store.Exchange(editable=True) as db_exchange:
+                    db_exchange[exchange_name] = instruments
 
 
 def main():

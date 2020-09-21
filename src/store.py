@@ -171,7 +171,7 @@ class Exchange(Series):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'))
 
     def __setitem__(self, exchange: str, series: List[Dict]):
-        removed = self.tnx_collection.delete_match({'exchange': exchange})
+        removed = self.tnx_collection.delete_match({'exchange': exchange}, sync=True)
         LOG.info(f'Removed {removed} items from {exchange}')
         result = self.tnx_collection.insert_many(series)
         return self.handle_insert_result(result)
@@ -205,7 +205,7 @@ def exchange_empty():
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('exchange'):
-            LOG.info(f'Emptying exchange: {name}')
+            LOG.info(f'Emptying series: {name}')
             collection = db.collection(name)
             for exchange in config.ACTIVE_EXCHANGES:
                 removed = collection.delete_match({'exchange': exchange})
