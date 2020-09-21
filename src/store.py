@@ -41,25 +41,6 @@ class FileStore(dict):
         return tools.loop_it(self, key)
 
 
-SERIES_SCHEMA = {
-    'message': 'series-schema',
-    'level': 'strict',
-    'rule': {
-        'type': 'object',
-        'additionalProperties': False,
-        'properties': {
-            'symbol': {'type': 'string'},
-            'timestamp': {'type': 'integer'},
-            'open': {'type': 'number', 'format': 'float'},
-            'close': {'type': 'number', 'format': 'float'},
-            'low': {'type': 'number', 'format': 'float'},
-            'high': {'type': 'number', 'format': 'float'},
-            'volume': {'type': 'integer'}
-        },
-        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
-    }
-}
-
 EXCHANGE_SCHEMA = {
     'message': 'exchange-schema',
     'level': 'strict',
@@ -92,6 +73,25 @@ EXCHANGE_SCHEMA = {
     }
 }
 
+TIME_SERIES_SCHEMA = {
+    'message': 'series-schema',
+    'level': 'strict',
+    'rule': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'symbol': {'type': 'string'},
+            'timestamp': {'type': 'integer'},
+            'open': {'type': 'number', 'format': 'float'},
+            'close': {'type': 'number', 'format': 'float'},
+            'low': {'type': 'number', 'format': 'float'},
+            'high': {'type': 'number', 'format': 'float'},
+            'volume': {'type': 'integer'}
+        },
+        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
+    }
+}
+
 
 def db_connect() -> StandardDatabase:
     url, username, password, db_name = config.arango_db_auth()
@@ -103,18 +103,18 @@ def db_connect() -> StandardDatabase:
     return db
 
 
-def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple):
+def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, schema: Dict):
     if not db.has_collection(name):
-        collection = db.create_collection(name)
+        collection = db.create_collection(name=name, schema=schema)
         collection.add_hash_index(fields=unique_fields, unique=True)
 
 
 class Series:
-    def __init__(self, name: str, editable: bool, unique_fields: Tuple):
+    def __init__(self, name: str, editable: bool, unique_fields: Tuple, schema: Dict):
         self.name = name
         self.editable = editable
         self.db = db_connect()
-        create_collection(self.db, self.name, unique_fields)
+        create_collection(self.db, self.name, unique_fields, schema)
 
     def __enter__(self) -> 'Series':
         write = self.name if self.editable else None
@@ -138,9 +138,29 @@ class Series:
         return self
 
 
+class Exchange(Series):
+    def __init__(self, editable=False):
+        super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
+
+    def __setitem__(self, exchange: str, series: List[Dict]):
+        removed = self.tnx_collection.delete_match({'exchange': exchange}, sync=True)
+        LOG.info(f'Removed {removed} items from {exchange}')
+        result = self.tnx_collection.insert_many(series, overwrite=True)
+        return self.handle_insert_result(result)
+
+    def __getitem__(self, exchange: str) -> List[Dict]:
+        query = '''
+            FOR series IN @@collection
+                FILTER series.exchange == @exchange
+                RETURN series
+        '''
+        result = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
+        return list(result)
+
+
 class TimeSeries(Series):
     def __init__(self, name: str, editable: bool):
-        super().__init__(name, editable, ('symbol', 'timestamp'))
+        super().__init__(name, editable, ('symbol', 'timestamp'), TIME_SERIES_SCHEMA)
 
     def __add__(self, series: List[Dict]):
         result = self.tnx_collection.insert_many(series)
@@ -166,38 +186,6 @@ class TimeSeries(Series):
         return list(result)
 
 
-class Exchange(Series):
-    def __init__(self, editable=False):
-        super().__init__('exchange', editable, ('exchange', 'short-symbol'))
-
-    def __setitem__(self, exchange: str, series: List[Dict]):
-        removed = self.tnx_collection.delete_match({'exchange': exchange}, sync=True)
-        LOG.info(f'Removed {removed} items from {exchange}')
-        result = self.tnx_collection.insert_many(series, overwrite=True)
-        return self.handle_insert_result(result)
-
-    def __getitem__(self, exchange: str) -> List[Dict]:
-        query = '''
-            FOR series IN @@collection
-                FILTER series.exchange == @exchange
-                RETURN series
-        '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
-        return list(result)
-
-
-def series_empty():
-    LOG.info(f'>> {series_empty.__name__}')
-
-    db = db_connect()
-    names = [c['name'] for c in db.collections()]
-    for name in names:
-        if name.startswith('series'):
-            LOG.info(f'Emptying series: {name}')
-            collection = db.collection(name)
-            collection.delete_match({})
-
-
 def exchange_empty():
     LOG.info(f'>> {exchange_empty.__name__}')
 
@@ -210,3 +198,15 @@ def exchange_empty():
             for exchange in config.ACTIVE_EXCHANGES:
                 removed = collection.delete_match({'exchange': exchange})
                 LOG.info(f'Removed {removed} items from {exchange}')
+
+
+def series_empty():
+    LOG.info(f'>> {series_empty.__name__}')
+
+    db = db_connect()
+    names = [c['name'] for c in db.collections()]
+    for name in names:
+        if name.startswith('series'):
+            LOG.info(f'Emptying series: {name}')
+            collection = db.collection(name)
+            collection.delete_match({})
