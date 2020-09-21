@@ -15,4 +15,4 @@ dependencies:
       - orjson==3.3.1
       - lxml==4.4.2
       - dash==1.15.0
-      - python-arango==5.4.0
+      - python-arango==6.0.0

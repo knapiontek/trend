@@ -173,7 +173,7 @@ class Exchange(Series):
     def __setitem__(self, exchange: str, series: List[Dict]):
         removed = self.tnx_collection.delete_match({'exchange': exchange}, sync=True)
         LOG.info(f'Removed {removed} items from {exchange}')
-        result = self.tnx_collection.insert_many(series)
+        result = self.tnx_collection.insert_many(series, overwrite=True)
         return self.handle_insert_result(result)
 
     def __getitem__(self, exchange: str) -> List[Dict]:
