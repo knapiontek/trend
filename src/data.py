@@ -104,6 +104,19 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
     return overlap, missing
 
 
+def exchange_health_update(interval: timedelta):
+    module = yahoo.__name__.split('.')[-1]
+    health_name = f'series-{module}-{tools.interval_name(interval)}-health'
+    with store.FileStore(health_name) as health:
+        with store.Exchange(editable=True) as db_exchange:
+            for exchange_name in config.ACTIVE_EXCHANGES:
+                instruments = db_exchange[exchange_name]
+                for instrument in instruments:
+                    symbol = instrument['symbol']
+                    instrument['health'] = bool(not health.get(symbol))
+                db_exchange[exchange_name] = instruments
+
+
 def series_verify():
     LOG.info(f'>> {series_verify.__name__}')
 
@@ -130,16 +143,7 @@ def series_verify():
                 if info:
                     health[symbol] = info
 
-    # update exchanges with health
-    store.exchange_empty()
-    with store.FileStore(health_name) as health:
-        with store.FileStore('exchanges', editable=True) as exchanges:
-            for exchange_name, instruments in exchanges.items():
-                for instrument in instruments:
-                    symbol = instrument['symbol']
-                    instrument['health'] = bool(not health.get(symbol))
-                with store.Exchange(editable=True) as db_exchange:
-                    db_exchange[exchange_name] = instruments
+    exchange_health_update(interval)
 
 
 def main():
@@ -148,6 +152,7 @@ def main():
     series_range()
     series_update()
     series_verify()
+    exchange_health_update(tools.INTERVAL_1D)
 
 
 if __name__ == '__main__':

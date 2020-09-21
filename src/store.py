@@ -2,7 +2,7 @@ import logging
 from typing import List, Tuple, Iterable, Dict, Any
 
 import orjson as json
-from arango import ArangoClient, DocumentInsertError
+from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
 
 from src import config, tools
@@ -129,13 +129,13 @@ class Series:
             else:
                 self.tnx_db.commit_transaction()
 
-    def handle_insert_result(self, result: List) -> 'Series':
-        errors = [str(e) for e in result if isinstance(e, DocumentInsertError)]
+    @staticmethod
+    def verify_result(result: List):
+        errors = [str(e) for e in result if isinstance(e, ArangoServerError)]
         if len(errors):
             error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
             LOG.exception(error)
             raise Exception(error)
-        return self
 
 
 class Exchange(Series):
@@ -143,10 +143,10 @@ class Exchange(Series):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
 
     def __setitem__(self, exchange: str, series: List[Dict]):
-        removed = self.tnx_collection.delete_match({'exchange': exchange}, sync=True)
-        LOG.info(f'Removed {removed} items from {exchange}')
-        result = self.tnx_collection.insert_many(series, overwrite=True)
-        return self.handle_insert_result(result)
+        result = self.tnx_collection.update_many(series)
+        self.verify_result(result)
+        LOG.debug(f'Modified {len(result)} documents for the exchange {exchange}')
+        return self
 
     def __getitem__(self, exchange: str) -> List[Dict]:
         query = '''
@@ -164,7 +164,8 @@ class TimeSeries(Series):
 
     def __add__(self, series: List[Dict]):
         result = self.tnx_collection.insert_many(series)
-        return self.handle_insert_result(result)
+        self.verify_result(result)
+        return self
 
     def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
