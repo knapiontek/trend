@@ -28,11 +28,11 @@ def exchange_update():
     shortables = exante.read_shortables()
 
     store.exchange_empty()
-    with store.Exchanges(editable=True) as exchanges:
+    with store.Exchanges(editable=True) as db_exchanges:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
                 instruments = session.instruments(name)
-                exchanges += [
+                db_exchanges += [
                     dict(instrument,
                          shortable=instrument['symbol'] in shortables,
                          health=False,
@@ -40,7 +40,7 @@ def exchange_update():
                     for instrument in instruments
                     if instrument['short-symbol'] in snp500
                 ]
-                LOG.info(f'Imported {len(exchanges[name])} instruments from exchange {name}')
+                LOG.info(f'Imported {len(instruments)} instruments from exchange {name}')
 
 
 def series_range():
@@ -91,7 +91,7 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
 
     exchange = symbol.split('.')[-1]
     dt_holidays = tools.holidays(exchange)
-    db_dates = {tools.from_timestamp(s['timestamp']) for s in series}
+    db_dates = {tools.from_timestamp(ts) for ts in tools.loop_it(series, 'timestamp')}
 
     overlap = [tools.dt_format(d) for d in db_dates & dt_holidays]
 
@@ -111,12 +111,13 @@ def series_verify():
     LOG.info(f'>> {series_verify.__name__}')
 
     interval = tools.INTERVAL_1D
+    module = yahoo.__name__.split('.')[-1]
+    health_name = f'series-{module}-{tools.interval_name(interval)}-health'
+
     with yahoo.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
-    module = yahoo.__name__.split('.')[-1]
-    health_name = f'series-{module}-{tools.interval_name(interval)}-health'
     with store.FileStore(health_name, editable=True) as health:
         with tools.Progress(health_name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
@@ -136,11 +137,10 @@ def series_verify():
     with store.FileStore(health_name) as health:
         with store.Exchanges(editable=True) as db_exchanges:
             for name in config.ACTIVE_EXCHANGES:
-                instruments = [
+                db_exchanges |= [
                     dict(instrument, health=instrument['symbol'] not in health)
                     for instrument in db_exchanges[name]
                 ]
-                db_exchanges.update(instruments)
 
 
 def main():

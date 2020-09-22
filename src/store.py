@@ -129,12 +129,11 @@ class SeriesClazz:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __add__(self, series: List[Dict]) -> 'SeriesClazz':
+    def __iadd__(self, series: List[Dict]) -> 'SeriesClazz':
         result = self.tnx_collection.insert_many(series)
-        self.verify_result(result)
-        return self
+        return self.verify_result(result)
 
-    def update(self, series: List[Dict]) -> 'SeriesClazz':
+    def __ior__(self, series: List[Dict]) -> 'SeriesClazz':
         result = self.tnx_collection.update_many(series)
         return self.verify_result(result)
 
