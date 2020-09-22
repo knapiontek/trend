@@ -78,8 +78,8 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
-    with store.Exchange() as db_exchange:
-        instruments = sum([db_exchange[name] for name in config.ACTIVE_EXCHANGES], [])
+    with store.Exchanges() as db_exchanges:
+        instruments = sum([db_exchanges[name] for name in config.ACTIVE_EXCHANGES], [])
     filtered = filter_instruments(instruments, filter_query)
     return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
 
@@ -92,7 +92,7 @@ def cb_price_graph(data, selected_rows):
         row = data[selected_rows[0]]
         symbol = row['symbol']
         LOG.debug(f'Loading time series for symbol: {symbol}')
-        with yahoo.TimeSeries(tools.INTERVAL_1D) as db_series:
+        with yahoo.Series(tools.INTERVAL_1D) as db_series:
             time_series = db_series[symbol]
 
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))

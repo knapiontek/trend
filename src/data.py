@@ -9,7 +9,7 @@ from src import store, tools, exante, yahoo, log, config
 LOG = logging.getLogger(__name__)
 
 
-def read_sp500() -> Dict:
+def read_snp500() -> Dict:
     import pandas as pd
     table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
     df = table[0]
@@ -24,28 +24,29 @@ def read_sp500() -> Dict:
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
 
-    sp500 = list(tools.loop_it(read_sp500(), 'Symbol'))
+    snp500 = list(tools.loop_it(read_snp500(), 'Symbol'))
     shortables = exante.read_shortables()
 
-    with store.FileStore('exchanges', editable=True) as content:
+    store.exchange_empty()
+    with store.Exchanges(editable=True) as exchanges:
         with exante.Session() as session:
-            for exchange in config.ACTIVE_EXCHANGES:
-                instruments = session.instruments(exchange)
-                content[exchange] = [
-                    dict(**instrument,
-                         shortable=bool(shortables.get(instrument['symbol'])),
+            for name in config.ACTIVE_EXCHANGES:
+                instruments = session.instruments(name)
+                exchanges += [
+                    dict(instrument,
+                         shortable=instrument['symbol'] in shortables,
                          health=False,
                          total=0.0)
                     for instrument in instruments
-                    if instrument['short-symbol'] in sp500
+                    if instrument['short-symbol'] in snp500
                 ]
-                LOG.info(f'Imported {len(content[exchange])} instruments from {exchange}')
+                LOG.info(f'Imported {len(exchanges[name])} instruments from exchange {name}')
 
 
 def series_range():
     LOG.info(f'>> {series_range.__name__}')
 
-    with yahoo.TimeSeries(tools.INTERVAL_1D) as db_series:
+    with yahoo.Series(tools.INTERVAL_1D) as db_series:
         time_range = {
             symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
             for symbol, min_ts, max_ts in tools.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
@@ -59,13 +60,14 @@ def series_update():
     interval = tools.INTERVAL_1D
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
 
-    with yahoo.TimeSeries(interval) as db_series:
+    with yahoo.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
-        series_latest = {r['symbol']: tools.from_timestamp(r['max_ts']) for r in time_range}
+        series_latest = {tr['symbol']: tools.from_timestamp(tr['max_ts']) for tr in time_range}
 
-    with store.FileStore('exchanges') as exchanges:
-        for exchange_name, instruments in exchanges.items():
+    with store.Exchanges() as db_exchanges:
+        for exchange_name in config.ACTIVE_EXCHANGES:
+            instruments = db_exchanges[exchange_name]
             LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
             symbols = tools.loop_it(instruments, 'symbol')
             latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
@@ -78,12 +80,12 @@ def series_update():
                         for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
                             time_series = session.series(symbol, slice_from, slice_to, interval)
 
-                            with yahoo.TimeSeries(interval, editable=True) as db_series:
+                            with yahoo.Series(interval, editable=True) as db_series:
                                 db_series += time_series
 
 
 def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Tuple[List, List]:
-    with yahoo.TimeSeries(interval) as db_series:
+    with yahoo.Series(interval) as db_series:
         series = db_series[symbol]
 
     exchange = symbol.split('.')[-1]
@@ -104,24 +106,11 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
     return overlap, missing
 
 
-def exchange_health_update(interval: timedelta):
-    module = yahoo.__name__.split('.')[-1]
-    health_name = f'series-{module}-{tools.interval_name(interval)}-health'
-    with store.FileStore(health_name) as health:
-        with store.Exchange(editable=True) as db_exchange:
-            for exchange_name in config.ACTIVE_EXCHANGES:
-                instruments = db_exchange[exchange_name]
-                for instrument in instruments:
-                    symbol = instrument['symbol']
-                    instrument['health'] = bool(not health.get(symbol))
-                db_exchange[exchange_name] = instruments
-
-
 def series_verify():
     LOG.info(f'>> {series_verify.__name__}')
 
     interval = tools.INTERVAL_1D
-    with yahoo.TimeSeries(interval) as db_series:
+    with yahoo.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
@@ -143,7 +132,14 @@ def series_verify():
                 if info:
                     health[symbol] = info
 
-    exchange_health_update(interval)
+    with store.FileStore(health_name) as health:
+        with store.Exchanges(editable=True) as db_exchanges:
+            for name in config.ACTIVE_EXCHANGES:
+                instruments = [
+                    dict(instrument, health=instrument['symbol'] not in health)
+                    for instrument in db_exchanges[name]
+                ]
+                db_exchanges.update(instruments)
 
 
 def main():
@@ -152,7 +148,6 @@ def main():
     series_range()
     series_update()
     series_verify()
-    exchange_health_update(tools.INTERVAL_1D)
 
 
 if __name__ == '__main__':

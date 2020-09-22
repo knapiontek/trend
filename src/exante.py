@@ -77,7 +77,7 @@ class Session(session.Session):
         return [price_from_exante(datum, symbol) for datum in data]
 
 
-class TimeSeries(store.TimeSeries):
+class Series(store.Series):
     def __init__(self, interval: timedelta, editable=False):
         module = __name__.split('.')[-1]
         name = f'series_{module}_{tools.interval_name(interval)}'

@@ -4,14 +4,14 @@ from typing import List, Type
 from src import tools, exante, yahoo, session
 
 
-def read_data_source(clazz: Type[session.Session]) -> List:
+def read_data_source(session_clazz: Type[session.Session]) -> List:
     symbol = 'XOM.NYSE'
     interval = tools.INTERVAL_1D
     dt_from = datetime(2020, 8, 3, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 11, tzinfo=timezone.utc)
 
-    with clazz() as _session:
-        return _session.series(symbol, dt_from, dt_to, interval)
+    with session_clazz() as data_session:
+        return data_session.series(symbol, dt_from, dt_to, interval)
 
 
 def accept_price(v1: float, v2: float) -> bool:

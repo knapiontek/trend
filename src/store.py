@@ -73,7 +73,7 @@ EXCHANGE_SCHEMA = {
     }
 }
 
-TIME_SERIES_SCHEMA = {
+SERIES_SCHEMA = {
     'message': 'series-schema',
     'level': 'strict',
     'rule': {
@@ -109,14 +109,14 @@ def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, sch
         collection.add_hash_index(fields=unique_fields, unique=True)
 
 
-class Series:
+class SeriesClazz:
     def __init__(self, name: str, editable: bool, unique_fields: Tuple, schema: Dict):
         self.name = name
         self.editable = editable
         self.db = db_connect()
         create_collection(self.db, self.name, unique_fields, schema)
 
-    def __enter__(self) -> 'Series':
+    def __enter__(self) -> 'SeriesClazz':
         write = self.name if self.editable else None
         self.tnx_db = self.db.begin_transaction(read=self.name, write=write)
         self.tnx_collection = self.tnx_db.collection(self.name)
@@ -129,24 +129,27 @@ class Series:
             else:
                 self.tnx_db.commit_transaction()
 
-    @staticmethod
-    def verify_result(result: List):
+    def __add__(self, series: List[Dict]) -> 'SeriesClazz':
+        result = self.tnx_collection.insert_many(series)
+        self.verify_result(result)
+        return self
+
+    def update(self, series: List[Dict]) -> 'SeriesClazz':
+        result = self.tnx_collection.update_many(series)
+        return self.verify_result(result)
+
+    def verify_result(self, result: List) -> 'SeriesClazz':
         errors = [str(e) for e in result if isinstance(e, ArangoServerError)]
         if len(errors):
             error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
             LOG.exception(error)
             raise Exception(error)
+        return self
 
 
-class Exchange(Series):
+class Exchanges(SeriesClazz):
     def __init__(self, editable=False):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
-
-    def __setitem__(self, exchange: str, series: List[Dict]):
-        result = self.tnx_collection.update_many(series)
-        self.verify_result(result)
-        LOG.debug(f'Modified {len(result)} documents for the exchange {exchange}')
-        return self
 
     def __getitem__(self, exchange: str) -> List[Dict]:
         query = '''
@@ -158,14 +161,9 @@ class Exchange(Series):
         return list(result)
 
 
-class TimeSeries(Series):
+class Series(SeriesClazz):
     def __init__(self, name: str, editable: bool):
-        super().__init__(name, editable, ('symbol', 'timestamp'), TIME_SERIES_SCHEMA)
-
-    def __add__(self, series: List[Dict]):
-        result = self.tnx_collection.insert_many(series)
-        self.verify_result(result)
-        return self
+        super().__init__(name, editable, ('symbol', 'timestamp'), SERIES_SCHEMA)
 
     def __getitem__(self, symbol: str) -> List[Dict]:
         query = '''
@@ -194,11 +192,11 @@ def exchange_empty():
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('exchange'):
-            LOG.info(f'Emptying series: {name}')
+            LOG.debug(f'Emptying arango collection: {name}')
             collection = db.collection(name)
             for exchange in config.ACTIVE_EXCHANGES:
                 removed = collection.delete_match({'exchange': exchange})
-                LOG.info(f'Removed {removed} items from {exchange}')
+                LOG.debug(f'Removed {removed} items from {exchange}')
 
 
 def series_empty():
@@ -208,6 +206,7 @@ def series_empty():
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('series'):
-            LOG.info(f'Emptying series: {name}')
+            LOG.debug(f'Emptying arango collection: {name}')
             collection = db.collection(name)
-            collection.delete_match({})
+            removed = collection.delete_match({})
+            LOG.debug(f'Removed {removed} items from {name}')
