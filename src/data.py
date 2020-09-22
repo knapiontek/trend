@@ -65,23 +65,24 @@ def series_update():
         LOG.info(f'Time range entries: {len(time_range)}')
         series_latest = {tr['symbol']: tools.from_timestamp(tr['max_ts']) for tr in time_range}
 
-    with store.Exchanges() as db_exchanges:
-        for exchange_name in config.ACTIVE_EXCHANGES:
+    for exchange_name in config.ACTIVE_EXCHANGES:
+        with store.Exchanges() as db_exchanges:
             instruments = db_exchanges[exchange_name]
-            LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
-            symbols = tools.loop_it(instruments, 'symbol')
-            latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
-            with yahoo.Session() as session:
-                with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
-                    for symbol, dt_from in latest.items():
-                        progress(symbol)
-                        dt_to = tools.dt_last(exchange_name, interval)
-                        for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
-                            time_series = session.series(symbol, slice_from, slice_to, interval)
+        LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
+        symbols = tools.loop_it(instruments, 'symbol')
+        latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
-                            with yahoo.Series(interval, editable=True) as db_series:
-                                db_series += time_series
+        with yahoo.Session() as session:
+            with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
+                for symbol, dt_from in latest.items():
+                    progress(symbol)
+                    dt_to = tools.dt_last(exchange_name, interval)
+                    for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
+                        time_series = session.series(symbol, slice_from, slice_to, interval)
+
+                        with yahoo.Series(interval, editable=True) as db_series:
+                            db_series += time_series
 
 
 def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> Tuple[List, List]:
