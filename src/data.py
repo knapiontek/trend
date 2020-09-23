@@ -32,7 +32,7 @@ def exchange_update():
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
                 instruments = session.instruments(name)
-                db_exchanges += [
+                documents = [
                     dict(instrument,
                          shortable=instrument['symbol'] in shortables,
                          health=False,
@@ -40,7 +40,8 @@ def exchange_update():
                     for instrument in instruments
                     if instrument['short-symbol'] in snp500
                 ]
-                LOG.info(f'Imported {len(instruments)} instruments from exchange {name}')
+                db_exchanges += documents
+                LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
 
 
 def series_range():
@@ -91,12 +92,12 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
 
     exchange = symbol.split('.')[-1]
     dt_holidays = tools.holidays(exchange)
-    db_dates = {tools.from_timestamp(ts) for ts in tools.loop_it(series, 'timestamp')}
+    dt_series = {tools.from_timestamp(ts) for ts in tools.loop_it(series, 'timestamp')}
 
-    overlap = [tools.dt_format(d) for d in db_dates & dt_holidays]
+    overlap = [tools.dt_format(d) for d in dt_series & dt_holidays]
 
     missing = []
-    all_days = db_dates | dt_holidays
+    all_days = dt_series | dt_holidays
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
