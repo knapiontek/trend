@@ -12,22 +12,22 @@ from src import tools
 
 DT_FORMAT = '%Y%m%d'
 FILES = {'d_us_txt.zip', 'd_uk_txt.zip', 'd_de_txt.zip', 'd_pl_txt.zip'}
-FOLDERS = {'us/nyse stocks',
-           'us/nyse etfs',
-           'us/nasdaq stocks',
-           'us/nasdaq etfs',
-           'uk/lse stocks intl',
-           'de/xetra',
-           'pl/wse stocks'}
+URL_ZIP = 'https://static.stooq.com/db/h/d_{name}_txt.zip'
+STOCK_PATHS = {'us/nyse stocks',
+               'us/nyse etfs',
+               'us/nasdaq stocks',
+               'us/nasdaq etfs',
+               'uk/lse stocks intl',
+               'de/xetra',
+               'pl/wse stocks'}
 
 
-def download():
-    zip_file_url = 'https://static.stooq.com/db/h/d_uk_txt.zip'
-    path = '/tmp/d_uk_txt'
-    print('downloading ...')
-    response = requests.get(zip_file_url)
+def download(name):
+    path = '/tmp/stooq/'
+    print(f'downloading {name} ...')
+    response = requests.get(URL_ZIP.format(name=name))
     z = zipfile.ZipFile(io.BytesIO(response.content))
-    print('extracting ...')
+    print(f'extracting {name} ...')
     z.extractall(path)
 
 
@@ -52,11 +52,13 @@ def price_from_stooq(dt: Dict) -> Dict:
 
 
 def load():
-    path = Path('/tmp/d_uk_txt/data/daily/uk/lse stocks intl/ogzd.uk.txt')
+    path = Path('/tmp/stooq/data/daily/uk/lse stocks intl/ogzd.uk.txt')
     with path.open() as read_io:
         for dt in csv.DictReader(read_io):
             pprint(price_from_stooq(dt))
 
 
 if __name__ == '__main__':
+    for name in ('us', 'uk', 'de', 'pl'):
+        download(name)
     load()
