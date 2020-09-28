@@ -10,6 +10,11 @@ def url_encode(name: str) -> str:
     return urllib.parse.quote(name, safe='')
 
 
+def symbol_split(symbol: str) -> Tuple[str, str]:
+    parts = symbol.split('.')
+    return '.'.join(parts[:-1]), parts[-1]
+
+
 def from_timestamp(ts: int) -> datetime:
     return datetime.fromtimestamp(ts, tz=timezone.utc)
 
