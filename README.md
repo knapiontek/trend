@@ -60,7 +60,17 @@
 gdx, sil, silj
 zkb gold
 zkb silver
+nom.cn
 trade break-outs with build-up
+
+### Market Sentiment
+- PUT/CALL ratio
+- Sentiment Research
+- Funds cash flow
+- Position of commercials on the dollar index
+- Truck Tonnage vs S&P500
+- Fear & Greed Index
+- Dollar Index (reverse correlation to the stock)
 
 # CLI
 
