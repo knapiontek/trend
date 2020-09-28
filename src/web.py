@@ -34,9 +34,7 @@ if 'gunicorn' in sys.modules:
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
-exchange_choice = dcc.Dropdown(id='exchange_choice',
-                               options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
-                               className='choice')
+exchange_choice = dcc.Dropdown(id='exchange-choice', className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -48,12 +46,13 @@ symbol_table = dash_table.DataTable(
     **style.symbol_table(symbol='left', shortable='center', health='center')
 )
 
-source_choice = dcc.Dropdown(className='choice')
+source_choice = dcc.Dropdown(id='source-choice', className='choice')
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
 
 app.layout = html.Div(
     [
+        dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
             exchange_choice,
             html.Div(symbol_table, className='scroll')
@@ -86,6 +85,15 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
         return instruments
 
 
+@app.callback([Output('exchange-choice', 'options'),
+               Output('exchange-choice', 'value')],
+              [Input('nil-store', 'data')])
+def cb_exchange_choice(data):
+    options = [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES]
+    value = config.ACTIVE_EXCHANGES[0],
+    return options, value
+
+
 @app.callback(Output('symbol-table', 'data'),
               [Input('symbol-table', 'filter_query')])
 def cb_symbol_table(filter_query):
@@ -94,6 +102,16 @@ def cb_symbol_table(filter_query):
         instruments = sum([db_exchanges[name] for name in config.ACTIVE_EXCHANGES], [])
     filtered = filter_instruments(instruments, filter_query)
     return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
+
+
+@app.callback([Output('source-choice', 'options'),
+               Output('source-choice', 'value')],
+              [Input('nil-store', 'data')])
+def cb_source_choice(data):
+    lst = store.series_list()
+    options = [{'label': s, 'value': s} for s in lst]
+    value = lst[0],
+    return options, value
 
 
 @app.callback(Output('data-graph', 'figure'),

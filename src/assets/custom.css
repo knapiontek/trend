@@ -24,13 +24,6 @@ body {
     overflow-y: hidden;
 }
 
-.graph {
-    margin: 0px;
-    padding: 0px;
-    height: 95%;
-    width: 100%;
-}
-
 .scroll {
     margin: 0px;
     padding: 0px;
@@ -50,4 +43,11 @@ body {
     background-color: #90A4AE;
     border-radius: 6px;
     border: 2px solid #EFEFEF;
+}
+
+.graph {
+    margin: 0px;
+    padding: 0px;
+    height: 95%;
+    width: 100%;
 }
