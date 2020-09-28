@@ -34,7 +34,9 @@ if 'gunicorn' in sys.modules:
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
-exchange_choice = dcc.Dropdown(className='choice')
+exchange_choice = dcc.Dropdown(id='exchange_choice',
+                               options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
+                               className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -52,8 +54,14 @@ data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='
 
 app.layout = html.Div(
     [
-        html.Div([exchange_choice, symbol_table], className='three columns panel scroll'),
-        html.Div([source_choice, data_graph], className='nine columns panel')
+        html.Div([
+            exchange_choice,
+            html.Div(symbol_table, className='scroll')
+        ], className='three columns panel'),
+        html.Div([
+            source_choice,
+            data_graph
+        ], className='nine columns panel')
     ],
     className='dashboard row'
 )

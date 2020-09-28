@@ -4,7 +4,7 @@ body {
 }
 
 .dashboard {
-    height: 85vh
+    height: 90vh
 }
 
 .choice {
@@ -14,14 +14,14 @@ body {
 
 .panel {
     margin: 15px;
-    padding: 4px;
+    padding: 2px;
     height: 100%;
     width: 100%;
     border-style: solid;
     border-color: lightgrey;
     border-width: thin;
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .graph {
@@ -29,6 +29,15 @@ body {
     padding: 0px;
     height: 95%;
     width: 100%;
+}
+
+.scroll {
+    margin: 0px;
+    padding: 0px;
+    height: 94%;
+    border: none !important;
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
 .scroll::-webkit-scrollbar {
