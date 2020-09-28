@@ -34,7 +34,7 @@ if 'gunicorn' in sys.modules:
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
 
-exchange_choice = dcc.Dropdown(id='exchange-choice', className='choice')
+exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -46,7 +46,7 @@ symbol_table = dash_table.DataTable(
     **style.symbol_table(symbol='left', shortable='center', health='center')
 )
 
-source_choice = dcc.Dropdown(id='source-choice', className='choice')
+source_choice = dcc.Dropdown(id='source-choice', placeholder='source', className='choice')
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
 
@@ -85,38 +85,33 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
         return instruments
 
 
-@app.callback([Output('exchange-choice', 'options'),
-               Output('exchange-choice', 'value')],
+@app.callback(Output('exchange-choice', 'options'),
               [Input('nil-store', 'data')])
 def cb_exchange_choice(data):
-    options = [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES]
-    value = config.ACTIVE_EXCHANGES[0],
-    return options, value
+    return [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES]
 
 
 @app.callback(Output('symbol-table', 'data'),
-              [Input('symbol-table', 'filter_query')])
-def cb_symbol_table(filter_query):
+              [Input('exchange-choice', 'value'),
+               Input('symbol-table', 'filter_query')])
+def cb_symbol_table(value, filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
     with store.Exchanges() as db_exchanges:
-        instruments = sum([db_exchanges[name] for name in config.ACTIVE_EXCHANGES], [])
+        instruments = db_exchanges[value]
     filtered = filter_instruments(instruments, filter_query)
     return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
 
 
-@app.callback([Output('source-choice', 'options'),
-               Output('source-choice', 'value')],
+@app.callback(Output('source-choice', 'options'),
               [Input('nil-store', 'data')])
 def cb_source_choice(data):
-    lst = store.series_list()
-    options = [{'label': s, 'value': s} for s in lst]
-    value = lst[0],
-    return options, value
+    return [{'label': s, 'value': s} for s in ['yahoo', 'stooq', 'exante']]
 
 
 @app.callback(Output('data-graph', 'figure'),
-              [Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_price_graph(data, selected_rows):
+              [Input('source-choice', 'value'),
+               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
+def cb_price_graph(value, data, selected_rows):
     if selected_rows:
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]

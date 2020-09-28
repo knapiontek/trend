@@ -209,8 +209,3 @@ def series_empty():
             collection = db.collection(name)
             removed = collection.delete_match({})
             LOG.debug(f'Removed {removed} items from {name}')
-
-
-def series_list():
-    db = db_connect()
-    return [c['name'] for c in db.collections() if c['name'].startswith('series')]
