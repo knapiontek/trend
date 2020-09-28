@@ -90,7 +90,7 @@ def verify_symbol_series(symbol: str, dt_from: datetime, dt_to: datetime, interv
     with yahoo.Series(interval) as db_series:
         series = db_series[symbol]
 
-    exchange = symbol.split('.')[-1]
+    _, exchange = tools.symbol_split(symbol)
     dt_holidays = tools.holidays(exchange)
     dt_series = {tools.from_timestamp(ts) for ts in tools.loop_it(series, 'timestamp')}
 
