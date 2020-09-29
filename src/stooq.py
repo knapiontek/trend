@@ -88,8 +88,7 @@ def price_from_stooq(dt: Dict) -> Dict:
 
 class Session(session.Session):
     def __init__(self, exchanges=None):
-        self.exchanges = exchanges if exchanges else {e: [tools.INTERVAL_1D, tools.INTERVAL_1W]
-                                                      for e in config.ACTIVE_EXCHANGES}
+        self.exchanges = exchanges if exchanges else {e: [tools.INTERVAL_1D] for e in config.ACTIVE_EXCHANGES}
 
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:

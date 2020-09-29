@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from src import log, data, store
+from src import log, data, store, yahoo, exante, stooq
 
 LOG = logging.getLogger(__name__)
 
@@ -49,7 +49,6 @@ def main():
         if args.exchange_update:
             data.exchange_update()
 
-        from src import yahoo, exante, stooq
         modules = dict(yahoo=yahoo, exante=exante, stooq=stooq)
         for datum in args.data:
             module = modules[datum]

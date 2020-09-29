@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, yahoo, config, log
+from src import store, tools, style, yahoo, config, log, exante, stooq
 
 LOG = logging.getLogger(__name__)
 
@@ -112,12 +112,14 @@ def cb_source_choice(data):
               [Input('source-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
 def cb_price_graph(value, data, selected_rows):
-    if selected_rows:
+    if value and selected_rows:
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbol']
         LOG.debug(f'Loading time series for symbol: {symbol}')
-        with yahoo.Series(tools.INTERVAL_1D) as db_series:
+        modules = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+        module = modules[value]
+        with module.Series(tools.INTERVAL_1D) as db_series:
             time_series = db_series[symbol]
 
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
