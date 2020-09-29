@@ -29,7 +29,7 @@ EXCHANGE_COUNTRY = {
 
 EXCHANGE_PATHS = {
     'NYSE': ('nyse stocks/1', 'nyse stocks/2', 'nyse stocks/3', 'nyse etfs'),
-    'NASDAQ': ('nasdaq stocks', 'nasdaq etfs'),
+    'NASDAQ': ('nasdaq stocks/1', 'nasdaq stocks/2', 'nasdaq etfs'),
     'LSE': ('lse stocks', 'lse stocks intl'),
     'XETRA': ['xetra'],
     'WSE': ['wse stocks']
@@ -95,10 +95,10 @@ class Session(session.Session):
                 path = stooq_country_path(interval, exchange)
                 if not tools.is_latest(path, exchange, interval):
                     url = stooq_url(interval, exchange)
-                    LOG.debug(f'Loading {url} ...')
+                    LOG.info(f'Loading {url} ...')
                     response = requests.get(url)
                     z = zipfile.ZipFile(io.BytesIO(response.content))
-                    LOG.debug(f'Extracting {exchange} ...')
+                    LOG.info(f'Extracting {exchange} ...')
                     z.extractall(ROOT_PATH)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
