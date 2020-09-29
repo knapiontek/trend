@@ -17,6 +17,8 @@ def get_args():
     parser.add_argument('--exchange-empty', action='store_true')
     parser.add_argument('--exchange-update', action='store_true')
 
+    parser.add_argument('--data', nargs='+', required=True)
+
     parser.add_argument('--series-empty', action='store_true')
     parser.add_argument('--series-range', action='store_true')
     parser.add_argument('--series-update', action='store_true')
@@ -47,14 +49,18 @@ def main():
         if args.exchange_update:
             data.exchange_update()
 
-        if args.series_empty:
-            store.series_empty()
-        if args.series_range:
-            data.series_range()
-        if args.series_update:
-            data.series_update()
-        if args.series_verify:
-            data.series_verify()
+        from src import yahoo, exante, stooq
+        modules = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+        for datum in args.data:
+            module = modules[datum]
+            if args.series_empty:
+                store.series_empty(module)
+            if args.series_range:
+                data.series_range(module)
+            if args.series_update:
+                data.series_update(module)
+            if args.series_verify:
+                data.series_verify(module)
     except:
         LOG.exception('TrendApp failed')
 

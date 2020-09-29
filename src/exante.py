@@ -79,8 +79,7 @@ class Session(session.Session):
 
 class Series(store.Series):
     def __init__(self, interval: timedelta, editable=False):
-        module = __name__.split('.')[-1]
-        name = f'series_{module}_{tools.interval_name(interval)}'
+        name = f'series_{tools.module_name(__name__)}_{tools.interval_name(interval)}'
         super().__init__(name, editable)
 
 

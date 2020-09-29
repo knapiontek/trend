@@ -16,6 +16,10 @@ def symbol_split(symbol: str) -> Tuple[str, str]:
     return '.'.join(parts[:-1]), parts[-1]
 
 
+def module_name(name: str) -> str:
+    return name.split(".")[-1]
+
+
 def from_timestamp(ts: int) -> datetime:
     return datetime.fromtimestamp(ts, tz=timezone.utc)
 

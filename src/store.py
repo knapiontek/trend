@@ -198,13 +198,13 @@ def exchange_empty():
                 LOG.debug(f'Removed {removed} items from {exchange}')
 
 
-def series_empty():
+def series_empty(module):
     LOG.info(f'>> {series_empty.__name__}')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
-        if name.startswith('series'):
+        if name.startswith(f'series_{tools.module_name(module.__name__)}'):
             LOG.debug(f'Emptying arango collection: {name}')
             collection = db.collection(name)
             removed = collection.delete_match({})
