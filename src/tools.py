@@ -192,23 +192,25 @@ def last_sunday(dt=utc_now()) -> datetime:
     return datetime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
 
 
-def dt_last(exchange: str, interval: timedelta) -> datetime:
+def dt_last(exchange: str, interval: timedelta, dt=utc_now()) -> datetime:
     """
     It returns datetime where all fields smaller than interval are set to zero.
     It is up to a data driver to modify it to meet a provider requirements.
     """
     if interval == INTERVAL_1H:
-        return utc_now().replace(minute=0, second=0, microsecond=0)
+        return dt.replace(minute=0, second=0, microsecond=0)
     if interval == INTERVAL_1D:
-        return last_workday(exchange)
+        return last_workday(exchange, dt)
     if interval == INTERVAL_1W:
-        return last_sunday()
+        return last_sunday(dt)
 
 
 def is_latest(path: Path, exchange: str, interval: timedelta) -> bool:
     if path.exists():
-        ts = path.stat().st_mtime
-        return from_timestamp(ts) >= dt_last(exchange, interval)
+        dt = from_timestamp(path.stat().st_mtime)
+        path_dt_last = dt_last(exchange, interval, dt)
+        now_dt_last = dt_last(exchange, interval, utc_now())
+        return path_dt_last >= now_dt_last
     return False
 
 
