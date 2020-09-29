@@ -3,6 +3,7 @@ import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Dict, Iterable, Tuple, Union, Any, Sized, Set
 
 
@@ -202,6 +203,13 @@ def dt_last(exchange: str, interval: timedelta) -> datetime:
         return last_workday(exchange)
     if interval == INTERVAL_1W:
         return last_sunday()
+
+
+def is_latest(path: Path, exchange: str, interval: timedelta) -> bool:
+    if path.exists():
+        ts = path.stat().st_mtime
+        return from_timestamp(ts) >= dt_last(exchange, interval)
+    return False
 
 
 def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: int):

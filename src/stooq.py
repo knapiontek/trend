@@ -94,8 +94,8 @@ class Session(session.Session):
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:
                 path = stooq_country_path(interval, exchange)
-                if not path.exists():
-                    url = stooq_url(exchange, interval)
+                if not tools.is_latest(path, exchange, interval):
+                    url = stooq_url(interval, exchange)
                     LOG.debug(f'Loading {url} ...')
                     response = requests.get(url)
                     z = zipfile.ZipFile(io.BytesIO(response.content))
@@ -108,7 +108,7 @@ class Session(session.Session):
                 path = stooq_country_path(interval, exchange)
                 if path.exists():
                     LOG.debug(f'Cleaning {shutil.disk_usage(path.as_posix())} in {path}')
-                    # shutil.rmtree(path)
+                    # shutil.rmtree(path, ignore_errors=True)
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         path = stooq_symbol_path(symbol, interval)
