@@ -95,7 +95,7 @@ class Session(session.Session):
                 if not tools.is_latest(path, exchange, interval):
                     url = stooq_url(interval, exchange)
                     zip_path = ROOT_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
-                    zip_path.mkdir(parents=True)
+                    zip_path.parent.mkdir(parents=True)
 
                     LOG.info(f'Loading {url} into {zip_path.as_posix()} ...')
                     response = requests.get(url, stream=True)
