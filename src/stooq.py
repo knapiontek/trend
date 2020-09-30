@@ -100,6 +100,7 @@ class Session(session.Session):
                     z = zipfile.ZipFile(io.BytesIO(response.content))
                     LOG.info(f'Extracting {exchange} ...')
                     z.extractall(ROOT_PATH)
+                    path.touch()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for exchange, intervals in self.exchanges.items():
