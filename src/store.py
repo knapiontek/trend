@@ -116,7 +116,7 @@ class SeriesClazz:
         self.db = db_connect()
         create_collection(self.db, self.name, unique_fields, schema)
 
-    def __enter__(self) -> 'SeriesClazz':
+    def __enter__(self):
         write = self.name if self.editable else None
         self.tnx_db = self.db.begin_transaction(read=self.name, write=write)
         self.tnx_collection = self.tnx_db.collection(self.name)

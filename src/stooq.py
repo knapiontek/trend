@@ -1,7 +1,6 @@
 import csv
 import io
 import logging
-import shutil
 import zipfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -107,8 +106,8 @@ class Session(session.Session):
             for interval in intervals:
                 path = stooq_country_path(interval, exchange)
                 if path.exists():
-                    LOG.debug(f'Cleaning {shutil.disk_usage(path.as_posix())} in {path}')
-                    # shutil.rmtree(path, ignore_errors=True)
+                    size = sum(file.stat().st_size for file in path.rglob('*'))
+                    LOG.debug(f'path: {path.as_posix()} size: {size/1024/1024:.2f}M')
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         path = stooq_symbol_path(symbol, interval)

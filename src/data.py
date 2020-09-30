@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 
 import orjson as json
 
@@ -44,7 +44,7 @@ def exchange_update():
                 LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
 
 
-def series_range(engine):
+def series_range(engine: Any):
     LOG.info(f'>> {series_range.__name__}')
 
     with engine.Series(tools.INTERVAL_1D) as db_series:
@@ -55,7 +55,7 @@ def series_range(engine):
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-def series_update(engine):
+def series_update(engine: Any):
     LOG.info(f'>> {series_update.__name__}')
 
     interval = tools.INTERVAL_1D
@@ -86,7 +86,7 @@ def series_update(engine):
                             db_series += time_series
 
 
-def verify_symbol_series(engine,
+def verify_symbol_series(engine: Any,
                          symbol: str,
                          dt_from: datetime, dt_to: datetime,
                          interval: timedelta) -> Tuple[List, List]:
@@ -111,7 +111,7 @@ def verify_symbol_series(engine,
     return overlap, missing
 
 
-def series_verify(engine):
+def series_verify(engine: Any):
     LOG.info(f'>> {series_verify.__name__}')
 
     interval = tools.INTERVAL_1D
