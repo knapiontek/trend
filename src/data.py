@@ -44,10 +44,10 @@ def exchange_update():
                 LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
 
 
-def series_range(data_module):
+def series_range(engine):
     LOG.info(f'>> {series_range.__name__}')
 
-    with data_module.Series(tools.INTERVAL_1D) as db_series:
+    with engine.Series(tools.INTERVAL_1D) as db_series:
         time_range = {
             symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
             for symbol, min_ts, max_ts in tools.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
@@ -55,13 +55,13 @@ def series_range(data_module):
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-def series_update(data_module):
+def series_update(engine):
     LOG.info(f'>> {series_update.__name__}')
 
     interval = tools.INTERVAL_1D
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
 
-    with data_module.Series(interval) as db_series:
+    with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
         series_latest = {tr['symbol']: tools.from_timestamp(tr['max_ts']) for tr in time_range}
@@ -74,7 +74,7 @@ def series_update(data_module):
         symbols = tools.loop_it(instruments, 'symbol')
         latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
-        with data_module.Session() as session:
+        with engine.Session() as session:
             with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
                 for symbol, dt_from in latest.items():
                     progress(symbol)
@@ -82,15 +82,15 @@ def series_update(data_module):
                     for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
-                        with data_module.Series(interval, editable=True) as db_series:
+                        with engine.Series(interval, editable=True) as db_series:
                             db_series += time_series
 
 
-def verify_symbol_series(data_module,
+def verify_symbol_series(engine,
                          symbol: str,
                          dt_from: datetime, dt_to: datetime,
                          interval: timedelta) -> Tuple[List, List]:
-    with data_module.Series(interval) as db_series:
+    with engine.Series(interval) as db_series:
         series = db_series[symbol]
 
     _, exchange = tools.symbol_split(symbol)
@@ -111,13 +111,13 @@ def verify_symbol_series(data_module,
     return overlap, missing
 
 
-def series_verify(data_module):
+def series_verify(engine):
     LOG.info(f'>> {series_verify.__name__}')
 
     interval = tools.INTERVAL_1D
-    health_name = f'series-{tools.module_name(__name__)}-{tools.interval_name(interval)}-health'
+    health_name = f'health-{tools.module_name(engine.__name__)}-{tools.interval_name(interval)}'
 
-    with data_module.Series(interval) as db_series:
+    with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
@@ -125,7 +125,7 @@ def series_verify(data_module):
         with tools.Progress(health_name, time_range) as progress:
             for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
                 progress(symbol)
-                overlap, missing = verify_symbol_series(data_module,
+                overlap, missing = verify_symbol_series(engine,
                                                         symbol,
                                                         tools.from_timestamp(ts_from),
                                                         tools.from_timestamp(ts_to),

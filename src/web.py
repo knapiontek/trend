@@ -117,9 +117,9 @@ def cb_price_graph(value, data, selected_rows):
         row = data[selected_rows[0]]
         symbol = row['symbol']
         LOG.debug(f'Loading time series for symbol: {symbol}')
-        modules = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-        module = modules[value]
-        with module.Series(tools.INTERVAL_1D) as db_series:
+        engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+        engine = engines[value]
+        with engine.Series(tools.INTERVAL_1D) as db_series:
             time_series = db_series[symbol]
 
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))

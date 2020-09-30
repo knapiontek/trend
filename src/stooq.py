@@ -71,10 +71,10 @@ def timestamp_from_stooq(date: str):
     return tools.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_stooq(dt: Dict) -> Dict:
+def price_from_stooq(dt: Dict, symbol: str) -> Dict:
     try:
         return {
-            'symbol': dt['<TICKER>'],
+            'symbol': symbol,
             'timestamp': timestamp_from_stooq(dt['<DATE>']),
             'open': float(dt['<OPEN>']),
             'close': float(dt['<CLOSE>']),
@@ -114,7 +114,7 @@ class Session(session.Session):
         if path is None:
             return []
         with path.open() as read_io:
-            prices = [price_from_stooq(dt) for dt in csv.DictReader(read_io)]
+            prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(read_io)]
         return [
             price
             for price in prices

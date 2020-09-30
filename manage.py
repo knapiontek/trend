@@ -49,17 +49,17 @@ def main():
         if args.exchange_update:
             data.exchange_update()
 
-        modules = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+        engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
         for datum in args.data:
-            module = modules[datum]
+            engine = engines[datum]
             if args.series_empty:
-                store.series_empty(module)
+                store.series_empty(engine)
             if args.series_range:
-                data.series_range(module)
+                data.series_range(engine)
             if args.series_update:
-                data.series_update(module)
+                data.series_update(engine)
             if args.series_verify:
-                data.series_verify(module)
+                data.series_verify(engine)
     except:
         LOG.exception('TrendApp failed')
 
