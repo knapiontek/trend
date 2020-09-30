@@ -98,6 +98,8 @@ def cb_symbol_table(value, filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
     with store.Exchanges() as db_exchanges:
         instruments = db_exchanges[value]
+    boolean = ['[-]', '[+]']
+    instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i['health']]) for i in instruments]
     filtered = filter_instruments(instruments, filter_query)
     return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
 
