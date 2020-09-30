@@ -268,10 +268,10 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
 
 
 class Progress:
-    def __init__(self, title: str, sized: Sized):
+    def __init__(self, title: str, size: Union[int, Sized]):
         self.count = -1
         self.title = title
-        self.length = len(sized)
+        self.length = len(size) if isinstance(size, Sized) else size
 
     def __enter__(self) -> 'Progress':
         return self

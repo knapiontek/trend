@@ -1,5 +1,4 @@
 import csv
-import io
 import logging
 import zipfile
 from datetime import datetime, timezone, timedelta
@@ -13,6 +12,7 @@ from src import tools, session, store, config
 LOG = logging.getLogger(__name__)
 
 DT_FORMAT = '%Y%m%d'
+URL_CHUNK_SIZE = 1024 * 1024
 URL_ZIP = 'https://static.stooq.com/db/h/{interval}_{country}_txt.zip'
 ROOT_PATH = Path('/tmp/stooq/')
 COUNTRY_PATH = 'data/{interval}/{country}'
@@ -94,11 +94,28 @@ class Session(session.Session):
                 path = stooq_country_path(interval, exchange)
                 if not tools.is_latest(path, exchange, interval):
                     url = stooq_url(interval, exchange)
-                    LOG.info(f'Loading {url} ...')
-                    response = requests.get(url)
-                    z = zipfile.ZipFile(io.BytesIO(response.content))
-                    LOG.info(f'Extracting {exchange} ...')
-                    z.extractall(ROOT_PATH)
+                    zip_path = ROOT_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
+                    zip_path.mkdir(parents=True)
+
+                    LOG.info(f'Loading {url} into {zip_path.as_posix()} ...')
+                    response = requests.get(url, stream=True)
+                    size = int(response.headers["Content-Length"]) // URL_CHUNK_SIZE + 1
+                    LOG.info(f'File {zip_path.as_posix()} size: {size}M')
+                    with zip_path.open('wb') as zip_io:
+                        with tools.Progress(zip_path.as_posix(), size) as progress:
+                            for chunk in response.iter_content(URL_CHUNK_SIZE):
+                                progress('+')
+                                zip_io.write(chunk)
+
+                    LOG.info(f'Extracting {zip_path.as_posix()} ...')
+                    with zipfile.ZipFile(zip_path) as zip_io:
+                        name_list = zip_io.namelist()
+                        with tools.Progress(zip_path.as_posix(), name_list) as progress:
+                            for name in name_list:
+                                progress(name)
+                                zip_io.extract(name, ROOT_PATH)
+
+                    zip_path.unlink()
                     path.touch()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -107,7 +124,7 @@ class Session(session.Session):
                 path = stooq_country_path(interval, exchange)
                 if path.exists():
                     size = sum(file.stat().st_size for file in path.rglob('*'))
-                    LOG.debug(f'path: {path.as_posix()} size: {size/1024/1024:.2f}M')
+                    LOG.debug(f'path: {path.as_posix()} size: {size / 1024 / 1024:.2f}M')
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         path = stooq_symbol_path(symbol, interval)
