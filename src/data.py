@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Set
 
 import orjson as json
+import pandas as pd
 
 from src import store, tools, exante, log, config
 
@@ -10,7 +11,6 @@ LOG = logging.getLogger(__name__)
 
 
 def read_snp500() -> Dict:
-    import pandas as pd
     table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
     df = table[0]
     df = df.where(pd.notnull(df), None)
@@ -19,6 +19,23 @@ def read_snp500() -> Dict:
         'schema': dt['columns'],
         'data': dt['data']
     }
+
+
+def read_indices() -> Set[str]:
+    SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
+    FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
+    WIG30 = ('https://en.wikipedia.org/wiki/WIG30', 0, 'Symbol', '')
+    DAX30 = ('https://en.wikipedia.org/wiki/DAX', 3, 'Ticker symbol', '.DE')
+
+    results = []
+    for url, index, name, suffix in [SP500, FTSE100, WIG30, DAX30]:
+        table = pd.read_html(url)
+        symbols = table[index][name].to_list()
+        results += [s.replace(suffix, '') for s in symbols]
+
+    result_set = set(results)
+    assert len(result_set) == len(results)
+    return result_set
 
 
 def exchange_update():

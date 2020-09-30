@@ -6,7 +6,7 @@ import orjson as json
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask
 
-from src import data, tools, log
+from src import data, tools, log, yahoo
 
 LOG = logging.getLogger(__name__)
 
@@ -51,8 +51,8 @@ def shutdown():
 def load_trading_data():
     LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
     data.exchange_update()
-    data.series_update()
-    data.series_verify()
+    data.series_update(yahoo)
+    data.series_verify(yahoo)
 
 
 def run_schedule(debug: bool):
