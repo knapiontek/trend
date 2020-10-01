@@ -292,13 +292,15 @@ class Progress:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.count += 1
-        if not self.length:
-            self.length = self.count
-        sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
-        sys.stdout.flush()
-        if not exc_type:
-            assert self.count == self.length
+        if self.length:
+            self.count += 1
+            sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
+            sys.stdout.flush()
+            if not exc_type:
+                assert self.count == self.length
+        else:
+            sys.stdout.write(f'{self.title}: done{SPACES}\n')
+            sys.stdout.flush()
 
     def __call__(self, message: str):
         self.count += 1
