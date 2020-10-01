@@ -279,7 +279,7 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
             yield datum[key]
 
 
-SPACES = '                                                                                                            '
+SPACES = '                                                    '
 
 
 class Progress:
