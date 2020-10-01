@@ -279,6 +279,9 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
             yield datum[key]
 
 
+SPACES = '                                                                                                            '
+
+
 class Progress:
     def __init__(self, title: str, size: Union[int, Sized]):
         self.count = -1
@@ -289,14 +292,14 @@ class Progress:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.count += 1
-        sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% done                                 \n')
-        sys.stdout.flush()
-        if not exc_type:
-            assert self.count == self.length
+        if self.length:
+            self.count += 1
+            sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
+            sys.stdout.flush()
+            if not exc_type:
+                assert self.count == self.length
 
     def __call__(self, message: str):
         self.count += 1
-        sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% {message}                            \r')
+        sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
         sys.stdout.flush()
-        return self
