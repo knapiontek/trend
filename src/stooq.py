@@ -95,22 +95,24 @@ class Session(session.Session):
                 if not tools.is_latest(path, exchange, interval):
                     url = stooq_url(interval, exchange)
                     zip_path = ROOT_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
-                    zip_path.parent.mkdir(parents=True)
+                    zip_path.parent.mkdir(parents=True, exist_ok=True)
 
-                    LOG.info(f'Loading {url} into {zip_path.as_posix()} ...')
                     response = requests.get(url, stream=True)
+                    message = f'Loading {url} to {zip_path.as_posix()}'
+                    LOG.info(message)
                     size = int(response.headers["Content-Length"]) // URL_CHUNK_SIZE + 1
-                    LOG.info(f'File {zip_path.as_posix()} size: {size}M')
+                    LOG.debug(f'Size {zip_path.as_posix()}: {size}M')
                     with zip_path.open('wb') as zip_io:
-                        with tools.Progress(zip_path.as_posix(), size) as progress:
+                        with tools.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
                                 progress('+')
                                 zip_io.write(chunk)
 
-                    LOG.info(f'Extracting {zip_path.as_posix()} ...')
+                    message = f'Extracting {zip_path.as_posix()}'
+                    LOG.info(message)
                     with zipfile.ZipFile(zip_path) as zip_io:
                         name_list = zip_io.namelist()
-                        with tools.Progress(zip_path.as_posix(), name_list) as progress:
+                        with tools.Progress(message, name_list) as progress:
                             for name in name_list:
                                 progress(name)
                                 zip_io.extract(name, ROOT_PATH)

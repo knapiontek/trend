@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Tuple, Any, Set
+from typing import List, Tuple, Any, Set
 
 import orjson as json
 import pandas as pd
@@ -10,18 +10,7 @@ from src import store, tools, exante, log, config
 LOG = logging.getLogger(__name__)
 
 
-def read_snp500() -> Dict:
-    table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-    df = table[0]
-    df = df.where(pd.notnull(df), None)
-    dt = df.to_dict('split')
-    return {
-        'schema': dt['columns'],
-        'data': dt['data']
-    }
-
-
-def read_indices() -> Set[str]:
+def read_main_indices() -> Set[str]:
     SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
     FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
     WIG30 = ('https://en.wikipedia.org/wiki/WIG30', 0, 'Symbol', '')
@@ -33,15 +22,13 @@ def read_indices() -> Set[str]:
         symbols = table[index][name].to_list()
         results += [s.replace(suffix, '') for s in symbols]
 
-    result_set = set(results)
-    assert len(result_set) == len(results)
-    return result_set
+    return set(results)
 
 
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
 
-    snp500 = list(tools.loop_it(read_snp500(), 'Symbol'))
+    main_indices = read_main_indices()
     shortables = exante.read_shortables()
 
     store.exchange_empty()
@@ -55,14 +42,15 @@ def exchange_update():
                          health=False,
                          total=0.0)
                     for instrument in instruments
-                    if instrument['short-symbol'] in snp500
+                    if instrument['short-symbol'] in main_indices
                 ]
                 db_exchanges += documents
                 LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
 
 
 def series_range(engine: Any):
-    LOG.info(f'>> {series_range.__name__}')
+    engine_name = tools.module_name(engine.__name__)
+    LOG.info(f'>> {series_range.__name__}({engine_name})')
 
     with engine.Series(tools.INTERVAL_1D) as db_series:
         time_range = {
@@ -73,7 +61,8 @@ def series_range(engine: Any):
 
 
 def series_update(engine: Any):
-    LOG.info(f'>> {series_update.__name__}')
+    engine_name = tools.module_name(engine.__name__)
+    LOG.info(f'>> {series_update.__name__}({engine_name})')
 
     interval = tools.INTERVAL_1D
     dt_from_default = datetime(2017, 12, 31, tzinfo=timezone.utc)
@@ -129,10 +118,11 @@ def verify_symbol_series(engine: Any,
 
 
 def series_verify(engine: Any):
-    LOG.info(f'>> {series_verify.__name__}')
+    engine_name = tools.module_name(engine.__name__)
+    LOG.info(f'>> {series_verify.__name__}({engine_name})')
 
     interval = tools.INTERVAL_1D
-    health_name = f'health-{tools.module_name(engine.__name__)}-{tools.interval_name(interval)}'
+    health_name = f'health-{engine_name}-{tools.interval_name(interval)}'
 
     with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
