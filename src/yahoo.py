@@ -16,14 +16,6 @@ SYMBOL_URL = 'https://query1.finance.yahoo.com/v7/finance/download/{symbol}'
 PATTERN = re.compile('"CrumbStore":{"crumb":"(.+?)"}')
 
 
-def symbol_to_yahoo(symbol: str):
-    return '-'.join(symbol.split('.')[:-1])
-
-
-def dt_to_yahoo(dt: datetime):
-    return tools.to_timestamp(dt)
-
-
 def interval_to_yahoo(interval: timedelta):
     return {
         tools.INTERVAL_1D: '1d',
@@ -62,9 +54,13 @@ class Session(session.Session):
         return self
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
-        yahoo_symbol = symbol_to_yahoo(symbol)
-        yahoo_from = dt_to_yahoo(dt_from)
-        yahoo_to = dt_to_yahoo(dt_to + interval)
+        short_symbol, exchange = tools.symbol_split(symbol)
+        if exchange not in ('NYSE', 'NASDAQ'):
+            return []
+
+        yahoo_symbol = short_symbol.replace('.', '-')
+        yahoo_from = tools.to_timestamp(dt_from)
+        yahoo_to = tools.to_timestamp(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)

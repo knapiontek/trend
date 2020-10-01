@@ -13,10 +13,9 @@ LOG = logging.getLogger(__name__)
 
 DT_FORMAT = '%Y%m%d'
 URL_CHUNK_SIZE = 1024 * 1024
-URL_ZIP = 'https://static.stooq.com/db/h/{interval}_{country}_txt.zip'
-ROOT_PATH = Path('/tmp/stooq/')
+ZIP_URL = 'https://static.stooq.com/db/h/{interval}_{country}_txt.zip'
+STOOQ_PATH = Path('/tmp/stooq/')
 COUNTRY_PATH = 'data/{interval}/{country}'
-SYMBOL_PATH = '{sub_path}/{symbol}.{country}.txt'
 
 EXCHANGE_COUNTRY = {
     'NYSE': 'us',
@@ -27,20 +26,22 @@ EXCHANGE_COUNTRY = {
 }
 
 EXCHANGE_PATHS = {
-    'NYSE': ('nyse stocks/1', 'nyse stocks/2', 'nyse stocks/3', 'nyse etfs'),
-    'NASDAQ': ('nasdaq stocks/1', 'nasdaq stocks/2', 'nasdaq etfs'),
-    'LSE': ('lse stocks', 'lse stocks intl'),
-    'XETRA': ['xetra'],
-    'WSE': ['wse stocks']
+    'NYSE': ('nyse stocks/1/{symbol}.us.txt',
+             'nyse stocks/2/{symbol}.us.txt',
+             'nyse stocks/3/{symbol}.us.txt'),
+    'NASDAQ': ('nasdaq stocks/1/{symbol}.us.txt', 'nasdaq stocks/2/{symbol}.us.txt'),
+    'LSE': ('lse stocks/{symbol}.uk.txt', 'lse stocks intl/{symbol}.uk.txt'),
+    'XETRA': ['xetra/{symbol}.de.txt'],
+    'WSE': ['wse stocks/{symbol}.txt']
 }
 
 
 def stooq_url(interval: timedelta, exchange: str) -> str:
     stooq_interval = {
-        tools.INTERVAL_1D: 'd',
-        tools.INTERVAL_1W: 'w'
+        tools.INTERVAL_1H: 'h',
+        tools.INTERVAL_1D: 'd'
     }[interval]
-    return URL_ZIP.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
+    return ZIP_URL.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
 
 
 def stooq_country_path(interval: timedelta, exchange: str) -> Path:
@@ -49,17 +50,14 @@ def stooq_country_path(interval: timedelta, exchange: str) -> Path:
         tools.INTERVAL_1W: 'weekly'
     }[interval]
     path = COUNTRY_PATH.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
-    return ROOT_PATH.joinpath(path)
+    return STOOQ_PATH.joinpath(path)
 
 
 def stooq_symbol_path(symbol: str, interval: timedelta) -> Optional[Path]:
     short_symbol, exchange = tools.symbol_split(symbol)
     country_path = stooq_country_path(interval, exchange)
-    for sub_path in EXCHANGE_PATHS[exchange]:
-        path = SYMBOL_PATH.format(sub_path=sub_path,
-                                  symbol=short_symbol.lower(),
-                                  country=EXCHANGE_COUNTRY[exchange])
-        symbol_path = country_path.joinpath(path)
+    for path in EXCHANGE_PATHS[exchange]:
+        symbol_path = country_path.joinpath(path.format(symbol=short_symbol))
         if symbol_path.exists():
             return symbol_path
     return None
@@ -94,7 +92,7 @@ class Session(session.Session):
                 path = stooq_country_path(interval, exchange)
                 if not tools.is_latest(path, exchange, interval):
                     url = stooq_url(interval, exchange)
-                    zip_path = ROOT_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
+                    zip_path = STOOQ_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
                     zip_path.parent.mkdir(parents=True, exist_ok=True)
 
                     response = requests.get(url, stream=True)
@@ -115,7 +113,7 @@ class Session(session.Session):
                         with tools.Progress(message, name_list) as progress:
                             for name in name_list:
                                 progress(name)
-                                zip_io.extract(name, ROOT_PATH)
+                                zip_io.extract(name, STOOQ_PATH)
 
                     zip_path.unlink()
                     path.touch()
