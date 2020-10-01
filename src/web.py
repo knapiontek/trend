@@ -46,7 +46,7 @@ symbol_table = dash_table.DataTable(
     **style.symbol_table(symbol='left', shortable='center', health='center')
 )
 
-source_choice = dcc.Dropdown(id='source-choice', placeholder='source', className='choice')
+engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
 
@@ -55,10 +55,10 @@ app.layout = html.Div(
         dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
             exchange_choice,
+            engine_choice,
             html.Div(symbol_table, className='scroll')
         ], className='three columns panel'),
         html.Div([
-            source_choice,
             data_graph
         ], className='nine columns panel')
     ],
@@ -91,36 +91,38 @@ def cb_exchange_choice(data):
     return [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES]
 
 
+@app.callback(Output('engine-choice', 'options'),
+              [Input('nil-store', 'data')])
+def cb_engine_choice(data):
+    return [{'label': s, 'value': s} for s in ['yahoo', 'stooq', 'exante']]
+
+
 @app.callback(Output('symbol-table', 'data'),
               [Input('exchange-choice', 'value'),
+               Input('engine-choice', 'value'),
                Input('symbol-table', 'filter_query')])
-def cb_symbol_table(value, filter_query):
+def cb_symbol_table(exchange_name, engine_name, filter_query):
     LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
     with store.Exchanges() as db_exchanges:
-        instruments = db_exchanges[value]
+        instruments = db_exchanges[exchange_name]
     boolean = ['[-]', '[+]']
-    instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i['health']]) for i in instruments]
+    instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i[f'health-{engine_name}']])
+                   for i in instruments]
     filtered = filter_instruments(instruments, filter_query)
     return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
 
 
-@app.callback(Output('source-choice', 'options'),
-              [Input('nil-store', 'data')])
-def cb_source_choice(data):
-    return [{'label': s, 'value': s} for s in ['yahoo', 'stooq', 'exante']]
-
-
 @app.callback(Output('data-graph', 'figure'),
-              [Input('source-choice', 'value'),
+              [Input('engine-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_price_graph(value, data, selected_rows):
-    if value and selected_rows:
+def cb_price_graph(engine_name, data, selected_rows):
+    if engine_name and selected_rows:
         assert len(selected_rows) == 1
         row = data[selected_rows[0]]
         symbol = row['symbol']
         LOG.debug(f'Loading time series for symbol: {symbol}')
         engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-        engine = engines[value]
+        engine = engines[engine_name]
         with engine.Series(tools.INTERVAL_1D) as db_series:
             time_series = db_series[symbol]
 

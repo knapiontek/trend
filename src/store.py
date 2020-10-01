@@ -56,7 +56,9 @@ EXCHANGE_SCHEMA = {
             'description': {'type': 'string'},
             'short-symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
-            'health': {'type': 'boolean'},
+            'health-exante': {'type': 'boolean'},
+            'health-yahoo': {'type': 'boolean'},
+            'health-stooq': {'type': 'boolean'},
             'total': {'type': 'number', 'format': 'float'}
 
         },
@@ -68,7 +70,9 @@ EXCHANGE_SCHEMA = {
                      'description',
                      'short-symbol',
                      'shortable',
-                     'health',
+                     'health-exante',
+                     'health-yahoo',
+                     'health-stooq',
                      'total']
     }
 }

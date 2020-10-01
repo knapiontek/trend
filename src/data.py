@@ -25,6 +25,14 @@ def read_main_indices() -> Set[str]:
     return set(results)
 
 
+HEALTH_DEFAULT = {
+    'health-exante': False,
+    'health-yahoo': False,
+    'health-stooq': False,
+    'total': 0.0
+}
+
+
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
 
@@ -39,8 +47,7 @@ def exchange_update():
                 documents = [
                     dict(instrument,
                          shortable=instrument['symbol'] in shortables,
-                         health=False,
-                         total=0.0)
+                         **HEALTH_DEFAULT)
                     for instrument in instruments
                     if instrument['short-symbol'] in main_indices
                 ]
@@ -149,7 +156,7 @@ def series_verify(engine: Any):
         with store.Exchanges(editable=True) as db_exchanges:
             for name in config.ACTIVE_EXCHANGES:
                 db_exchanges |= [
-                    dict(instrument, health=instrument['symbol'] not in health)
+                    dict(instrument, **{f'health-{engine_name}': instrument['symbol'] not in health})
                     for instrument in db_exchanges[name]
                 ]
 
