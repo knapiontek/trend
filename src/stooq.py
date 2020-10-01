@@ -31,7 +31,7 @@ EXCHANGE_PATHS = {
              'nyse stocks/3/{symbol}.us.txt'),
     'NASDAQ': ('nasdaq stocks/1/{symbol}.us.txt', 'nasdaq stocks/2/{symbol}.us.txt'),
     'LSE': ('lse stocks/{symbol}.uk.txt', 'lse stocks intl/{symbol}.uk.txt'),
-    'XETRA': ['xetra/{symbol}.de.txt'],
+    'XETRA': ['xetra stocks/{symbol}.de.txt'],
     'WSE': ['wse stocks/{symbol}.txt']
 }
 
