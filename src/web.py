@@ -42,8 +42,16 @@ symbol_table = dash_table.DataTable(
     filter_action='custom',
     row_selectable='single',
     page_action='none',
-    sort_action='native',
     **style.symbol_table(symbol='left', shortable='center', health='center')
+)
+
+details_table = dash_table.DataTable(
+    id='details-table',
+    columns=[{'name': v, 'id': v} for v in ('key', 'value')],
+    filter_action='custom',
+    row_selectable='single',
+    page_action='none',
+    **style.symbol_table(key='left', value='center')
 )
 
 engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
@@ -54,9 +62,12 @@ app.layout = html.Div(
     [
         dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
-            exchange_choice,
-            engine_choice,
-            html.Div(symbol_table, className='scroll')
+            html.Div([
+                html.Div(exchange_choice, className='four columns'),
+                html.Div(engine_choice, className='four columns')
+            ], className='row'),
+            html.Div(symbol_table, className='scroll'),
+            html.Div(details_table, className='scroll')
         ], className='three columns panel'),
         html.Div([
             data_graph
@@ -102,14 +113,16 @@ def cb_engine_choice(data):
                Input('engine-choice', 'value'),
                Input('symbol-table', 'filter_query')])
 def cb_symbol_table(exchange_name, engine_name, filter_query):
-    LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
-    with store.Exchanges() as db_exchanges:
-        instruments = db_exchanges[exchange_name]
-    boolean = ['[-]', '[+]']
-    instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i[f'health-{engine_name}']])
-                   for i in instruments]
-    filtered = filter_instruments(instruments, filter_query)
-    return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
+    if exchange_name and engine_name:
+        LOG.debug(f'Loading symbols with filter: "{filter_query or "*"}"')
+        with store.Exchanges() as db_exchanges:
+            instruments = db_exchanges[exchange_name]
+        boolean = ['[-]', '[+]']
+        instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i[f'health-{engine_name}']])
+                       for i in instruments]
+        filtered = filter_instruments(instruments, filter_query)
+        return list(tools.dict_it(filtered, SYMBOL_COLUMNS))
+    return []
 
 
 @app.callback(Output('data-graph', 'figure'),

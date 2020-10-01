@@ -25,9 +25,9 @@ body {
 }
 
 .scroll {
-    margin: 0px;
+    margin: 10px;
     padding: 0px;
-    height: 94%;
+    height: 45%;
     border: none !important;
     overflow-x: auto;
     overflow-y: auto;
