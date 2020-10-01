@@ -46,8 +46,8 @@ def stooq_url(interval: timedelta, exchange: str) -> str:
 
 def stooq_country_path(interval: timedelta, exchange: str) -> Path:
     stooq_interval = {
-        tools.INTERVAL_1D: 'daily',
-        tools.INTERVAL_1W: 'weekly'
+        tools.INTERVAL_1H: 'hourly',
+        tools.INTERVAL_1D: 'daily'
     }[interval]
     path = COUNTRY_PATH.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
     return STOOQ_PATH.joinpath(path)
@@ -57,7 +57,7 @@ def stooq_symbol_path(symbol: str, interval: timedelta) -> Optional[Path]:
     short_symbol, exchange = tools.symbol_split(symbol)
     country_path = stooq_country_path(interval, exchange)
     for path in EXCHANGE_PATHS[exchange]:
-        symbol_path = country_path.joinpath(path.format(symbol=short_symbol))
+        symbol_path = country_path.joinpath(path.format(symbol=short_symbol.lower()))
         if symbol_path.exists():
             return symbol_path
     return None
