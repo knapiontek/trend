@@ -4,7 +4,7 @@ body {
 }
 
 .dashboard {
-    height: 90vh
+    height: 98vh;
 }
 
 .choice {
@@ -13,7 +13,7 @@ body {
 }
 
 .panel {
-    margin: 15px;
+    margin: 2px;
     padding: 2px;
     height: 100%;
     width: 100%;
@@ -27,7 +27,7 @@ body {
 .scroll {
     margin: 10px;
     padding: 0px;
-    height: 45%;
+    height: 30%;
     border: none !important;
     overflow-x: auto;
     overflow-y: auto;

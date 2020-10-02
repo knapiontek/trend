@@ -38,7 +38,7 @@ def list_scheduled_jobs():
         }
         for job in scheduler.get_jobs()
     ]
-    return json.dumps(jobs, option=json.OPT_INDENT_2)
+    return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
 
 
 @atexit.register

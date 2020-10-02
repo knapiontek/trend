@@ -7,6 +7,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
+import orjson as json
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
@@ -32,7 +33,7 @@ if 'gunicorn' in sys.modules:
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
-GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 15, 'pad': 4}
+GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 0, 'pad': 1}
 
 exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
 
@@ -63,11 +64,12 @@ app.layout = html.Div(
         dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
             html.Div([
-                html.Div(exchange_choice, className='four columns'),
-                html.Div(engine_choice, className='four columns')
+                html.Div(exchange_choice, className='six columns'),
+                html.Div(engine_choice, className='six columns')
             ], className='row'),
             html.Div(symbol_table, className='scroll'),
-            html.Div(details_table, className='scroll')
+            html.Div(details_table, className='scroll'),
+            html.Pre(id='click-data', className='scroll')
         ], className='three columns panel'),
         html.Div([
             data_graph
@@ -142,7 +144,7 @@ def cb_price_graph(engine_name, data, selected_rows):
         params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
         dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
 
-        prices = go.Scatter(x=dates, y=params['close'], name='Price', line=dict(width=1.5))
+        prices = go.Scatter(x=dates, y=params['close'], name='Price', customdata=time_series, line=dict(width=1.5))
         volume = go.Bar(x=dates, y=params['volume'], name='Volume')
         figure = make_subplots(rows=2, cols=1,
                                shared_xaxes=True,
@@ -156,6 +158,14 @@ def cb_price_graph(engine_name, data, selected_rows):
         return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
+
+
+@app.callback(
+    Output('click-data', 'children'),
+    [Input('data-graph', 'clickData')])
+def display_click_data(data):
+    if data:
+        return json.dumps(data, option=json.OPT_INDENT_2).decode('utf-8')
 
 
 def run_dash(debug: bool):
