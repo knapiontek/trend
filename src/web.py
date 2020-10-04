@@ -47,7 +47,7 @@ symbol_table = dash_table.DataTable(
 
 details_table = dash_table.DataTable(
     id='details-table',
-    columns=[{'name': v, 'id': v} for v in ('key', 'value')],
+    columns=[{'name': name, 'id': _id} for _id, name in (('key', 'Key'), ('value', 'Value'))],
     page_action='none',
     **style.symbol_table(key='left', value='right')
 )
