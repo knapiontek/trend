@@ -1,36 +1,40 @@
 body {
+    margin: 0px;
+    padding: 0px;
     font-family: sans-serif;
     font-size: 14px;
 }
 
 .dashboard {
+    margin: 0px;
+    padding: 0px;
     height: 98vh;
+    width: 98vw;
 }
 
 .choice {
-  width: 150px;
-  margin: 10px;
+    margin: 10px;
+    width: 150px;
 }
 
 .panel {
-    margin: 2px;
-    padding: 2px;
+    margin: 0px;
+    padding: 0px;
     height: 100%;
     width: 100%;
-    border-style: solid;
-    border-color: lightgrey;
-    border-width: thin;
     overflow-x: hidden;
     overflow-y: hidden;
 }
 
-.scroll {
-    margin: 10px;
+.frame {
+    margin: 6px;
     padding: 0px;
-    height: 45%;
     border-style: solid;
     border-color: lightgrey;
     border-width: thin;
+}
+
+.scroll {
     overflow-x: auto;
     overflow-y: auto;
 }
@@ -45,11 +49,4 @@ body {
     background-color: #90A4AE;
     border-radius: 6px;
     border: 2px solid #EFEFEF;
-}
-
-.graph {
-    margin: 0px;
-    padding: 0px;
-    height: 95%;
-    width: 100%;
 }

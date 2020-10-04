@@ -32,9 +32,10 @@ if 'gunicorn' in sys.modules:
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
-GRAPH_MARGIN = {'l': 15, 'r': 15, 't': 40, 'b': 0, 'pad': 1}
+GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 
 exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
+engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -52,9 +53,7 @@ details_table = dash_table.DataTable(
     **style.symbol_table(key='left', value='right')
 )
 
-engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
-
-data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='graph')
+data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='panel')
 
 app.layout = html.Div(
     [
@@ -63,15 +62,15 @@ app.layout = html.Div(
             html.Div([
                 html.Div(exchange_choice, className='six columns'),
                 html.Div(engine_choice, className='six columns')
-            ], className='row'),
-            html.Div(symbol_table, className='scroll'),
-            html.Div(details_table, className='scroll')
+            ], className='row frame', style={'height': '20'}),
+            html.Div(symbol_table, className='frame scroll', style={'height': '60%'}),
+            html.Div(details_table, className='frame scroll', style={'height': '31.1%'})
         ], className='three columns panel'),
         html.Div([
             data_graph
-        ], className='nine columns panel')
+        ], className='nine columns panel frame')
     ],
-    className='dashboard row'
+    className='row dashboard'
 )
 
 PATTERN = re.compile('{(\\w+)} contains (.+)')
