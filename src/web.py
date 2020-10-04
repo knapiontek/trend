@@ -161,9 +161,19 @@ def cb_price_graph(engine_name, data, selected_rows):
 
 
 @app.callback(
+    Output('details-table', 'data'),
+    [Input('data-graph', 'clickData')])
+def cb_details_table(data):
+    if data:
+        points = data.get('points')
+        return [{'key': k, 'value': v} for p in points for k, v in p.get('customdata').items()]
+    return []
+
+
+@app.callback(
     Output('click-data', 'children'),
     [Input('data-graph', 'clickData')])
-def display_click_data(data):
+def cb_click_data(data):
     if data:
         return json.dumps(data, option=json.OPT_INDENT_2).decode('utf-8')
 
