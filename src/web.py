@@ -7,7 +7,6 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-import orjson as json
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
@@ -49,10 +48,8 @@ symbol_table = dash_table.DataTable(
 details_table = dash_table.DataTable(
     id='details-table',
     columns=[{'name': v, 'id': v} for v in ('key', 'value')],
-    filter_action='custom',
-    row_selectable='single',
     page_action='none',
-    **style.symbol_table(key='left', value='center')
+    **style.symbol_table(key='left', value='right')
 )
 
 engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
@@ -68,8 +65,7 @@ app.layout = html.Div(
                 html.Div(engine_choice, className='six columns')
             ], className='row'),
             html.Div(symbol_table, className='scroll'),
-            html.Div(details_table, className='scroll'),
-            html.Pre(id='click-data', className='scroll')
+            html.Div(details_table, className='scroll')
         ], className='three columns panel'),
         html.Div([
             data_graph
@@ -165,17 +161,9 @@ def cb_price_graph(engine_name, data, selected_rows):
     [Input('data-graph', 'clickData')])
 def cb_details_table(data):
     if data:
-        points = data.get('points')
+        points = data.get('points') or []
         return [{'key': k, 'value': v} for p in points for k, v in p.get('customdata').items()]
     return []
-
-
-@app.callback(
-    Output('click-data', 'children'),
-    [Input('data-graph', 'clickData')])
-def cb_click_data(data):
-    if data:
-        return json.dumps(data, option=json.OPT_INDENT_2).decode('utf-8')
 
 
 def run_dash(debug: bool):
