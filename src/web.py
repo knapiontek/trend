@@ -64,8 +64,8 @@ app.layout = html.Div(
                 html.Div(engine_choice, className='six columns')
             ], className='row frame', style={'height': '20'}),
             html.Div(symbol_table, className='frame scroll', style={'height': '60%'}),
-            html.Div(details_table, className='frame scroll', style={'height': '31.1%'})
-        ], className='three columns panel'),
+            html.Div(details_table, className='frame scroll flex-element')
+        ], className='three columns panel flex-box'),
         html.Div([
             data_graph
         ], className='nine columns panel frame')
@@ -127,30 +127,30 @@ def cb_symbol_table(exchange_name, engine_name, filter_query):
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
 def cb_price_graph(engine_name, data, selected_rows):
     if engine_name and selected_rows:
-        assert len(selected_rows) == 1
-        row = data[selected_rows[0]]
-        symbol = row['symbol']
-        LOG.debug(f'Loading time series for symbol: {symbol}')
-        engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-        engine = engines[engine_name]
-        with engine.Series(tools.INTERVAL_1D) as db_series:
-            time_series = db_series[symbol]
+        if data and selected_rows:
+            row = data[selected_rows[0]]
+            symbol = row['symbol']
+            LOG.debug(f'Loading time series for symbol: {symbol}')
+            engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+            engine = engines[engine_name]
+            with engine.Series(tools.INTERVAL_1D) as db_series:
+                time_series = db_series[symbol]
 
-        params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
-        dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+            params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
+            dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
 
-        prices = go.Scatter(x=dates, y=params['close'], name='Price', customdata=time_series, line=dict(width=1.5))
-        volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-        figure = make_subplots(rows=2, cols=1,
-                               shared_xaxes=True,
-                               vertical_spacing=0.03,
-                               row_heights=[0.7, 0.3],
-                               specs=[[{'type': 'scatter'}], [{'type': 'bar'}]])
-        figure.add_trace(prices, row=1, col=1)
-        figure.add_trace(volume, row=2, col=1)
-        figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
-        figure.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
-        return figure
+            prices = go.Scatter(x=dates, y=params['close'], name='Price', customdata=time_series, line=dict(width=1.5))
+            volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+            figure = make_subplots(rows=2, cols=1,
+                                   shared_xaxes=True,
+                                   vertical_spacing=0.03,
+                                   row_heights=[0.7, 0.3],
+                                   specs=[[{'type': 'scatter'}], [{'type': 'bar'}]])
+            figure.add_trace(prices, row=1, col=1)
+            figure.add_trace(volume, row=2, col=1)
+            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
+            figure.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+            return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
 

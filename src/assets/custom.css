@@ -50,3 +50,12 @@ body {
     border-radius: 6px;
     border: 2px solid #EFEFEF;
 }
+
+.flex-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-element {
+  flex: 1;
+}
