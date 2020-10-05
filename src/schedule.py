@@ -46,7 +46,7 @@ def list_scheduled_jobs():
 def schedule_update_job():
     LOG.info(f'Scheduling {load_trading_data.__name__}')
     dt = tools.utc_now() + timedelta(minutes=1)
-    scheduler.add_job(load_trading_data, 'cron', hour=dt.hour, minute=dt.minute, second=dt.second)
+    scheduler.add_job(load_trading_data, 'date', hour=dt.hour, minute=dt.minute, second=dt.second)
     return list_scheduled_jobs()
 
 
