@@ -1,6 +1,7 @@
 import atexit
 import logging
 import sys
+from datetime import timedelta
 
 import orjson as json
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -27,7 +28,7 @@ scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
 
 
-@app.route("/schedule/")
+@app.route("/list-scheduled-jobs/")
 def list_scheduled_jobs():
     LOG.info('Listing scheduled tasks')
     jobs = [
@@ -39,6 +40,14 @@ def list_scheduled_jobs():
         for job in scheduler.get_jobs()
     ]
     return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
+
+
+@app.route("/schedule-job/")
+def schedule_update_job():
+    LOG.info(f'Scheduling {load_trading_data.__name__}')
+    dt = tools.utc_now() + timedelta(minutes=1)
+    scheduler.add_job(load_trading_data, 'cron', hour=dt.hour, minute=dt.minute, second=dt.second)
+    return list_scheduled_jobs()
 
 
 @atexit.register
