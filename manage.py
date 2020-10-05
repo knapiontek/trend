@@ -14,12 +14,12 @@ def get_args():
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--schedule', action='store_true')
 
-    parser.add_argument('--exchange-empty', action='store_true')
+    parser.add_argument('--exchange-clean', action='store_true')
     parser.add_argument('--exchange-update', action='store_true')
 
     parser.add_argument('--data', nargs='+', required=True)
 
-    parser.add_argument('--series-empty', action='store_true')
+    parser.add_argument('--series-clean', action='store_true')
     parser.add_argument('--series-range', action='store_true')
     parser.add_argument('--series-update', action='store_true')
     parser.add_argument('--series-verify', action='store_true')
@@ -44,16 +44,16 @@ def main():
             from src import schedule
             schedule.run_schedule(args.debug)
 
-        if args.exchange_empty:
-            store.exchange_empty()
+        if args.exchange_clean:
+            store.exchange_clean()
         if args.exchange_update:
             data.exchange_update()
 
         engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
         for datum in args.data:
             engine = engines[datum]
-            if args.series_empty:
-                store.series_empty(engine)
+            if args.series_clean:
+                store.series_clean(engine)
             if args.series_range:
                 data.series_range(engine)
             if args.series_update:

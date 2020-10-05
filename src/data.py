@@ -39,7 +39,7 @@ def exchange_update():
     main_indices = read_main_indices()
     shortables = exante.read_shortables()
 
-    store.exchange_empty()
+    store.exchange_clean()
     with store.Exchanges(editable=True) as db_exchanges:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:

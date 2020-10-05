@@ -188,28 +188,26 @@ class Series(SeriesClazz):
         return list(result)
 
 
-def exchange_empty():
-    LOG.info(f'>> {exchange_empty.__name__}')
+def exchange_clean():
+    LOG.info(f'>> {exchange_clean.__name__}')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('exchange'):
-            LOG.debug(f'Emptying arango collection: {name}')
-            collection = db.collection(name)
-            for exchange in config.ACTIVE_EXCHANGES:
-                removed = collection.delete_match({'exchange': exchange})
-                LOG.debug(f'Removed {removed} items from {exchange}')
+            LOG.debug(f'Cleaning arango collection: {name}')
+            deleted = db.delete_collection(name)
+            assert deleted
 
 
-def series_empty(module):
-    LOG.info(f'>> {series_empty.__name__}')
+def series_clean(engine: Any):
+    engine_name = tools.module_name(engine.__name__)
+    LOG.info(f'>> {series_clean.__name__}({engine_name})')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
-        if name.startswith(f'series_{tools.module_name(module.__name__)}'):
-            LOG.debug(f'Emptying arango collection: {name}')
-            collection = db.collection(name)
-            removed = collection.delete_match({})
-            LOG.debug(f'Removed {removed} items from {name}')
+        if name.startswith(f'series_{tools.module_name(engine.__name__)}'):
+            LOG.debug(f'Cleaning arango collection: {name}')
+            deleted = db.delete_collection(name)
+            assert deleted
