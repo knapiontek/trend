@@ -62,13 +62,13 @@ app.layout = html.Div(
             html.Div([
                 html.Div(exchange_choice, className='six columns'),
                 html.Div(engine_choice, className='six columns')
-            ], className='row frame', style={'height': '20'}),
-            html.Div(symbol_table, className='frame scroll', style={'height': '60%'}),
-            html.Div(details_table, className='frame scroll flex-element')
+            ], className='row', style={'height': '20'}),
+            html.Div(symbol_table, className='scroll', style={'height': '60%'}),
+            html.Div(details_table, className='scroll flex-element'),
         ], className='three columns panel flex-box'),
         html.Div([
             data_graph
-        ], className='nine columns panel frame')
+        ], className='nine columns panel')
     ],
     className='row dashboard'
 )

@@ -8,8 +8,8 @@ body {
 .dashboard {
     margin: 0px;
     padding: 0px;
-    height: 98vh;
-    width: 98vw;
+    height: 100vh;
+    width: 100vw;
 }
 
 .choice {
@@ -26,15 +26,11 @@ body {
     overflow-y: hidden;
 }
 
-.frame {
+.scroll {
     margin: 6px;
-    padding: 0px;
     border-style: solid;
     border-color: lightgrey;
     border-width: thin;
-}
-
-.scroll {
     overflow-x: auto;
     overflow-y: scroll;
 }
@@ -52,10 +48,10 @@ body {
 }
 
 .flex-box {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .flex-element {
-  flex: 1;
+    flex: 1;
 }
