@@ -45,8 +45,9 @@ class Session(session.Session):
         self.auth = config.exante_auth()
 
     def instruments(self, exchange: str) -> List[Dict]:
-        response = self.get(f'{DATA_URL}/exchanges/{exchange}')
-        assert response.status_code == 200, response.text
+        url = f'{DATA_URL}/exchanges/{exchange}'
+        response = self.get(url)
+        assert response.status_code == 200, f'url: {url} reply: {response.text}'
         keys = {'symbol': 'symbolId',
                 'type': 'symbolType',
                 'exchange': 'exchange',
@@ -70,7 +71,7 @@ class Session(session.Session):
             'type': 'trades'
         }
         response = self.get(url, params=params)
-        assert response.status_code == 200, response.text
+        assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = response.json()
         size = len(data)
         assert size < max_size

@@ -46,7 +46,7 @@ def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
 class Session(session.Session):
     def __enter__(self) -> 'Session':
         response = self.get(QUOTE_URL)
-        assert response.status_code == 200, response.text
+        assert response.status_code == 200, f'url: {QUOTE_URL} reply: {response.text}'
         found = re.search(PATTERN, response.text)
         if not found:
             raise RuntimeError(f'Expected response from the yahoo api: {PATTERN.pattern}')
@@ -75,9 +75,13 @@ class Session(session.Session):
         response = self.get(url, params=params)
         if response.status_code == 404:
             return []
-        assert response.status_code == 200, f'symbol: {symbol} error: {response.text}'
+        assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
-        data = [datum for datum in data if datum]
+        data = [
+            datum
+            for datum in data
+            if datum and yahoo_from <= datum['timestamp'] <= yahoo_to
+        ]
         if len(data) == 2 and data[0]['timestamp'] == data[1]['timestamp']:
             data = data[0:1]  # if yahoo returns 2 rows with duplicated values
         return data
