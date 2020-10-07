@@ -91,7 +91,7 @@ def series_update(engine: Any):
             with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
                 for symbol, dt_from in latest.items():
                     progress(symbol)
-                    dt_to = tools.dt_last(exchange_name, interval)
+                    dt_to = tools.dt_last(exchange_name, interval, tools.utc_now())
                     for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
@@ -164,10 +164,10 @@ def series_verify(engine: Any):
 def main():
     log.init(__file__, debug=True, to_screen=True)
     exchange_update()
-    from src import yahoo
-    series_range(yahoo)
-    series_update(yahoo)
-    series_verify(yahoo)
+    from src import exante as engine
+    series_range(engine)
+    series_update(engine)
+    series_verify(engine)
 
 
 if __name__ == '__main__':

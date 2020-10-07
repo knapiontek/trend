@@ -63,6 +63,20 @@ zkb silver
 nom.cn
 trade break-outs with build-up
 
+### Pullback in Up-Trend
+
+- trend above 200 EMA
+- entry RSI(10) < 30 (buy on the next day open)
+- exit RSI(10) > 40 or 10 trading days (sell on the next day open)
+
+### Follow Trend against Contra-Trend Players
+
+- when in the down-trend
+- strong green bar
+- strong red bar
+- quite, no price change makes contra-trend players to loose confidence
+- time to sell
+
 ### Market Sentiment
 - PUT/CALL ratio
 - Sentiment Research
