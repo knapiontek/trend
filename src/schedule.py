@@ -5,13 +5,13 @@ from datetime import timedelta
 
 import orjson as json
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask
+from flask import Flask, request
 
-from src import data, tools, log, yahoo, exante, stooq
+from src import data, tools, log, yahoo, exante, stooq, config
 
 LOG = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=config.ASSETS_PATH.as_posix())
 
 
 def wsgi(environ, start_response):
@@ -28,8 +28,13 @@ scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
 
 
-@app.route("/list-scheduled-jobs/")
-def list_scheduled_jobs():
+@app.route("/schedule/", methods=['GET', 'POST'])
+def schedule_update_job():
+    if request.method == 'POST':
+        LOG.info(f'Scheduling {load_trading_data.__name__}')
+        dt = tools.utc_now() + timedelta(minutes=1)
+        scheduler.add_job(load_trading_data, 'date', run_date=dt)
+
     LOG.info('Listing scheduled tasks')
     jobs = [
         {
@@ -40,14 +45,6 @@ def list_scheduled_jobs():
         for job in scheduler.get_jobs()
     ]
     return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
-
-
-@app.route("/schedule-job/")
-def schedule_update_job():
-    LOG.info(f'Scheduling {load_trading_data.__name__}')
-    dt = tools.utc_now() + timedelta(minutes=1)
-    scheduler.add_job(load_trading_data, 'date', run_date=dt)
-    return list_scheduled_jobs()
 
 
 @atexit.register
