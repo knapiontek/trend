@@ -7,15 +7,16 @@ from typing import Dict, List, Optional
 
 import requests
 
-from src import tools, session, store, config
+from src import tools, config, session, store
 
 LOG = logging.getLogger(__name__)
 
-DT_FORMAT = '%Y%m%d'
 URL_CHUNK_SIZE = 1024 * 1024
-ZIP_URL = 'https://static.stooq.com/db/h/{interval}_{country}_txt.zip'
 STOOQ_PATH = Path('/tmp/stooq/')
-COUNTRY_PATH = 'data/{interval}/{country}'
+
+DT_FORMAT = '%Y%m%d'
+ZIP_URL_FORMAT = 'https://static.stooq.com/db/h/{interval}_{country}_txt.zip'
+ZIP_PATH_FORMAT = 'data-{interval}-{country}.zip'
 
 EXCHANGE_COUNTRY = {
     'NYSE': 'us',
@@ -26,13 +27,15 @@ EXCHANGE_COUNTRY = {
 }
 
 EXCHANGE_PATHS = {
-    'NYSE': ('nyse stocks/1/{symbol}.us.txt',
-             'nyse stocks/2/{symbol}.us.txt',
-             'nyse stocks/3/{symbol}.us.txt'),
-    'NASDAQ': ('nasdaq stocks/1/{symbol}.us.txt', 'nasdaq stocks/2/{symbol}.us.txt'),
-    'LSE': ('lse stocks/{symbol}.uk.txt', 'lse stocks intl/{symbol}.uk.txt'),
-    'XETRA': ['xetra stocks/{symbol}.de.txt'],
-    'WSE': ['wse stocks/{symbol}.txt']
+    'NYSE': ('data/{interval}/us/nyse stocks/1/{symbol}.us.txt',
+             'data/{interval}/us/nyse stocks/2/{symbol}.us.txt',
+             'data/{interval}/us/nyse stocks/3/{symbol}.us.txt'),
+    'NASDAQ': ('data/{interval}/us/nasdaq stocks/1/{symbol}.us.txt',
+               'data/{interval}/us/nasdaq stocks/2/{symbol}.us.txt'),
+    'LSE': ('data/{interval}/uk/lse stocks/{symbol}.uk.txt',
+            'data/{interval}/uk/lse stocks intl/{symbol}.uk.txt'),
+    'XETRA': ['data/{interval}/de/xetra stocks/{symbol}.de.txt'],
+    'WSE': ['data/{interval}/pl/wse stocks/{symbol}.txt']
 }
 
 
@@ -41,24 +44,26 @@ def stooq_url(interval: timedelta, exchange: str) -> str:
         tools.INTERVAL_1H: 'h',
         tools.INTERVAL_1D: 'd'
     }[interval]
-    return ZIP_URL.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
+    return ZIP_URL_FORMAT.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
 
 
-def stooq_country_path(interval: timedelta, exchange: str) -> Path:
+def stooq_zip_path(interval: timedelta, exchange: str) -> Path:
     stooq_interval = {
         tools.INTERVAL_1H: 'hourly',
         tools.INTERVAL_1D: 'daily'
     }[interval]
-    path = COUNTRY_PATH.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
+    path = ZIP_PATH_FORMAT.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
     return STOOQ_PATH.joinpath(path)
 
 
-def stooq_symbol_path(symbol: str, interval: timedelta) -> Optional[Path]:
-    short_symbol, exchange = tools.symbol_split(symbol)
-    country_path = stooq_country_path(interval, exchange)
+def stooq_symbol_path(short_symbol: str, exchange: str, interval: timedelta, name_list: List[str]) -> Optional[str]:
+    stooq_interval = {
+        tools.INTERVAL_1H: 'hourly',
+        tools.INTERVAL_1D: 'daily'
+    }[interval]
     for path in EXCHANGE_PATHS[exchange]:
-        symbol_path = country_path.joinpath(path.format(symbol=short_symbol.lower()))
-        if symbol_path.exists():
+        symbol_path = path.format(interval=stooq_interval, symbol=short_symbol.lower())
+        if symbol_path in name_list:
             return symbol_path
     return None
 
@@ -89,12 +94,10 @@ class Session(session.Session):
 
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:
-                path = stooq_country_path(interval, exchange)
-                if not tools.is_latest(path, exchange, interval):
+                zip_path = stooq_zip_path(interval, exchange)
+                zip_path.parent.mkdir(parents=True, exist_ok=True)
+                if not tools.is_latest(zip_path, exchange, interval):
                     url = stooq_url(interval, exchange)
-                    zip_path = STOOQ_PATH.joinpath(f'{EXCHANGE_COUNTRY[exchange]}.zip')
-                    zip_path.parent.mkdir(parents=True, exist_ok=True)
-
                     response = requests.get(url, stream=True)
                     message = f'Loading {url} to {zip_path.as_posix()}'
                     LOG.info(message)
@@ -106,31 +109,23 @@ class Session(session.Session):
                                 progress('+')
                                 zip_io.write(chunk)
 
-                    message = f'Extracting {zip_path.as_posix()}'
-                    LOG.info(message)
-                    with zipfile.ZipFile(zip_path) as zip_io:
-                        name_list = zip_io.namelist()
-                        with tools.Progress(message, name_list) as progress:
-                            for name in name_list:
-                                progress(name)
-                                zip_io.extract(name, STOOQ_PATH)
-
-                    zip_path.unlink()
-                    path.touch()
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:
-                path = stooq_country_path(interval, exchange)
-                if path.exists():
-                    size = sum(file.stat().st_size for file in path.rglob('*'))
-                    LOG.debug(f'path: {path.as_posix()} size: {size / 1024 / 1024:.2f}M')
+                zip_path = stooq_zip_path(interval, exchange)
+                LOG.debug(f'zip_path: {zip_path.as_posix()} size: {zip_path.stat().st_size / 1024 / 1024:.2f}M')
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
-        path = stooq_symbol_path(symbol, interval)
-        if path is None:
-            return []
-        with path.open() as read_io:
+        short_symbol, exchange = tools.symbol_split(symbol)
+        zip_path = stooq_zip_path(interval, exchange)
+        with zipfile.ZipFile(zip_path) as zip_io:
+            name_list = zip_io.namelist()
+            path = stooq_symbol_path(short_symbol, exchange, interval, name_list)
+            if path is None:
+                return []
+            zip_io.extract(path, STOOQ_PATH)
+
+        with STOOQ_PATH.joinpath(path).open() as read_io:
             prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(read_io)]
         return [
             price
