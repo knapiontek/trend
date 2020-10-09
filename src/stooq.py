@@ -2,6 +2,7 @@ import csv
 import logging
 import zipfile
 from datetime import datetime, timezone, timedelta
+from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -122,10 +123,8 @@ class Session(session.Session):
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
             if relative_path:
-                zip_io.extract(relative_path, STOOQ_PATH)
-                absolute_path = STOOQ_PATH.joinpath(relative_path)
-                with absolute_path.open() as read_io:
-                    prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(read_io)]
+                content = zip_io.read(relative_path).decode('utf-8')
+                prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(StringIO(content))]
                 return [
                     price
                     for price in prices
