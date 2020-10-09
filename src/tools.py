@@ -322,7 +322,7 @@ def dt_last(exchange: str, interval: timedelta, dt: datetime) -> datetime:
         return last_sunday(dt)
 
 
-def is_latest(path: Path, exchange: str, interval: timedelta) -> bool:
+def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
     if path.exists():
         dt = from_timestamp(path.stat().st_mtime)
         path_dt_last = dt_last(exchange, interval, dt)

@@ -56,13 +56,14 @@ def stooq_zip_path(interval: timedelta, exchange: str) -> Path:
     return STOOQ_PATH.joinpath(path)
 
 
-def stooq_symbol_path(short_symbol: str, exchange: str, interval: timedelta, name_list: List[str]) -> Optional[str]:
+def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name_list: List[str]) -> Optional[str]:
+    stooq_symbol = short_symbol.replace('.', '-').lower()
     stooq_interval = {
         tools.INTERVAL_1H: 'hourly',
         tools.INTERVAL_1D: 'daily'
     }[interval]
     for path in EXCHANGE_PATHS[exchange]:
-        symbol_path = path.format(interval=stooq_interval, symbol=short_symbol.replace('.', '-').lower())
+        symbol_path = path.format(interval=stooq_interval, symbol=stooq_symbol)
         if symbol_path in name_list:
             return symbol_path
     return None
@@ -96,7 +97,7 @@ class Session(session.Session):
             for interval in intervals:
                 zip_path = stooq_zip_path(interval, exchange)
                 zip_path.parent.mkdir(parents=True, exist_ok=True)
-                if not tools.is_latest(zip_path, exchange, interval):
+                if not tools.is_latest(zip_path, interval, exchange):
                     url = stooq_url(interval, exchange)
                     response = requests.get(url, stream=True)
                     message = f'Loading {url} to {zip_path.as_posix()}'
@@ -119,19 +120,18 @@ class Session(session.Session):
         short_symbol, exchange = tools.symbol_split(symbol)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
-            name_list = zip_io.namelist()
-            path = stooq_symbol_path(short_symbol, exchange, interval, name_list)
-            if path is None:
-                return []
-            zip_io.extract(path, STOOQ_PATH)
-
-        with STOOQ_PATH.joinpath(path).open() as read_io:
-            prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(read_io)]
-        return [
-            price
-            for price in prices
-            if price and tools.to_timestamp(dt_from) <= price['timestamp'] <= tools.to_timestamp(dt_to)
-        ]
+            relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
+            if relative_path:
+                zip_io.extract(relative_path, STOOQ_PATH)
+                absolute_path = STOOQ_PATH.joinpath(relative_path)
+                with absolute_path.open() as read_io:
+                    prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(read_io)]
+                return [
+                    price
+                    for price in prices
+                    if price and tools.to_timestamp(dt_from) <= price['timestamp'] <= tools.to_timestamp(dt_to)
+                ]
+        return []
 
 
 class Series(store.Series):

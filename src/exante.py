@@ -28,15 +28,18 @@ def timestamp_from_exante(ts: int):
 
 
 def price_from_exante(dt: Dict, symbol: str) -> Dict:
-    return {
-        'symbol': symbol,
-        'timestamp': timestamp_from_exante(dt['timestamp']),
-        'open': float(dt['open']),
-        'close': float(dt['close']),
-        'low': float(dt['low']),
-        'high': float(dt['high']),
-        'volume': int(dt['volume'])
-    }
+    try:
+        return {
+            'symbol': symbol,
+            'timestamp': timestamp_from_exante(dt['timestamp']),
+            'open': float(dt['open']),
+            'close': float(dt['close']),
+            'low': float(dt['low']),
+            'high': float(dt['high']),
+            'volume': int(dt['volume'])
+        }
+    except:
+        return {}
 
 
 class Session(session.Session):
@@ -72,10 +75,9 @@ class Session(session.Session):
         }
         response = self.get(url, params=params)
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
-        data = response.json()
-        size = len(data)
-        assert size < max_size
-        return [price_from_exante(datum, symbol) for datum in data]
+        data = [price_from_exante(datum, symbol) for datum in response.json()]
+        assert len(data) < max_size
+        return [datum for datum in data if datum]
 
 
 class Series(store.Series):
