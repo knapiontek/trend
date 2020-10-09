@@ -164,7 +164,7 @@ def series_verify(engine: Any):
 def main():
     log.init(__file__, debug=True, to_screen=True)
     exchange_update()
-    from src import exante as engine
+    from src import stooq as engine
     series_range(engine)
     series_update(engine)
     series_verify(engine)

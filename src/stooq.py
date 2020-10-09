@@ -62,7 +62,7 @@ def stooq_symbol_path(short_symbol: str, exchange: str, interval: timedelta, nam
         tools.INTERVAL_1D: 'daily'
     }[interval]
     for path in EXCHANGE_PATHS[exchange]:
-        symbol_path = path.format(interval=stooq_interval, symbol=short_symbol.lower())
+        symbol_path = path.format(interval=stooq_interval, symbol=short_symbol.replace('.', '-').lower())
         if symbol_path in name_list:
             return symbol_path
     return None
