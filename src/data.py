@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List, Tuple, Any, Set
+from typing import List, Tuple, Any, Dict
 
 import orjson as json
 import pandas as pd
@@ -9,20 +9,26 @@ from src import store, tools, exante, log, config
 
 LOG = logging.getLogger(__name__)
 
+INDEX_SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
+INDEX_FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
+INDEX_WIG30 = ('https://en.wikipedia.org/wiki/WIG30', 0, 'Symbol', '')
+INDEX_DAX30 = ('https://en.wikipedia.org/wiki/DAX', 3, 'Ticker symbol', '.DE')
 
-def read_main_indices() -> Set[str]:
-    SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
-    FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
-    WIG30 = ('https://en.wikipedia.org/wiki/WIG30', 0, 'Symbol', '')
-    DAX30 = ('https://en.wikipedia.org/wiki/DAX', 3, 'Ticker symbol', '.DE')
+EXCHANGE_INDEX = {'NYSE': INDEX_SP500,
+                  'NASDAQ': INDEX_SP500,
+                  'LSE': INDEX_FTSE100,
+                  'XETRA': INDEX_DAX30,
+                  'WSE': INDEX_WIG30}
 
-    results = []
-    for url, index, name, suffix in [SP500, FTSE100, WIG30, DAX30]:
-        table = pd.read_html(url)
-        symbols = table[index][name].to_list()
-        results += [s.replace(suffix, '') for s in symbols]
 
-    return set(results)
+def read_major_indices() -> Dict[str, List]:
+    exchanges = {}
+    for exchange_name, (url, index, column_name, suffix) in EXCHANGE_INDEX.items():
+        if exchange_name not in exchanges:
+            table = pd.read_html(url)
+            symbols = table[index][column_name].to_list()
+            exchanges[exchange_name] = [s.replace(suffix, '') for s in symbols]
+    return exchanges
 
 
 HEALTH_DEFAULT = {
@@ -36,20 +42,21 @@ HEALTH_DEFAULT = {
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
 
-    main_indices = read_main_indices()
+    indices = read_major_indices()
     shortables = exante.read_shortables()
 
     store.exchange_clean()
     with store.Exchanges(editable=True) as db_exchanges:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
+                exchange_index = indices[name]
                 instruments = session.instruments(name)
                 documents = [
                     dict(instrument,
                          shortable=instrument['symbol'] in shortables,
                          **HEALTH_DEFAULT)
                     for instrument in instruments
-                    if instrument['short-symbol'] in main_indices
+                    if instrument['short-symbol'] in exchange_index
                 ]
                 db_exchanges += documents
                 LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
