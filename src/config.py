@@ -14,7 +14,7 @@ STORE_PATH = TREND_PATH.joinpath('store')
 EXANTE_PATH = TREND_PATH.joinpath('exante')
 LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
-LOG_FORMAT = '[%(asctime)s] [%(process)d] [%(levelname)s] [%(module)s] %(message)s'
+LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
 
 ACTIVE_EXCHANGES = ['NYSE', 'NASDAQ', 'LSE', 'XETRA', 'WSE']
 

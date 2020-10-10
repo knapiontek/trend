@@ -378,6 +378,11 @@ def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
 SPACES = ' ' * 43
 
 
+def print_line(message: str):
+    sys.stdout.write(message)
+    sys.stdout.flush()
+
+
 class Progress:
     def __init__(self, title: str, size: Union[int, Sized]):
         self.count = -1
@@ -390,15 +395,12 @@ class Progress:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.length:
             self.count += 1
-            sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
-            sys.stdout.flush()
+            print_line(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
             if not exc_type:
                 assert self.count == self.length
         else:
-            sys.stdout.write(f'{self.title}: done{SPACES}\n')
-            sys.stdout.flush()
+            print_line(f'{self.title}: done{SPACES}\n')
 
     def __call__(self, message: str):
         self.count += 1
-        sys.stdout.write(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
-        sys.stdout.flush()
+        print_line(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
