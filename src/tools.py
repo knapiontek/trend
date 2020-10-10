@@ -49,11 +49,6 @@ def ts_format(ts: int):
     return dt_format(dt)
 
 
-def list_split(lst: List, delta=5):
-    for i in range(0, len(lst), delta):
-        yield lst[i:i + delta]
-
-
 INTERVAL_1H = timedelta(hours=1)
 INTERVAL_1D = timedelta(days=1)
 INTERVAL_1W = timedelta(days=7)

@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument('--exchange-clean', action='store_true')
     parser.add_argument('--exchange-update', action='store_true')
 
-    parser.add_argument('--data', nargs='+', required=True)
+    parser.add_argument('--engines', nargs='+', required=True)
 
     parser.add_argument('--series-clean', action='store_true')
     parser.add_argument('--series-range', action='store_true')
@@ -50,7 +50,7 @@ def main():
             data.exchange_update()
 
         engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-        for datum in args.data:
+        for datum in args.engines:
             engine = engines[datum]
             if args.series_clean:
                 store.series_clean(engine)

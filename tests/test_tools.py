@@ -23,16 +23,6 @@ def test_interval_name():
     assert tools.interval_name(tools.INTERVAL_1D) == '1d'
 
 
-def test_list_split():
-    lst = [1, 2, 3, 4, 5, 'PSLV.ARCA']
-
-    chunks = [chunk for chunk in tools.list_split(lst, 5)]
-    assert chunks == [[1, 2, 3, 4, 5], ['PSLV.ARCA']]
-
-    chunks = [chunk for chunk in tools.list_split(lst, 3)]
-    assert chunks == [[1, 2, 3], [4, 5, 'PSLV.ARCA']]
-
-
 def test_time_slices_0():
     dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)

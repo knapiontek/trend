@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, yahoo, config, log, exante, stooq
+from src import store, tools, style, yahoo, config, log, exante, stooq, analyse
 
 LOG = logging.getLogger(__name__)
 
@@ -93,16 +93,17 @@ def filter_instruments(instruments: List[Dict], filter_query) -> List[Dict]:
         return instruments
 
 
-@app.callback(Output('exchange-choice', 'options'),
+@app.callback([Output('exchange-choice', 'options'), Output('exchange-choice', 'value')],
               [Input('nil-store', 'data')])
 def cb_exchange_choice(data):
-    return [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES]
+    return [{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES], config.ACTIVE_EXCHANGES[0]
 
 
-@app.callback(Output('engine-choice', 'options'),
+@app.callback([Output('engine-choice', 'options'), Output('engine-choice', 'value')],
               [Input('nil-store', 'data')])
 def cb_engine_choice(data):
-    return [{'label': s, 'value': s} for s in ['yahoo', 'stooq', 'exante']]
+    engines = ['yahoo', 'stooq', 'exante']
+    return [{'label': s, 'value': s} for s in engines], engines[0]
 
 
 @app.callback(Output('symbol-table', 'data'),
@@ -136,7 +137,8 @@ def cb_price_graph(engine_name, data, selected_rows):
             with engine.Series(tools.INTERVAL_1D) as db_series:
                 time_series = db_series[symbol]
 
-            params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
+            zigzag = analyse.zigzag(time_series, 'close')
+            params = tools.transpose(zigzag, ('timestamp', 'close', 'volume'))
             dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
 
             prices = go.Scatter(x=dates, y=params['close'], name='Price', customdata=time_series, line=dict(width=1.5))
@@ -149,7 +151,6 @@ def cb_price_graph(engine_name, data, selected_rows):
             figure.add_trace(prices, row=1, col=1)
             figure.add_trace(volume, row=2, col=1)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
-            figure.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))

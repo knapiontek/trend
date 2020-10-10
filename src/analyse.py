@@ -1,0 +1,16 @@
+from typing import Dict, List, Optional
+
+import more_itertools
+
+
+def zigzag(series: List[Dict], key: str) -> List[Dict]:
+    items: List[Optional[Dict]] = series[:]
+    for i1, i2, i3 in more_itertools.windowed(range(0, len(series)), 3):
+        c1 = series[i1][key]
+        c2 = series[i2][key]
+        c3 = series[i3][key]
+        if c1 < c2 < c3:
+            items[i2] = None
+        elif c1 > c2 > c3:
+            items[i2] = None
+    return [item for item in items if item]
