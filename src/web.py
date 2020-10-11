@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, style, yahoo, config, log, exante, stooq, analyse
+from src import store, tools, yahoo, config, log, exante, stooq, analyse
 
 LOG = logging.getLogger(__name__)
 
@@ -34,6 +34,20 @@ if 'gunicorn' in sys.modules:
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 
+
+def table_style(**kwargs):
+    return dict(
+        style_cell_conditional=[
+            {
+                'if': {'column_id': k},
+                'textAlign': v,
+            } for k, v in kwargs.items()
+        ],
+        style_header={'fontWeight': 'bold'},
+        style_cell={'padding': '5px'}
+    )
+
+
 exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
 engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
 
@@ -43,14 +57,14 @@ symbol_table = dash_table.DataTable(
     filter_action='custom',
     row_selectable='single',
     page_action='none',
-    **style.symbol_table(symbol='left', shortable='center', health='center')
+    **table_style(symbol='left', shortable='center', health='center')
 )
 
 details_table = dash_table.DataTable(
     id='details-table',
     columns=[{'name': name, 'id': _id} for _id, name in (('key', 'Key'), ('value', 'Value'))],
     page_action='none',
-    **style.symbol_table(key='left', value='right')
+    **table_style(key='left', value='right')
 )
 
 data_graph = dcc.Graph(id='data-graph', config={'scrollZoom': True}, className='panel')
