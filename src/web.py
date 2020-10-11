@@ -43,7 +43,7 @@ def table_style(**kwargs):
                 'textAlign': v,
             } for k, v in kwargs.items()
         ],
-        style_header={'fontWeight': 'bold'},
+        style_header={'font-weight': 'bold', 'border-top': 'none'},
         style_cell={'padding': '5px'}
     )
 
