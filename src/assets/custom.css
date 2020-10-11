@@ -28,8 +28,9 @@ body {
 
 .scroll {
     margin: 6px;
-    border-style: solid;
-    border-color: grey;
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-color: lightgrey;
     border-width: thin;
     overflow-x: auto;
     overflow-y: scroll;
