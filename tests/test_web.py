@@ -1,7 +1,7 @@
 from src import web, tools
 
 
-def test_filter():
+def test_select():
     instruments = [
         {
             'name': 'Exxon Mobil Corporation',
@@ -13,9 +13,9 @@ def test_filter():
             'currency': 'USD'
         }
     ]
-    filter_query = '{currency} contains usd && {type} contains stock && {symbol} contains xom'
-    filtered = web.filter_instruments(instruments, filter_query=filter_query)
-    assert len(filtered) == 1
+    query = '{currency} contains usd && {type} contains stock && {symbol} contains xom'
+    selected = web.select_instruments(instruments, query=query)
+    assert len(selected) == 1
 
-    selected = [i for i in tools.dict_it(filtered, ('symbol', 'country'))]
+    selected = [i for i in tools.dict_it(selected, ('symbol', 'country'))]
     assert len(selected) == 1
