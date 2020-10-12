@@ -43,7 +43,7 @@ def table_style(**kwargs):
                 'textAlign': v,
             } for k, v in kwargs.items()
         ],
-        style_header={'font-weight': 'bold', 'border-top': 'none'},
+        style_header={'font-weight': 'bold'},
         style_cell={'padding': '5px'}
     )
 
@@ -176,7 +176,7 @@ def cb_price_graph(engine_name, data, selected_rows):
 def cb_details_table(data):
     if data:
         points = data.get('points') or []
-        return [{'key': k, 'value': v} for p in points for k, v in p.get('customdata').items()]
+        return [{'key': k, 'value': v} for p in points for k, v in p.get('customdata', {}).items()]
     return []
 
 

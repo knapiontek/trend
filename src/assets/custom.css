@@ -28,10 +28,8 @@ body {
 
 .scroll {
     margin: 6px;
-    border-top-style: solid;
-    border-bottom-style: solid;
-    border-color: lightgrey;
-    border-width: thin;
+    padding: 2px;
+    border: solid thin lightgrey;
     overflow-x: auto;
     overflow-y: scroll;
 }
