@@ -51,9 +51,7 @@ def table_style(**kwargs):
 
 exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
 engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
-price_choice = dcc.RadioItems(id='price-choice',
-                              options=[{'label': 'ZigZag', 'value': 'zigzag'}, {'label': 'Price', 'value': 'price'}],
-                              value='zigzag', className='choice')
+price_choice = dcc.Dropdown(id='price-choice', placeholder='chart', className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -121,8 +119,14 @@ def cb_exchange_choice(data):
 @app.callback([Output('engine-choice', 'options'), Output('engine-choice', 'value')],
               [Input('nil-store', 'data')])
 def cb_engine_choice(data):
-    engines = ['yahoo', 'stooq', 'exante']
-    return [{'label': s, 'value': s} for s in engines], engines[0]
+    return [{'label': s, 'value': s} for s in ENGINES], list(ENGINES.keys())[0]
+
+
+@app.callback([Output('price-choice', 'options'), Output('price-choice', 'value')],
+              [Input('nil-store', 'data')])
+def cb_price_choice(data):
+    price_names = ['ZIGZAG', 'PRICE']
+    return [{'label': s, 'value': s} for s in price_names], price_names[0]
 
 
 @app.callback(Output('symbol-table', 'data'),
@@ -158,7 +162,7 @@ def cb_price_graph(engine_name, price_name, data, selected_rows):
 
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-            if price_name == 'zigzag':
+            if price_name == 'ZIGZAG':
                 zz = analyse.zigzag(time_series, 'close')
                 params = tools.transpose(zz, ('timestamp', 'close', 'volume'))
                 dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
@@ -168,7 +172,7 @@ def cb_price_graph(engine_name, price_name, data, selected_rows):
                 volume = go.Bar(x=dates, y=params['volume'], name='Volume')
                 figure.add_trace(volume, row=2, col=1)
 
-            if price_name == 'price':
+            if price_name == 'PRICE':
                 params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
                 dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
                 prices = go.Scatter(x=dates, y=params['close'],
