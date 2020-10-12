@@ -31,6 +31,7 @@ if 'gunicorn' in sys.modules:
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
+ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = {'symbol': 'Symbol', 'shortable': 'Short', 'health': 'Health', 'total': 'Total'}
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 
@@ -50,6 +51,9 @@ def table_style(**kwargs):
 
 exchange_choice = dcc.Dropdown(id='exchange-choice', placeholder='exchange', className='choice')
 engine_choice = dcc.Dropdown(id='engine-choice', placeholder='engine', className='choice')
+price_choice = dcc.RadioItems(id='price-choice',
+                              options=[{'label': 'ZigZag', 'value': 'zigzag'}, {'label': 'Price', 'value': 'price'}],
+                              value='zigzag', className='choice')
 
 symbol_table = dash_table.DataTable(
     id='symbol-table',
@@ -74,8 +78,9 @@ app.layout = html.Div(
         dcc.Store(id='nil-store', storage_type='local'),
         html.Div([
             html.Div([
-                html.Div(exchange_choice, className='six columns'),
-                html.Div(engine_choice, className='six columns')
+                html.Div(exchange_choice, className='four columns'),
+                html.Div(engine_choice, className='four columns'),
+                html.Div(price_choice, className='four columns')
             ], className='row', style={'height': '20'}),
             html.Div(symbol_table, className='scroll', style={'height': '60%'}),
             html.Div(details_table, className='scroll flex-element'),
@@ -139,31 +144,39 @@ def cb_symbol_table(exchange_name, engine_name, filter_query):
 
 @app.callback(Output('data-graph', 'figure'),
               [Input('engine-choice', 'value'),
+               Input('price-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_price_graph(engine_name, data, selected_rows):
+def cb_price_graph(engine_name, price_name, data, selected_rows):
     if engine_name and selected_rows:
         if data and selected_rows:
             row = data[selected_rows[0]]
             symbol = row['symbol']
             LOG.debug(f'Loading time series for symbol: {symbol}')
-            engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-            engine = engines[engine_name]
+            engine = ENGINES[engine_name]
             with engine.Series(tools.INTERVAL_1D) as db_series:
                 time_series = db_series[symbol]
 
-            zigzag = analyse.zigzag(time_series, 'close')
-            params = tools.transpose(zigzag, ('timestamp', 'close', 'volume'))
-            dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+            figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-            prices = go.Scatter(x=dates, y=params['close'], name='Price', customdata=time_series, line=dict(width=1.5))
-            volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-            figure = make_subplots(rows=2, cols=1,
-                                   shared_xaxes=True,
-                                   vertical_spacing=0.03,
-                                   row_heights=[0.7, 0.3],
-                                   specs=[[{'type': 'scatter'}], [{'type': 'bar'}]])
-            figure.add_trace(prices, row=1, col=1)
-            figure.add_trace(volume, row=2, col=1)
+            if price_name == 'zigzag':
+                zz = analyse.zigzag(time_series, 'close')
+                params = tools.transpose(zz, ('timestamp', 'close', 'volume'))
+                dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+                prices = go.Scatter(x=dates, y=params['close'],
+                                    name='Zigzag', customdata=time_series, line=dict(width=1.5))
+                figure.add_trace(prices, row=1, col=1)
+                volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+                figure.add_trace(volume, row=2, col=1)
+
+            if price_name == 'price':
+                params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
+                dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+                prices = go.Scatter(x=dates, y=params['close'],
+                                    name='Price', customdata=time_series, line=dict(width=1.5))
+                figure.add_trace(prices, row=1, col=1)
+                volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+                figure.add_trace(volume, row=2, col=1)
+
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
             return figure
 
