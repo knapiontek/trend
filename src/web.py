@@ -130,10 +130,12 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.Exchanges() as db_exchanges:
             instruments = db_exchanges[exchange_name]
         boolean = ['[-]', '[+]']
-        instruments = [dict(i, shortable=boolean[i['shortable']], health=boolean[i[f'health-{engine_name}']])
+        instruments = [dict(i,
+                            shortable=boolean[i['shortable']],
+                            health=boolean[i[f'health-{engine_name}']],
+                            info=i['description'])
                        for i in instruments]
-        selected = select_instruments(instruments, query)
-        return list(tools.dict_it(selected, SYMBOL_COLUMNS))
+        return select_instruments(instruments, query)
     return []
 
 
@@ -145,7 +147,7 @@ def cb_series_graph(engine_name, options, data, selected_rows):
     if engine_name and selected_rows:
         if data and selected_rows:
             row = data[selected_rows[0]]
-            symbol = row['symbol']
+            symbol, info = row['symbol'], row['info']
 
             LOG.debug(f'Loading time series for symbol: {symbol}')
             engine = ENGINES[engine_name]
@@ -173,7 +175,7 @@ def cb_series_graph(engine_name, options, data, selected_rows):
                 volume = go.Bar(x=dates, y=params['volume'], name='Volume')
                 figure.add_trace(volume, row=2, col=1)
 
-            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=symbol)
+            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info)
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
