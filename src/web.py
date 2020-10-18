@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+from datetime import timedelta
 from typing import Dict, List
 
 import dash
@@ -150,9 +151,10 @@ def cb_series_graph(engine_name, options, data, selected_rows):
             symbol, info = row['symbol'], row['info']
 
             LOG.debug(f'Loading time series for symbol: {symbol}')
+            dt_from = tools.utc_now() - timedelta(days=1400)
             engine = ENGINES[engine_name]
             with engine.Series(tools.INTERVAL_1D) as db_series:
-                time_series = db_series[symbol]
+                time_series = [s for s in db_series[symbol] if tools.from_timestamp(s['timestamp']) > dt_from]
 
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
