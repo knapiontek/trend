@@ -31,7 +31,7 @@ if 'gunicorn' in sys.modules:
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
-CHARTS = dict(zigzag='Zigzag', price='Price')
+OPTIONS = dict(simplified='Simplified', close='Close')
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
@@ -46,10 +46,11 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              value=list(ENGINES.keys())[0],
                              placeholder='engine', className='choice')
 
-chart_choice = dcc.Dropdown(id='chart-choice',
-                            options=[{'label': v, 'value': k} for k, v in CHARTS.items()],
-                            value=list(CHARTS.keys())[0],
-                            placeholder='chart', className='choice')
+options_choice = dcc.Checklist(id='options-choice',
+                               options=[{'label': v, 'value': k} for k, v in OPTIONS.items()],
+                               labelStyle={'display': 'inline'},
+                               value=[list(OPTIONS.keys())[0]],
+                               style={'padding': 10})
 
 
 def table_style(**kwargs):
@@ -61,7 +62,7 @@ def table_style(**kwargs):
             } for k, v in kwargs.items()
         ],
         style_header={'font-weight': 'bold'},
-        style_cell={'padding': '5px'}
+        style_cell={'padding': 5}
     )
 
 
@@ -87,16 +88,14 @@ app.layout = html.Div(
     [
         html.Div([
             html.Div([
-                html.Div(exchange_choice, className='four columns'),
-                html.Div(engine_choice, className='four columns'),
-                html.Div(chart_choice, className='four columns')
-            ], className='row', style={'height': '20'}),
-            html.Div(symbol_table, className='scroll', style={'height': '60%'}),
+                html.Div(exchange_choice, className='six columns'),
+                html.Div(engine_choice, className='six columns')
+            ], className='row frame'),
+            html.Div(options_choice, className='frame'),
+            html.Div(symbol_table, className='scroll', style={'max-height': '60%'}),
             html.Div(details_table, className='scroll flex-element'),
         ], className='three columns panel flex-box'),
-        html.Div([
-            series_graph
-        ], className='nine columns panel')
+        html.Div(series_graph, className='nine columns panel')
     ],
     className='row dashboard'
 )
@@ -140,9 +139,9 @@ def cb_symbol_table(exchange_name, engine_name, query):
 
 @app.callback(Output('series-graph', 'figure'),
               [Input('engine-choice', 'value'),
-               Input('chart-choice', 'value'),
+               Input('options-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(engine_name, chart_name, data, selected_rows):
+def cb_series_graph(engine_name, options, data, selected_rows):
     if engine_name and selected_rows:
         if data and selected_rows:
             row = data[selected_rows[0]]
@@ -155,22 +154,22 @@ def cb_series_graph(engine_name, chart_name, data, selected_rows):
 
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-            if chart_name == 'zigzag':
-                zz = analyse.zigzag(time_series, 'close')
-                params = tools.transpose(zz, ('timestamp', 'close', 'volume'))
+            if 'simplified' in options:
+                simplified = analyse.simplify(time_series, 'close')
+                params = tools.transpose(simplified, ('timestamp', 'close', 'volume'))
                 dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-                prices = go.Scatter(x=dates, y=params['close'],
-                                    name='Zigzag Close', customdata=time_series, line=dict(width=1.5))
-                figure.add_trace(prices, row=1, col=1)
+                closes = go.Scatter(x=dates, y=params['close'],
+                                    name='Simplified', customdata=time_series, line=dict(width=1.5))
+                figure.add_trace(closes, row=1, col=1)
                 volume = go.Bar(x=dates, y=params['volume'], name='Volume')
                 figure.add_trace(volume, row=2, col=1)
 
-            if chart_name == 'price':
+            if 'close' in options:
                 params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
                 dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-                prices = go.Scatter(x=dates, y=params['close'],
-                                    name='Price Close', customdata=time_series, line=dict(width=1.5))
-                figure.add_trace(prices, row=1, col=1)
+                closes = go.Scatter(x=dates, y=params['close'],
+                                    name='Close', customdata=time_series, line=dict(width=1.5))
+                figure.add_trace(closes, row=1, col=1)
                 volume = go.Bar(x=dates, y=params['volume'], name='Volume')
                 figure.add_trace(volume, row=2, col=1)
 

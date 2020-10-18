@@ -26,12 +26,18 @@ body {
     overflow-y: hidden;
 }
 
+.frame {
+    margin: 6px;
+    padding: 2px;
+    border: solid thin lightgrey;
+}
+
 .scroll {
     margin: 6px;
     padding: 2px;
     border: solid thin lightgrey;
     overflow-x: auto;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .scroll::-webkit-scrollbar {
