@@ -73,7 +73,7 @@ class Session(session.Session):
         }
         time.sleep(0.6)
         response = self.get(url, params=params)
-        if response.status_code == 404:
+        if response.status_code in (400, 404):
             return []
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]

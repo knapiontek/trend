@@ -66,7 +66,7 @@ class Session(session.Session):
         exante_interval = interval_to_exante(interval)
 
         url = f'{DATA_URL}/ohlc/{tools.url_encode(symbol)}/{exante_interval}'
-        max_size = 1000
+        max_size = 4096
         params = {
             'from': exante_from,
             'to': exante_to,

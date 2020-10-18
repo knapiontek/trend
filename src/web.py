@@ -175,7 +175,9 @@ def cb_series_graph(engine_name, options, data, selected_rows):
                 volume = go.Bar(x=dates, y=params['volume'], name='Volume')
                 figure.add_trace(volume, row=2, col=1)
 
-            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info)
+            figure.update_layout(margin=GRAPH_MARGIN,
+                                 showlegend=False,
+                                 title_text=info)
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
