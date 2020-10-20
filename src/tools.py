@@ -34,10 +34,15 @@ def utc_now():
 
 
 DT_FORMAT = '%Y-%m-%d %H:%M:%S %z'
+D_FORMAT = '%Y-%m-%d'
 
 
 def dt_parse(dt: str):
-    return datetime.strptime(dt, DT_FORMAT)
+    return datetime.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
+
+
+def d_parse(dt: str):
+    return datetime.strptime(dt, D_FORMAT).replace(tzinfo=timezone.utc)
 
 
 def dt_format(dt: datetime):

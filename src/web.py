@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import date
 from typing import Dict, List
 
 import dash
@@ -36,7 +36,6 @@ ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
 ORDER_RANGE = 6
 DISPLAY_FORMAT = 'YYYY-MM-DD'
-DATE_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
@@ -150,19 +149,20 @@ def cb_symbol_table(exchange_name, engine_name, query):
                Input('order-choice', 'value'),
                Input('date-from', 'date'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(engine_name, order, date_from, data, selected_rows):
+def cb_series_graph(engine_name, order, d_from, data, selected_rows):
     if engine_name and selected_rows:
         if data and selected_rows:
             row = data[selected_rows[0]]
             symbol, info = row['symbol'], row['info']
 
-            LOG.debug(f'Loading time series for symbol: {symbol}')
-            dt_from = datetime.strptime(date_from, DATE_FORMAT)
-            ts_from = tools.to_timestamp(dt_from.replace(tzinfo=timezone.utc))
+            # engine series
+            dt_from = tools.d_parse(d_from)
+            ts_from = tools.to_timestamp(dt_from)
             engine = ENGINES[engine_name]
             with engine.Series(tools.INTERVAL_1D) as db_series:
                 time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
 
+            # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
             series = analyse.simplify(time_series, 'close', order)
