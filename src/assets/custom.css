@@ -14,7 +14,7 @@ body {
 
 .choice {
     margin: 10px;
-    width: 150px;
+    width: 120px;
 }
 
 .panel {
@@ -22,8 +22,6 @@ body {
     padding: 0px;
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
-    overflow-y: hidden;
 }
 
 .frame {

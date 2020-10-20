@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import timedelta
+from datetime import date, datetime, timezone
 from typing import Dict, List
 
 import dash
@@ -32,9 +32,11 @@ if 'gunicorn' in sys.modules:
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
-OPTIONS = dict(simplified='Simplified', close='Close')
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
+ORDER_RANGE = 6
+DISPLAY_FORMAT = 'YYYY-MM-DD'
+DATE_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
@@ -47,11 +49,13 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              value=list(ENGINES.keys())[0],
                              placeholder='engine', className='choice')
 
-options_choice = dcc.Checklist(id='options-choice',
-                               options=[{'label': v, 'value': k} for k, v in OPTIONS.items()],
-                               labelStyle={'display': 'inline'},
-                               value=[list(OPTIONS.keys())[0]],
-                               style={'padding': 10})
+date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
+                                   display_format=DISPLAY_FORMAT, className='choice')
+
+order_choice = dcc.Slider(id='order-choice',
+                          min=0, max=ORDER_RANGE - 1,
+                          marks={i: f'Order.{i}' for i in range(ORDER_RANGE)},
+                          value=1)
 
 
 def table_style(**kwargs):
@@ -89,10 +93,11 @@ app.layout = html.Div(
     [
         html.Div([
             html.Div([
-                html.Div(exchange_choice, className='six columns'),
-                html.Div(engine_choice, className='six columns')
+                html.Div(exchange_choice, className='four columns'),
+                html.Div(engine_choice, className='four columns'),
+                html.Div(date_choice, className='four columns')
             ], className='row frame'),
-            html.Div(options_choice, className='frame'),
+            html.Div(order_choice, className='frame'),
             html.Div(symbol_table, className='scroll', style={'max-height': '60%'}),
             html.Div(details_table, className='scroll flex-element'),
         ], className='three columns panel flex-box'),
@@ -142,40 +147,32 @@ def cb_symbol_table(exchange_name, engine_name, query):
 
 @app.callback(Output('series-graph', 'figure'),
               [Input('engine-choice', 'value'),
-               Input('options-choice', 'value'),
+               Input('order-choice', 'value'),
+               Input('date-from', 'date'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(engine_name, options, data, selected_rows):
+def cb_series_graph(engine_name, order, date_from, data, selected_rows):
     if engine_name and selected_rows:
         if data and selected_rows:
             row = data[selected_rows[0]]
             symbol, info = row['symbol'], row['info']
 
             LOG.debug(f'Loading time series for symbol: {symbol}')
-            dt_from = tools.utc_now() - timedelta(days=1400)
+            dt_from = datetime.strptime(date_from, DATE_FORMAT)
+            ts_from = tools.to_timestamp(dt_from.replace(tzinfo=timezone.utc))
             engine = ENGINES[engine_name]
             with engine.Series(tools.INTERVAL_1D) as db_series:
-                time_series = [s for s in db_series[symbol] if tools.from_timestamp(s['timestamp']) > dt_from]
+                time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
 
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-            if 'simplified' in options:
-                simplified = analyse.simplify(time_series, 'close')
-                params = tools.transpose(simplified, ('timestamp', 'close', 'volume'))
-                dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-                closes = go.Scatter(x=dates, y=params['close'],
-                                    name='Simplified', customdata=time_series, line=dict(width=1.5))
-                figure.add_trace(closes, row=1, col=1)
-                volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-                figure.add_trace(volume, row=2, col=1)
-
-            if 'close' in options:
-                params = tools.transpose(time_series, ('timestamp', 'close', 'volume'))
-                dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-                closes = go.Scatter(x=dates, y=params['close'],
-                                    name='Close', customdata=time_series, line=dict(width=1.5))
-                figure.add_trace(closes, row=1, col=1)
-                volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-                figure.add_trace(volume, row=2, col=1)
+            series = analyse.simplify(time_series, 'close', order)
+            params = tools.transpose(series, ('timestamp', 'close', 'volume'))
+            dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+            closes = go.Scatter(x=dates, y=params['close'],
+                                name='Close', customdata=series, line=dict(width=1.5))
+            figure.add_trace(closes, row=1, col=1)
+            volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+            figure.add_trace(volume, row=2, col=1)
 
             figure.update_layout(margin=GRAPH_MARGIN,
                                  showlegend=False,

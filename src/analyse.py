@@ -3,7 +3,10 @@ from typing import Dict, List, Optional
 import more_itertools
 
 
-def simplify(series: List[Dict], key: str) -> List[Dict]:
+def simplify(series: List[Dict], key: str, order: int) -> List[Dict]:
+    if not order:
+        return series
+
     items: List[Optional[Dict]] = series[:]
     for i1, i2, i3 in more_itertools.windowed(range(len(series)), 3):
         if None not in (i1, i2, i3):
