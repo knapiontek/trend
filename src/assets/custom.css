@@ -12,11 +12,6 @@ body {
     width: 100vw;
 }
 
-.choice {
-    margin: 10px;
-    width: 120px;
-}
-
 .panel {
     margin: 0px;
     padding: 0px;
@@ -28,6 +23,12 @@ body {
     margin: 6px;
     padding: 2px;
     border: solid thin lightgrey;
+}
+
+.choice {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 120px;
 }
 
 .scroll {
@@ -60,6 +61,6 @@ body {
 }
 
 .DateInput_input, .DateInput_input_1 {
-  height: 30px;
+  height: 34px;
   font-size: 14px;
 }

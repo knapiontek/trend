@@ -49,7 +49,7 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              placeholder='engine', className='choice')
 
 date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
-                                   display_format=DISPLAY_FORMAT)
+                                   display_format=DISPLAY_FORMAT, className='choice')
 
 order_choice = dcc.Slider(id='order-choice', min=0, max=ORDER_RANGE - 1,
                           marks={i: f'Order.{i}' for i in range(ORDER_RANGE)}, value=1)
@@ -148,34 +148,33 @@ def cb_symbol_table(exchange_name, engine_name, query):
                Input('date-from', 'date'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
 def cb_series_graph(engine_name, order, d_from, data, selected_rows):
-    if engine_name and selected_rows:
-        if data and selected_rows:
-            row = data[selected_rows[0]]
-            symbol, info = row['symbol'], row['info']
+    if engine_name and d_from and selected_rows and data and selected_rows:
+        row = data[selected_rows[0]]
+        symbol, info = row['symbol'], row['info']
 
-            # engine series
-            dt_from = tools.d_parse(d_from)
-            ts_from = tools.to_timestamp(dt_from)
-            engine = ENGINES[engine_name]
-            with engine.Series(tools.INTERVAL_1D) as db_series:
-                time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
+        # engine series
+        dt_from = tools.d_parse(d_from)
+        ts_from = tools.to_timestamp(dt_from)
+        engine = ENGINES[engine_name]
+        with engine.Series(tools.INTERVAL_1D) as db_series:
+            time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
 
-            # create a graph
-            figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
+        # create a graph
+        figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
 
-            series = analyse.simplify(time_series, 'close', order)
-            params = tools.transpose(series, ('timestamp', 'close', 'volume'))
-            dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-            closes = go.Scatter(x=dates, y=params['close'],
-                                name='Close', customdata=series, line=dict(width=1.5))
-            figure.add_trace(closes, row=1, col=1)
-            volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-            figure.add_trace(volume, row=2, col=1)
+        series = analyse.simplify(time_series, 'close', order)
+        params = tools.transpose(series, ('timestamp', 'close', 'volume'))
+        dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
+        closes = go.Scatter(x=dates, y=params['close'],
+                            name='Close', customdata=series, line=dict(width=1.5))
+        figure.add_trace(closes, row=1, col=1)
+        volume = go.Bar(x=dates, y=params['volume'], name='Volume')
+        figure.add_trace(volume, row=2, col=1)
 
-            figure.update_layout(margin=GRAPH_MARGIN,
-                                 showlegend=False,
-                                 title_text=info)
-            return figure
+        figure.update_layout(margin=GRAPH_MARGIN,
+                             showlegend=False,
+                             title_text=info)
+        return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
 
