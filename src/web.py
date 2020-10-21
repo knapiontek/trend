@@ -5,8 +5,8 @@ from datetime import date
 from typing import Dict, List
 
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
-import dash_html_components as html
 import dash_table
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input
@@ -18,7 +18,7 @@ LOG = logging.getLogger(__name__)
 
 app = dash.Dash(title='trend',
                 url_base_pathname='/trend/',
-                external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'],
+                external_stylesheets=[dbc.themes.BOOTSTRAP],
                 assets_folder=config.ASSETS_PATH)
 
 
@@ -49,12 +49,10 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              placeholder='engine', className='choice')
 
 date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
-                                   display_format=DISPLAY_FORMAT, className='choice')
+                                   display_format=DISPLAY_FORMAT)
 
-order_choice = dcc.Slider(id='order-choice',
-                          min=0, max=ORDER_RANGE - 1,
-                          marks={i: f'Order.{i}' for i in range(ORDER_RANGE)},
-                          value=1)
+order_choice = dcc.Slider(id='order-choice', min=0, max=ORDER_RANGE - 1,
+                          marks={i: f'Order.{i}' for i in range(ORDER_RANGE)}, value=1)
 
 
 def table_style(**kwargs):
@@ -88,21 +86,21 @@ details_table = dash_table.DataTable(
 
 series_graph = dcc.Graph(id='series-graph', config={'scrollZoom': True}, className='panel')
 
-app.layout = html.Div(
+app.layout = dbc.Row(
     [
-        html.Div([
-            html.Div([
-                html.Div(exchange_choice, className='four columns'),
-                html.Div(engine_choice, className='four columns'),
-                html.Div(date_choice, className='four columns')
-            ], className='row frame'),
-            html.Div(order_choice, className='frame'),
-            html.Div(symbol_table, className='scroll', style={'max-height': '60%'}),
-            html.Div(details_table, className='scroll flex-element'),
-        ], className='three columns panel flex-box'),
-        html.Div(series_graph, className='nine columns panel')
+        dbc.Col([
+            dbc.Row([
+                dbc.Col(exchange_choice),
+                dbc.Col(engine_choice),
+                dbc.Col(date_choice)
+            ], className='frame'),
+            dbc.Row(dbc.Col(order_choice), className='frame'),
+            dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
+            dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
+        ], className='panel flex-box', width=3),
+        dbc.Col(series_graph, width=9)
     ],
-    className='row dashboard'
+    className='dashboard'
 )
 
 PATTERN = re.compile('{(\\w+)} contains (.+)')

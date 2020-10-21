@@ -58,3 +58,8 @@ body {
 .flex-element {
     flex: 1;
 }
+
+.DateInput_input, .DateInput_input_1 {
+  height: 30px;
+  font-size: 14px;
+}
