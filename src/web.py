@@ -159,21 +159,20 @@ def cb_series_graph(engine_name, order, d_from, data, selected_rows):
         with engine.Series(tools.INTERVAL_1D) as db_series:
             time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
 
-        # create a graph
-        figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
-
+        # customize data
         series = analyse.simplify(time_series, 'close', order)
-        params = tools.transpose(series, ('timestamp', 'close', 'volume'))
-        dates = [tools.from_timestamp(ts) for ts in params['timestamp']]
-        closes = go.Scatter(x=dates, y=params['close'],
-                            name='Close', customdata=series, line=dict(width=1.5))
-        figure.add_trace(closes, row=1, col=1)
-        volume = go.Bar(x=dates, y=params['volume'], name='Volume')
-        figure.add_trace(volume, row=2, col=1)
+        transposed = tools.transpose(series, ('timestamp', 'close', 'volume'))
+        dates = [tools.from_timestamp(ts) for ts in transposed['timestamp']]
 
-        figure.update_layout(margin=GRAPH_MARGIN,
-                             showlegend=False,
-                             title_text=info)
+        # create a graph
+        closes = go.Scatter(x=dates, y=transposed['close'], name='Close', customdata=series, line=dict(width=1.5))
+        volume = go.Bar(x=dates, y=transposed['volume'], name='Volume')
+        figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
+        figure.add_trace(closes, row=1, col=1)
+        figure.add_trace(volume, row=2, col=1)
+        spike = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
+        figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info,
+                             hovermode='x', xaxis=spike, yaxis=spike)
         return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
