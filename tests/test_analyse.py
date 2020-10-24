@@ -54,11 +54,11 @@ SERIES = [
 ]
 
 
-def test_zigzag():
+def test_simplify():
     key = 'close'
     series_close = [s[key] for s in SERIES]
     assert series_close == [1, 2, 3, 4, 5, 4, 3, 4, 5, 6]
 
-    simplified = analyse.simplify(SERIES, key)
+    simplified = analyse.simplify(SERIES, key, 1)
     simplified_close = [s[key] for s in simplified]
     assert simplified_close == [1, 5, 3, 6]
