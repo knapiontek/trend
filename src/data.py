@@ -79,7 +79,7 @@ def series_update(engine: Any):
     LOG.info(f'>> {series_update.__name__}({engine_name})')
 
     interval = tools.INTERVAL_1D
-    dt_from_default = datetime(2009, 12, 31, tzinfo=timezone.utc)
+    dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
     with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
