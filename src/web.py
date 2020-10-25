@@ -89,6 +89,7 @@ series_graph = dcc.Graph(id='series-graph', config={'scrollZoom': True}, classNa
 
 app.layout = dbc.Row(
     [
+        dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
             dbc.Row([
                 dbc.Col(exchange_choice),
@@ -143,12 +144,19 @@ def cb_symbol_table(exchange_name, engine_name, query):
     return []
 
 
+@app.callback(Output('relayout-data', 'data'),
+              [Input('series-graph', 'relayoutData')])
+def display_relayout_data(relayout_data):
+    return relayout_data or {}
+
+
 @app.callback(Output('series-graph', 'figure'),
               [Input('engine-choice', 'value'),
                Input('order-choice', 'value'),
                Input('date-from', 'date'),
+               Input('relayout-data', 'data'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(engine_name, order, d_from, data, selected_rows):
+def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_rows):
     if engine_name and d_from and selected_rows and data and selected_rows:
         row = data[selected_rows[0]]
         symbol, info = row['symbol'], row['info']
@@ -173,6 +181,15 @@ def cb_series_graph(engine_name, order, d_from, data, selected_rows):
         figure.add_trace(volume, row=2, col=1)
         figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info,
                              hovermode='x', xaxis=SPIKE, yaxis=SPIKE)
+        if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
+            figure.update_xaxes(range=[relayout_data['xaxis.range[0]'],
+                                       relayout_data['xaxis.range[1]']])
+        if 'yaxis.range[0]' in relayout_data and 'yaxis.range[1]' in relayout_data:
+            figure.update_yaxes(range=[relayout_data['yaxis.range[0]'],
+                                       relayout_data['yaxis.range[1]']], row=1, col=1)
+        if 'yaxis2.range[0]' in relayout_data and 'yaxis2.range[1]' in relayout_data:
+            figure.update_yaxes(range=[relayout_data['yaxis2.range[0]'],
+                                       relayout_data['yaxis2.range[1]']], row=2, col=1)
         return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
