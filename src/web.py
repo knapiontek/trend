@@ -37,6 +37,7 @@ SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total
 ORDER_RANGE = 6
 DISPLAY_FORMAT = 'YYYY-MM-DD'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
+SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
@@ -170,9 +171,8 @@ def cb_series_graph(engine_name, order, d_from, data, selected_rows):
         figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
         figure.add_trace(closes, row=1, col=1)
         figure.add_trace(volume, row=2, col=1)
-        spike = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
         figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info,
-                             hovermode='x', xaxis=spike, yaxis=spike)
+                             hovermode='x', xaxis=SPIKE, yaxis=SPIKE)
         return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
