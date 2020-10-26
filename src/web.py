@@ -92,9 +92,9 @@ app.layout = dbc.Row(
         dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
             dbc.Row([
+                dbc.Col(date_choice),
                 dbc.Col(exchange_choice),
-                dbc.Col(engine_choice),
-                dbc.Col(date_choice)
+                dbc.Col(engine_choice)
             ], className='frame'),
             dbc.Row(dbc.Col(order_choice), className='frame'),
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
@@ -147,7 +147,15 @@ def cb_symbol_table(exchange_name, engine_name, query):
 @app.callback(Output('relayout-data', 'data'),
               [Input('series-graph', 'relayoutData')])
 def display_relayout_data(relayout_data):
-    return relayout_data or {}
+    relayout_data = relayout_data or {}
+    data = {}
+    if {'xaxis.range[0]', 'xaxis.range[1]'} <= relayout_data.keys():
+        data['xaxis'] = [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
+    if {'yaxis.range[0]', 'yaxis.range[1]'} <= relayout_data.keys():
+        data['yaxis'] = [relayout_data['yaxis.range[0]'], relayout_data['yaxis.range[1]']]
+    if {'yaxis2.range[0]', 'yaxis2.range[1]'} <= relayout_data.keys():
+        data['yaxis2'] = [relayout_data['yaxis2.range[0]'], relayout_data['yaxis2.range[1]']]
+    return data
 
 
 @app.callback(Output('series-graph', 'figure'),
@@ -168,29 +176,27 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
         with engine.Series(tools.INTERVAL_1D) as db_series:
             time_series = [s for s in db_series[symbol] if s['timestamp'] > ts_from]
 
-        # customize data
-        series = analyse.simplify(time_series, 'close', order)
-        transposed = tools.transpose(series, ('timestamp', 'close', 'volume'))
-        dates = [tools.from_timestamp(ts) for ts in transposed['timestamp']]
+        if time_series:
+            # customize data
+            series = analyse.simplify(time_series, 'close', order)
+            transposed = tools.transpose(series, ('timestamp', 'close', 'volume'))
+            dates = [tools.from_timestamp(ts) for ts in transposed['timestamp']]
 
-        # create a graph
-        closes = go.Scatter(x=dates, y=transposed['close'], name='Close', customdata=series, line=dict(width=1.5))
-        volume = go.Bar(x=dates, y=transposed['volume'], name='Volume')
-        figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
-        figure.add_trace(closes, row=1, col=1)
-        figure.add_trace(volume, row=2, col=1)
-        figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info,
-                             hovermode='x', xaxis=SPIKE, yaxis=SPIKE)
-        if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
-            figure.update_xaxes(range=[relayout_data['xaxis.range[0]'],
-                                       relayout_data['xaxis.range[1]']])
-        if 'yaxis.range[0]' in relayout_data and 'yaxis.range[1]' in relayout_data:
-            figure.update_yaxes(range=[relayout_data['yaxis.range[0]'],
-                                       relayout_data['yaxis.range[1]']], row=1, col=1)
-        if 'yaxis2.range[0]' in relayout_data and 'yaxis2.range[1]' in relayout_data:
-            figure.update_yaxes(range=[relayout_data['yaxis2.range[0]'],
-                                       relayout_data['yaxis2.range[1]']], row=2, col=1)
-        return figure
+            # create a graph
+            closes = go.Scatter(x=dates, y=transposed['close'], name='Close', customdata=series, line=dict(width=1.5))
+            volume = go.Bar(x=dates, y=transposed['volume'], name='Volume')
+            figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
+            figure.add_trace(closes, row=1, col=1)
+            figure.add_trace(volume, row=2, col=1)
+            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info,
+                                 hovermode='x', xaxis=SPIKE, yaxis=SPIKE)
+            if 'xaxis' in relayout_data:
+                figure.update_xaxes(range=relayout_data['xaxis'])
+            if 'yaxis' in relayout_data:
+                figure.update_xaxes(range=relayout_data['yaxis'], row=1, col=1)
+            if 'yaxis2' in relayout_data:
+                figure.update_xaxes(range=relayout_data['yaxis2'], row=2, col=1)
+            return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
 
