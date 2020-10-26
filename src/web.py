@@ -34,7 +34,7 @@ if 'gunicorn' in sys.modules:
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
-ORDER_RANGE = 6
+ORDER_RANGE = 7
 DISPLAY_FORMAT = 'YYYY-MM-DD'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
