@@ -35,7 +35,8 @@ if 'gunicorn' in sys.modules:
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
 ORDER_RANGE = 7
-DISPLAY_FORMAT = 'YYYY-MM-DD'
+DATE_PICKER_FORMAT = 'YYYY-MM-DD'
+XAXES_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
 
@@ -50,7 +51,7 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              placeholder='engine', className='choice')
 
 date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
-                                   display_format=DISPLAY_FORMAT, className='choice')
+                                   display_format=DATE_PICKER_FORMAT, className='choice')
 
 order_choice = dcc.Slider(id='order-choice', min=0, max=ORDER_RANGE - 1,
                           marks={i: f'Order.{i}' for i in range(ORDER_RANGE)}, value=1)
@@ -179,9 +180,9 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
         if time_series:
             # customize data
             vma = analyse.vma(time_series, 100)
-            time_series = [s for s in time_series if s['timestamp'] > ts_from]
+            time_series = [dt for dt in time_series if dt['timestamp'] > ts_from]
 
-            vma = [s for s in vma if s['timestamp'] > ts_from]
+            vma = [dt for dt in vma if dt['timestamp'] > ts_from]
             vma_trans = tools.transpose(vma, ('timestamp', 'value'))
             vma_dates = [tools.from_timestamp(ts) for ts in vma_trans['timestamp']]
 
@@ -200,6 +201,7 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             figure.add_trace(price_trace, row=1, col=1)
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
+            figure.update_xaxes(tickformat=XAXES_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 
