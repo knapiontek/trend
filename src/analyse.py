@@ -50,22 +50,33 @@ def simplify(series: List[Dict], key: str, order: int) -> List[Dict]:
     return reduced
 
 
+def smooth(series: List[Dict]) -> List[Dict]:
+    w_size = 3
+    result = []
+    for window in windowed(series, w_size):
+        values = [s['value'] for s in window]
+        timestamp = window[-1]['timestamp']
+        dt = dict(value=sum(values) / w_size, timestamp=timestamp)
+        result.append(dt)
+    return result
+
+
 def sma(series: List[Dict], w_size: int) -> List[Dict]:
     result = []
     for window in windowed(series, w_size):
         closes = [s['close'] for s in window]
         timestamp = window[-1]['timestamp']
-        dt = dict(sma=sum(closes) / w_size, timestamp=timestamp)
+        dt = dict(value=sum(closes) / w_size, timestamp=timestamp)
         result.append(dt)
-    return result
+    return smooth(result)
 
 
 def vma(series: List[Dict], w_size: int) -> List[Dict]:
     result = []
     for window in windowed(series, w_size):
-        weight_closes = [s['close'] * s['volume'] for s in window]
+        weighted_closes = [s['close'] * s['volume'] for s in window]
         volumes = [s['volume'] for s in window]
         timestamp = window[-1]['timestamp']
-        dt = dict(vma=sum(weight_closes) / sum(volumes), timestamp=timestamp)
+        dt = dict(value=sum(weighted_closes) / sum(volumes), timestamp=timestamp)
         result.append(dt)
-    return result
+    return smooth(result)

@@ -178,12 +178,12 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
         if time_series:
             # customize data
-            sma = analyse.sma(time_series, 100)
+            vma = analyse.vma(time_series, 100)
             time_series = [s for s in time_series if s['timestamp'] > ts_from]
 
-            sma = [s for s in sma if s['timestamp'] > ts_from]
-            sma_trans = tools.transpose(sma, ('timestamp', 'sma'))
-            sma_dates = [tools.from_timestamp(ts) for ts in sma_trans['timestamp']]
+            vma = [s for s in vma if s['timestamp'] > ts_from]
+            vma_trans = tools.transpose(vma, ('timestamp', 'value'))
+            vma_dates = [tools.from_timestamp(ts) for ts in vma_trans['timestamp']]
 
             series = analyse.simplify(time_series, 'close', order)
             series_trans = tools.transpose(series, ('timestamp', 'close', 'volume'))
@@ -192,13 +192,13 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             # create traces
             price_trace = go.Scatter(x=series_dates, y=series_trans['close'],
                                      name='Close', customdata=series, line=dict(width=1.5))
-            sma_trace = go.Scatter(x=sma_dates, y=sma_trans['sma'], name='SMA', line=dict(width=1.5))
+            vma_trace = go.Scatter(x=vma_dates, y=vma_trans['value'], name='VMA', line=dict(width=1.5))
             volume_trace = go.Bar(x=series_dates, y=series_trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
             figure.add_trace(price_trace, row=1, col=1)
-            figure.add_trace(sma_trace, row=1, col=1)
+            figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
