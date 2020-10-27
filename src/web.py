@@ -193,9 +193,9 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             if 'xaxis' in relayout_data:
                 figure.update_xaxes(range=relayout_data['xaxis'])
             if 'yaxis' in relayout_data:
-                figure.update_xaxes(range=relayout_data['yaxis'], row=1, col=1)
+                figure.update_yaxes(range=relayout_data['yaxis'], row=1, col=1)
             if 'yaxis2' in relayout_data:
-                figure.update_xaxes(range=relayout_data['yaxis2'], row=2, col=1)
+                figure.update_yaxes(range=relayout_data['yaxis2'], row=2, col=1)
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))

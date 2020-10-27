@@ -5,7 +5,7 @@ from src import tools, exante, yahoo, stooq
 
 
 def read_data_source(engine: Any) -> List:
-    symbol = 'XOM.NYSE'
+    symbol = 'SIE.XETRA'
     interval = tools.INTERVAL_1D
     dt_from = datetime(2020, 8, 3, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 11, tzinfo=timezone.utc)

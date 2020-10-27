@@ -99,17 +99,23 @@ class Session(session.Session):
                 zip_path = stooq_zip_path(interval, exchange)
                 zip_path.parent.mkdir(parents=True, exist_ok=True)
                 if not tools.is_latest(zip_path, interval, exchange):
+
+                    # start streaming from url
                     url = stooq_url(interval, exchange)
                     response = requests.get(url, stream=True)
                     message = f'Loading {url} to {zip_path.as_posix()}'
                     LOG.info(message)
                     size = int(response.headers["Content-Length"]) // URL_CHUNK_SIZE + 1
                     LOG.debug(f'Size {zip_path.as_posix()}: {size}M')
-                    with zip_path.open('wb') as zip_io:
+
+                    # streaming to the zip file
+                    zip_path_pending = zip_path.with_suffix('pending')
+                    with zip_path_pending.open('wb') as zip_io:
                         with tools.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
                                 progress('+')
                                 zip_io.write(chunk)
+                    zip_path_pending.rename(zip_path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for exchange, intervals in self.exchanges.items():
