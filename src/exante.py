@@ -77,7 +77,7 @@ class Session(session.Session):
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [price_from_exante(datum, symbol) for datum in response.json()]
         assert len(data) < max_size
-        return [datum for datum in data if datum]
+        return list(filter(None, data))
 
 
 class Series(store.Series):

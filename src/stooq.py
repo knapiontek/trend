@@ -125,6 +125,8 @@ class Session(session.Session):
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
         short_symbol, exchange = tools.symbol_split(symbol)
+        ts_from = tools.to_timestamp(dt_from)
+        ts_to = tools.to_timestamp(dt_to)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
@@ -134,7 +136,7 @@ class Session(session.Session):
                 return [
                     price
                     for price in prices
-                    if price and tools.to_timestamp(dt_from) <= price['timestamp'] <= tools.to_timestamp(dt_to)
+                    if price and ts_from <= price['timestamp'] <= ts_to
                 ]
         return []
 
