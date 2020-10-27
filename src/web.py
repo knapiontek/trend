@@ -146,7 +146,7 @@ def cb_symbol_table(exchange_name, engine_name, query):
 
 @app.callback(Output('relayout-data', 'data'),
               [Input('series-graph', 'relayoutData')])
-def display_relayout_data(relayout_data):
+def cb_relayout_data(relayout_data):
     relayout_data = relayout_data or {}
     data = {}
     if {'xaxis.range[0]', 'xaxis.range[1]'} <= relayout_data.keys():

@@ -109,7 +109,7 @@ class Session(session.Session):
                     LOG.debug(f'Size {zip_path.as_posix()}: {size}M')
 
                     # streaming to the zip file
-                    zip_path_pending = zip_path.with_suffix('pending')
+                    zip_path_pending = zip_path.with_suffix('.pending')
                     with zip_path_pending.open('wb') as zip_io:
                         with tools.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
