@@ -76,23 +76,19 @@ def test_simplify():
 
 def test_sma():
     sma = analyse.sma(SERIES, 3)
-    assert sma == [{'sma': 2.0, 'timestamp': 1515024000},
-                   {'sma': 3.0, 'timestamp': 1515110400},
-                   {'sma': 4.0, 'timestamp': 1515196800},
-                   {'sma': 4.333333333333333, 'timestamp': 1515369600},
-                   {'sma': 4.0, 'timestamp': 1515456000},
-                   {'sma': 3.6666666666666665, 'timestamp': 1515542400},
-                   {'sma': 4.0, 'timestamp': 1515628800},
-                   {'sma': 5.0, 'timestamp': 1515715200}]
+    assert sma == [{'timestamp': 1515196800, 'value': 3.0},
+                   {'timestamp': 1515369600, 'value': 3.7777777777777772},
+                   {'timestamp': 1515456000, 'value': 4.111111111111111},
+                   {'timestamp': 1515542400, 'value': 3.9999999999999996},
+                   {'timestamp': 1515628800, 'value': 3.888888888888889},
+                   {'timestamp': 1515715200, 'value': 4.222222222222222}]
 
 
 def test_vma():
     vma = analyse.vma(SERIES, 3)
-    assert vma == [{'timestamp': 1515024000, 'vma': 1.8333333333333333},
-                   {'timestamp': 1515110400, 'vma': 3.227272727272727},
-                   {'timestamp': 1515196800, 'vma': 4.594594594594595},
-                   {'timestamp': 1515369600, 'vma': 4.5227272727272725},
-                   {'timestamp': 1515456000, 'vma': 4.542857142857143},
-                   {'timestamp': 1515542400, 'vma': 3.9069767441860463},
-                   {'timestamp': 1515628800, 'vma': 4.204081632653061},
-                   {'timestamp': 1515715200, 'vma': 4.733333333333333}]
+    assert vma == [{'timestamp': 1515196800, 'value': 3.2184002184002183},
+                   {'timestamp': 1515369600, 'value': 4.114864864864864},
+                   {'timestamp': 1515456000, 'value': 4.553393003393003},
+                   {'timestamp': 1515542400, 'value': 4.3241870532568205},
+                   {'timestamp': 1515628800, 'value': 4.21797183989875},
+                   {'timestamp': 1515715200, 'value': 4.281463903390814}]
