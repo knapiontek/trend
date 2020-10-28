@@ -4,7 +4,7 @@ from typing import List, Dict
 
 import requests
 
-from src import config, tools, store, session
+from src import config, tool, store, session
 
 LOG = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
 def dt_to_exante(dt: datetime):
-    return tools.to_timestamp(dt) * 1000
+    return tool.to_timestamp(dt) * 1000
 
 
 def interval_to_exante(interval: timedelta):
     return {
-        tools.INTERVAL_1H: 60 * 60,
-        tools.INTERVAL_1D: 24 * 60 * 60
+        tool.INTERVAL_1H: 60 * 60,
+        tool.INTERVAL_1D: 24 * 60 * 60
     }[interval]
 
 
@@ -65,7 +65,7 @@ class Session(session.Session):
         exante_to = dt_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)
 
-        url = f'{DATA_URL}/ohlc/{tools.url_encode(symbol)}/{exante_interval}'
+        url = f'{DATA_URL}/ohlc/{tool.url_encode(symbol)}/{exante_interval}'
         max_size = 4096
         params = {
             'from': exante_from,
@@ -82,7 +82,7 @@ class Session(session.Session):
 
 class Series(store.Series):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tools.module_name(__name__)}_{tools.interval_name(interval)}'
+        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)
 
 

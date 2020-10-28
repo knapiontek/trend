@@ -1,4 +1,4 @@
-from src import web, tools
+from src import web, tool
 
 
 def test_select():
@@ -17,5 +17,5 @@ def test_select():
     selected = web.select_instruments(instruments, query=query)
     assert len(selected) == 1
 
-    selected = [i for i in tools.dict_it(selected, ('symbol', 'country'))]
+    selected = [i for i in tool.dict_it(selected, ('symbol', 'country'))]
     assert len(selected) == 1

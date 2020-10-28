@@ -1,18 +1,18 @@
 from datetime import datetime, timezone
 
-from src import yahoo, tools
+from src import yahoo, tool
 
 
 def test_series():
-    interval = tools.INTERVAL_1D
+    interval = tool.INTERVAL_1D
     dt_from = datetime(2020, 2, 2, tzinfo=timezone.utc)
     dt_to = datetime(2020, 2, 4, tzinfo=timezone.utc)
     with yahoo.Session() as session:
         series = session.series('XOM.NYSE', dt_from, dt_to, interval)
 
     closing_prices = [
-        (tools.ts_format(timestamp), close, volume)
-        for timestamp, close, volume in tools.tuple_it(series, ('timestamp', 'close', 'volume'))
+        (tool.ts_format(timestamp), close, volume)
+        for timestamp, close, volume in tool.tuple_it(series, ('timestamp', 'close', 'volume'))
     ]
 
     assert closing_prices == [

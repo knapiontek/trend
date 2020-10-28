@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-from src import tools, config, session, store
+from src import tool, config, session, store
 
 LOG = logging.getLogger(__name__)
 
@@ -42,16 +42,16 @@ EXCHANGE_PATHS = {
 
 def stooq_url(interval: timedelta, exchange: str) -> str:
     stooq_interval = {
-        tools.INTERVAL_1H: 'h',
-        tools.INTERVAL_1D: 'd'
+        tool.INTERVAL_1H: 'h',
+        tool.INTERVAL_1D: 'd'
     }[interval]
     return ZIP_URL_FORMAT.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
 
 
 def stooq_zip_path(interval: timedelta, exchange: str) -> Path:
     stooq_interval = {
-        tools.INTERVAL_1H: 'hourly',
-        tools.INTERVAL_1D: 'daily'
+        tool.INTERVAL_1H: 'hourly',
+        tool.INTERVAL_1D: 'daily'
     }[interval]
     path = ZIP_PATH_FORMAT.format(interval=stooq_interval, country=EXCHANGE_COUNTRY[exchange])
     return STOOQ_PATH.joinpath(path)
@@ -60,8 +60,8 @@ def stooq_zip_path(interval: timedelta, exchange: str) -> Path:
 def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name_list: List[str]) -> Optional[str]:
     stooq_symbol = short_symbol.replace('.', '-').lower()
     stooq_interval = {
-        tools.INTERVAL_1H: 'hourly',
-        tools.INTERVAL_1D: 'daily'
+        tool.INTERVAL_1H: 'hourly',
+        tool.INTERVAL_1D: 'daily'
     }[interval]
     for path in EXCHANGE_PATHS[exchange]:
         symbol_path = path.format(interval=stooq_interval, symbol=stooq_symbol)
@@ -72,7 +72,7 @@ def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name
 
 def timestamp_from_stooq(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tools.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
 def price_from_stooq(dt: Dict, symbol: str) -> Dict:
@@ -92,13 +92,13 @@ def price_from_stooq(dt: Dict, symbol: str) -> Dict:
 
 class Session(session.Session):
     def __init__(self, exchanges=None):
-        self.exchanges = exchanges if exchanges else {e: [tools.INTERVAL_1D] for e in config.ACTIVE_EXCHANGES}
+        self.exchanges = exchanges if exchanges else {e: [tool.INTERVAL_1D] for e in config.ACTIVE_EXCHANGES}
 
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:
                 zip_path = stooq_zip_path(interval, exchange)
                 zip_path.parent.mkdir(parents=True, exist_ok=True)
-                if not tools.is_latest(zip_path, interval, exchange):
+                if not tool.is_latest(zip_path, interval, exchange):
 
                     # start streaming from url
                     url = stooq_url(interval, exchange)
@@ -111,7 +111,7 @@ class Session(session.Session):
                     # streaming to the zip file
                     zip_path_pending = zip_path.with_suffix('.pending')
                     with zip_path_pending.open('wb') as zip_io:
-                        with tools.Progress(message, size) as progress:
+                        with tool.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
                                 progress('+')
                                 zip_io.write(chunk)
@@ -124,9 +124,9 @@ class Session(session.Session):
                 LOG.debug(f'zip_path: {zip_path.as_posix()} size: {zip_path.stat().st_size / 1024 / 1024:.2f}M')
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
-        short_symbol, exchange = tools.symbol_split(symbol)
-        ts_from = tools.to_timestamp(dt_from)
-        ts_to = tools.to_timestamp(dt_to)
+        short_symbol, exchange = tool.symbol_split(symbol)
+        ts_from = tool.to_timestamp(dt_from)
+        ts_to = tool.to_timestamp(dt_to)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
@@ -143,5 +143,5 @@ class Session(session.Session):
 
 class Series(store.Series):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tools.module_name(__name__)}_{tools.interval_name(interval)}'
+        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)

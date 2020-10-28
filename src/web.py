@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import store, tools, yahoo, config, log, exante, stooq, analyse
+from src import store, tool, yahoo, config, log, exante, stooq, analyse
 
 LOG = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ def cb_relayout_data(relayout_data):
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
 def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_rows):
     if engine_name and d_from and selected_rows and data and selected_rows:
-        interval = tools.INTERVAL_1D
+        interval = tool.INTERVAL_1D
         vma_size = 100
         row = data[selected_rows[0]]
         symbol, info = row['symbol'], row['info']
@@ -179,20 +179,20 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
         if time_series:
             # customize data
-            dt_from = tools.d_parse(d_from)
-            ts_from = tools.to_timestamp(dt_from)
-            ts_vma_from = tools.to_timestamp(dt_from - timedelta(days=vma_size))
+            dt_from = tool.d_parse(d_from)
+            ts_from = tool.to_timestamp(dt_from)
+            ts_vma_from = tool.to_timestamp(dt_from - timedelta(days=vma_size))
 
             vma_series = [dt for dt in time_series if dt['timestamp'] > ts_vma_from]
             vma = analyse.vma(vma_series, vma_size)
             vma = [dt for dt in vma if dt['timestamp'] > ts_from]
-            vma_trans = tools.transpose(vma, ('timestamp', 'value'))
-            vma_dates = [tools.from_timestamp(ts) for ts in vma_trans['timestamp']]
+            vma_trans = tool.transpose(vma, ('timestamp', 'value'))
+            vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
 
             time_series = [dt for dt in time_series if dt['timestamp'] > ts_from]
             series = analyse.simplify(time_series, 'close', order)
-            series_trans = tools.transpose(series, ('timestamp', 'close', 'volume'))
-            series_dates = [tools.from_timestamp(ts) for ts in series_trans['timestamp']]
+            series_trans = tool.transpose(series, ('timestamp', 'close', 'volume'))
+            series_dates = [tool.from_timestamp(ts) for ts in series_trans['timestamp']]
 
             # create traces
             price_trace = go.Scatter(x=series_dates, y=series_trans['close'],
@@ -206,7 +206,7 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_xaxes(tickformat=XAXES_FORMAT,
-                                rangebreaks=[dict(values=tools.find_gaps(vma_dates, interval))])
+                                rangebreaks=[dict(values=tool.find_gaps(vma_dates, interval))])
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 

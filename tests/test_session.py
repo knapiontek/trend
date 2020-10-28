@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 from typing import List, Any
 
-from src import tools, exante, yahoo, stooq
+from src import tool, exante, yahoo, stooq
 
 
 def read_data_source(engine: Any) -> List:
     symbol = 'SIE.XETRA'
-    interval = tools.INTERVAL_1D
+    interval = tool.INTERVAL_1D
     dt_from = datetime(2020, 8, 3, tzinfo=timezone.utc)
     dt_to = datetime(2020, 8, 11, tzinfo=timezone.utc)
 

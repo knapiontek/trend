@@ -7,7 +7,7 @@ import orjson as json
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, request
 
-from src import data, tools, log, yahoo, exante, stooq, config
+from src import data, tool, log, yahoo, exante, stooq, config
 
 LOG = logging.getLogger(__name__)
 
@@ -32,14 +32,14 @@ scheduler.start()
 def schedule_update_job():
     if request.method == 'POST':
         LOG.info(f'Scheduling {load_trading_data.__name__}')
-        dt = tools.utc_now() + timedelta(minutes=1)
+        dt = tool.utc_now() + timedelta(minutes=1)
         scheduler.add_job(load_trading_data, 'date', run_date=dt)
 
     LOG.info('Listing scheduled tasks')
     jobs = [
         {
             'name': job.name,
-            'next-run-at': tools.dt_format(job.next_run_time),
+            'next-run-at': tool.dt_format(job.next_run_time),
             'pending': job.pending
         }
         for job in scheduler.get_jobs()

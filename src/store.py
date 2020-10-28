@@ -5,7 +5,7 @@ import orjson as json
 from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
 
-from src import config, tools
+from src import config, tool
 
 LOG = logging.getLogger(__name__)
 
@@ -32,13 +32,13 @@ class FileStore(dict):
         super().__setitem__(key, value)
 
     def tuple_it(self, keys: Iterable[str]) -> Iterable[Tuple]:
-        return tools.tuple_it(self, keys)
+        return tool.tuple_it(self, keys)
 
     def dict_it(self, keys: Iterable[str]) -> Iterable[Dict]:
-        return tools.dict_it(self, keys)
+        return tool.dict_it(self, keys)
 
     def loop_it(self, key: str) -> Iterable[Any]:
-        return tools.loop_it(self, key)
+        return tool.loop_it(self, key)
 
 
 EXCHANGE_SCHEMA = {
@@ -201,13 +201,13 @@ def exchange_clean():
 
 
 def series_clean(engine: Any):
-    engine_name = tools.module_name(engine.__name__)
+    engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {series_clean.__name__}({engine_name})')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
-        if name.startswith(f'series_{tools.module_name(engine.__name__)}'):
+        if name.startswith(f'series_{tool.module_name(engine.__name__)}'):
             LOG.debug(f'Cleaning arango collection: {name}')
             deleted = db.delete_collection(name)
             assert deleted

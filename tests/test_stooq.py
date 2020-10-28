@@ -1,18 +1,18 @@
 from datetime import datetime, timezone
 
-from src import stooq, tools
+from src import stooq, tool
 
 
 def test_series():
-    interval = tools.INTERVAL_1D
+    interval = tool.INTERVAL_1D
     dt_from = datetime(2020, 2, 2, tzinfo=timezone.utc)
     dt_to = datetime(2020, 2, 4, tzinfo=timezone.utc)
     with stooq.Session({'XETRA': [interval]}) as session:
         series = session.series('SIE.XETRA', dt_from, dt_to, interval)
 
     closing_prices = [
-        (tools.ts_format(timestamp), close, volume)
-        for timestamp, close, volume in tools.tuple_it(series, ('timestamp', 'close', 'volume'))
+        (tool.ts_format(timestamp), close, volume)
+        for timestamp, close, volume in tool.tuple_it(series, ('timestamp', 'close', 'volume'))
     ]
 
     assert closing_prices == [('2020-02-03 00:00:00 +0000', 107.41, 2466371),

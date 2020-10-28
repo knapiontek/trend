@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict
 
-from src import tools, store, session
+from src import tool, store, session
 
 LOG = logging.getLogger(__name__)
 
@@ -18,14 +18,14 @@ PATTERN = re.compile('"CrumbStore":{"crumb":"(.+?)"}')
 
 def interval_to_yahoo(interval: timedelta):
     return {
-        tools.INTERVAL_1D: '1d',
-        tools.INTERVAL_1W: '1wk'
+        tool.INTERVAL_1D: '1d',
+        tool.INTERVAL_1W: '1wk'
     }[interval]
 
 
 def timestamp_from_yahoo(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tools.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
 def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
@@ -54,13 +54,13 @@ class Session(session.Session):
         return self
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
-        short_symbol, exchange = tools.symbol_split(symbol)
+        short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []
 
         yahoo_symbol = short_symbol.replace('.', '-')
-        yahoo_from = tools.to_timestamp(dt_from)
-        yahoo_to = tools.to_timestamp(dt_to + interval)
+        yahoo_from = tool.to_timestamp(dt_from)
+        yahoo_to = tool.to_timestamp(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)
@@ -89,5 +89,5 @@ class Session(session.Session):
 
 class Series(store.Series):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tools.module_name(__name__)}_{tools.interval_name(interval)}'
+        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)

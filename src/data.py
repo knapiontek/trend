@@ -5,7 +5,7 @@ from typing import List, Tuple, Any, Dict
 import orjson as json
 import pandas as pd
 
-from src import store, tools, exante, log, config
+from src import store, tool, exante, log, config
 
 LOG = logging.getLogger(__name__)
 
@@ -63,43 +63,43 @@ def exchange_update():
 
 
 def series_range(engine: Any):
-    engine_name = tools.module_name(engine.__name__)
+    engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {series_range.__name__}({engine_name})')
 
-    with engine.Series(tools.INTERVAL_1D) as db_series:
+    with engine.Series(tool.INTERVAL_1D) as db_series:
         time_range = {
-            symbol: [tools.ts_format(min_ts), tools.ts_format(max_ts)]
-            for symbol, min_ts, max_ts in tools.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
+            symbol: [tool.ts_format(min_ts), tool.ts_format(max_ts)]
+            for symbol, min_ts, max_ts in tool.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
 def series_update(engine: Any):
-    engine_name = tools.module_name(engine.__name__)
+    engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {series_update.__name__}({engine_name})')
 
-    interval = tools.INTERVAL_1D
+    interval = tool.INTERVAL_1D
     dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
     with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
-        series_latest = {tr['symbol']: tools.from_timestamp(tr['max_ts']) for tr in time_range}
+        series_latest = {tr['symbol']: tool.from_timestamp(tr['max_ts']) for tr in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.Exchanges() as db_exchanges:
             instruments = db_exchanges[exchange_name]
 
         LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
-        symbols = tools.loop_it(instruments, 'symbol')
+        symbols = tool.loop_it(instruments, 'symbol')
         latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
 
         with engine.Session() as session:
-            with tools.Progress(f'series-update: {exchange_name}', latest) as progress:
+            with tool.Progress(f'series-update: {exchange_name}', latest) as progress:
                 for symbol, dt_from in latest.items():
                     progress(symbol)
-                    dt_to = tools.dt_last(exchange_name, interval, tools.utc_now())
-                    for slice_from, slice_to in tools.time_slices(dt_from, dt_to, interval, 1024):
+                    dt_to = tool.dt_last(exchange_name, interval, tool.utc_now())
+                    for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
                         with engine.Series(interval, editable=True) as db_series:
@@ -113,11 +113,11 @@ def verify_symbol_series(engine: Any,
     with engine.Series(interval) as db_series:
         series = db_series[symbol]
 
-    _, exchange = tools.symbol_split(symbol)
-    dt_holidays = tools.holidays(exchange)
-    dt_series = {tools.from_timestamp(ts) for ts in tools.loop_it(series, 'timestamp')}
+    _, exchange = tool.symbol_split(symbol)
+    dt_holidays = tool.holidays(exchange)
+    dt_series = {tool.from_timestamp(ts) for ts in tool.loop_it(series, 'timestamp')}
 
-    overlap = [tools.dt_format(d) for d in dt_series & dt_holidays]
+    overlap = [tool.dt_format(d) for d in dt_series & dt_holidays]
 
     missing = []
     all_days = dt_series | dt_holidays
@@ -125,31 +125,31 @@ def verify_symbol_series(engine: Any,
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
             if start not in all_days:
-                missing.append(tools.dt_format(start))
+                missing.append(tool.dt_format(start))
         start += interval
 
     return overlap, missing
 
 
 def series_verify(engine: Any):
-    engine_name = tools.module_name(engine.__name__)
+    engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {series_verify.__name__}({engine_name})')
 
-    interval = tools.INTERVAL_1D
-    health_name = f'health-{engine_name}-{tools.interval_name(interval)}'
+    interval = tool.INTERVAL_1D
+    health_name = f'health-{engine_name}-{tool.interval_name(interval)}'
 
     with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.FileStore(health_name, editable=True) as health:
-        with tools.Progress(health_name, time_range) as progress:
-            for symbol, ts_from, ts_to in tools.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
+        with tool.Progress(health_name, time_range) as progress:
+            for symbol, ts_from, ts_to in tool.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
                 progress(symbol)
                 overlap, missing = verify_symbol_series(engine,
                                                         symbol,
-                                                        tools.from_timestamp(ts_from),
-                                                        tools.from_timestamp(ts_to),
+                                                        tool.from_timestamp(ts_from),
+                                                        tool.from_timestamp(ts_to),
                                                         interval)
                 info = {}
                 if overlap:
