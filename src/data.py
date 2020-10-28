@@ -163,7 +163,7 @@ def series_verify(engine: Any):
             for name in config.ACTIVE_EXCHANGES:
                 instruments = db_exchanges[name]
                 for i in instruments:
-                    i.__dict__[f'health-{engine_name}'] = i.symbol not in health
+                    i[f'health-{engine_name}'] = i.symbol not in health
                 db_exchanges |= instruments
 
 

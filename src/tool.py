@@ -21,12 +21,11 @@ class Clazz(dict):
         return super().__setitem__(key, value)
 
     def from_dict(self, dt: Dict) -> 'Clazz':
-        for key, value in dt.items():
-            super().__setitem__(key, value)
+        self.__dict__.update(dt)
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(self)
+        return self.__dict__
 
 
 def url_encode(name: str) -> str:

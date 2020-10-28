@@ -136,9 +136,9 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.Exchanges() as db_exchanges:
             instruments = db_exchanges[exchange_name]
         boolean = ['[-]', '[+]']
-        instruments = [dict(i.__dict__,
+        instruments = [dict(i,
                             shortable=boolean[i.shortable],
-                            health=boolean[i.__dict__[f'health-{engine_name}']],
+                            health=boolean[i[f'health-{engine_name}']],
                             info=i.description)
                        for i in instruments]
         return select_instruments(instruments, query)
@@ -196,7 +196,7 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
             # create traces
             price_trace = go.Scatter(x=series_dates, y=series_trans['close'],
-                                     name='Close', customdata=[s.__dict__ for s in series], line=dict(width=1.5))
+                                     name='Close', customdata=[s.to_dict() for s in series], line=dict(width=1.5))
             vma_trace = go.Scatter(x=vma_dates, y=vma_trans['value'], name='VMA', line=dict(width=1.5))
             volume_trace = go.Bar(x=series_dates, y=series_trans['volume'], name='Volume')
 
