@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+from typing import List
+
 from src import analyse
 
 SERIES = [
@@ -64,18 +67,23 @@ SERIES = [
 ]
 
 
+def series() -> List[SimpleNamespace]:
+    return [SimpleNamespace(**s) for s in SERIES]
+
+
 def test_simplify():
     key = 'close'
     series_close = [s[key] for s in SERIES]
     assert series_close == [1, 2, 3, 4, 5, 4, 3, 4, 5, 6]
 
-    simplified = analyse.simplify(SERIES, key, 1)
-    simplified_close = [s[key] for s in simplified]
+    simplified = analyse.simplify(series(), key, 1)
+    simplified_close = [s.__dict__[key] for s in simplified]
     assert simplified_close == [1, 5, 3, 6]
 
 
 def test_sma():
-    sma = analyse.sma(SERIES, 3)
+    sma = analyse.sma(series(), 3)
+    sma = [s.__dict__ for s in sma]
     assert sma == [{'timestamp': 1515196800, 'value': 3.0},
                    {'timestamp': 1515369600, 'value': 3.7777777777777772},
                    {'timestamp': 1515456000, 'value': 4.111111111111111},
@@ -85,7 +93,8 @@ def test_sma():
 
 
 def test_vma():
-    vma = analyse.vma(SERIES, 3)
+    vma = analyse.vma(series(), 3)
+    vma = [s.__dict__ for s in vma]
     assert vma == [{'timestamp': 1515196800, 'value': 3.2184002184002183},
                    {'timestamp': 1515369600, 'value': 4.114864864864864},
                    {'timestamp': 1515456000, 'value': 4.553393003393003},
