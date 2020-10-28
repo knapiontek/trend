@@ -10,10 +10,7 @@ def test_series():
     with stooq.Session({'XETRA': [interval]}) as session:
         series = session.series('SIE.XETRA', dt_from, dt_to, interval)
 
-    closing_prices = [
-        (tool.ts_format(timestamp), close, volume)
-        for timestamp, close, volume in tool.tuple_it(series, ('timestamp', 'close', 'volume'))
-    ]
+    closing_prices = [(tool.ts_format(s.timestamp), s.close, s.volume) for s in series]
 
     assert closing_prices == [('2020-02-03 00:00:00 +0000', 107.41, 2466371),
                               ('2020-02-04 00:00:00 +0000', 109.11, 2416826)]

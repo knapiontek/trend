@@ -32,15 +32,6 @@ class FileStore(dict):
         assert self.editable
         super().__setitem__(key, value)
 
-    def tuple_it(self, keys: Iterable[str]) -> Iterable[Tuple]:
-        return tool.tuple_it(self, keys)
-
-    def dict_it(self, keys: Iterable[str]) -> Iterable[Dict]:
-        return tool.dict_it(self, keys)
-
-    def loop_it(self, key: str) -> Iterable[Any]:
-        return tool.loop_it(self, key)
-
 
 EXCHANGE_SCHEMA = {
     'message': 'exchange-schema',
@@ -134,12 +125,12 @@ class SeriesClazz:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __iadd__(self, series: List[Dict]) -> 'SeriesClazz':
-        result = self.tnx_collection.insert_many(series)
+    def __iadd__(self, series: List[SimpleNamespace]) -> 'SeriesClazz':
+        result = self.tnx_collection.insert_many([s.__dict__ for s in series])
         return self.verify_result(result)
 
-    def __ior__(self, series: List[Dict]) -> 'SeriesClazz':
-        result = self.tnx_collection.update_many(series)
+    def __ior__(self, series: List[SimpleNamespace]) -> 'SeriesClazz':
+        result = self.tnx_collection.update_many([s.__dict__ for s in series])
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'SeriesClazz':
@@ -155,28 +146,28 @@ class Exchanges(SeriesClazz):
     def __init__(self, editable=False):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
 
-    def __getitem__(self, exchange: str) -> List[Dict]:
+    def __getitem__(self, exchange: str) -> List[SimpleNamespace]:
         query = '''
             FOR series IN @@collection
                 FILTER series.exchange == @exchange
                 RETURN series
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
-        return list(result)
+        records = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
+        return [SimpleNamespace(**r) for r in records]
 
 
 class Series(SeriesClazz):
     def __init__(self, name: str, editable: bool):
         super().__init__(name, editable, ('symbol', 'timestamp'), SERIES_SCHEMA)
 
-    def __getitem__(self, symbol: str) -> List[Dict]:
+    def __getitem__(self, symbol: str) -> List[SimpleNamespace]:
         query = '''
             FOR series IN @@collection
                 FILTER series.symbol == @symbol
                 RETURN series
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
-        return list(result)
+        records = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
+        return [SimpleNamespace(**r) for r in records]
 
     def time_range(self) -> List[SimpleNamespace]:
         query = '''

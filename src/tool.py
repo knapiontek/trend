@@ -4,7 +4,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Dict, Iterable, Tuple, Union, Any, Sized, Set
+from types import SimpleNamespace
+from typing import List, Dict, Iterable, Tuple, Union, Sized, Set
 
 from more_itertools import windowed
 
@@ -736,45 +737,12 @@ def find_gaps(series: List[datetime], interval: timedelta) -> List[datetime]:
     return results
 
 
-def transpose(lst: Iterable[Dict], keys: Iterable[str]) -> Dict[str, List]:
+def transpose(lst: Iterable[SimpleNamespace], keys: Iterable[str]) -> Dict[str, List]:
     dt = defaultdict(list)
     for i in lst:
         for k in keys:
-            dt[k].append(i[k])
+            dt[k].append(i.__dict__[k])
     return dt
-
-
-def tuple_it(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Tuple]:
-    if isinstance(data, Dict):
-        schema = data['schema']
-        indices = [schema.index(c) for c in keys]
-        for datum in data['data']:
-            yield tuple([datum[i] for i in indices])
-    elif isinstance(data, Iterable):
-        for i in data:
-            yield tuple([i[k] for k in keys])
-
-
-def dict_it(data: Union[Dict, Iterable[Dict]], keys: Iterable[str]) -> Iterable[Dict]:
-    if isinstance(data, Dict):
-        schema = data['schema']
-        indices = [schema.index(c) for c in keys]
-        for datum in data['data']:
-            yield {schema[i]: datum[i] for i in indices}
-    elif isinstance(data, Iterable):
-        for i in data:
-            yield {k: i[k] for k in keys}
-
-
-def loop_it(data: Union[Dict, Iterable[Dict]], key: str) -> Iterable[Any]:
-    if isinstance(data, Dict):
-        schema = data['schema']
-        index = schema.index(key)
-        for datum in data['data']:
-            yield datum[index]
-    elif isinstance(data, Iterable):
-        for datum in data:
-            yield datum[key]
 
 
 SPACES = ' ' * 43

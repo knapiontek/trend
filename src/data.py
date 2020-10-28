@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from typing import List, Tuple, Any, Dict
 
 import orjson as json
@@ -52,9 +53,9 @@ def exchange_update():
                 exchange_index = indices[name]
                 instruments = session.instruments(name)
                 documents = [
-                    dict(instrument,
-                         shortable=instrument['symbol'] in shortables,
-                         **HEALTH_DEFAULT)
+                    SimpleNamespace(**instrument,
+                                    **HEALTH_DEFAULT,
+                                    shortable=instrument['symbol'] in shortables)
                     for instrument in instruments
                     if instrument['short-symbol'] in exchange_index
                 ]
@@ -91,8 +92,7 @@ def series_update(engine: Any):
             instruments = db_exchanges[exchange_name]
 
         LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
-        symbols = tool.loop_it(instruments, 'symbol')
-        latest = {s: series_latest.get(s) or dt_from_default for s in symbols}
+        latest = {i.symbol: series_latest.get(i.symbol) or dt_from_default for i in instruments}
 
         with engine.Session() as session:
             with tool.Progress(f'series-update: {exchange_name}', latest) as progress:
@@ -115,7 +115,7 @@ def verify_symbol_series(engine: Any,
 
     _, exchange = tool.symbol_split(symbol)
     dt_holidays = tool.holidays(exchange)
-    dt_series = {tool.from_timestamp(ts) for ts in tool.loop_it(series, 'timestamp')}
+    dt_series = {tool.from_timestamp(s.timestamp) for s in series}
 
     overlap = [tool.dt_format(d) for d in dt_series & dt_holidays]
 
@@ -162,10 +162,10 @@ def series_verify(engine: Any):
     with store.FileStore(health_name) as health:
         with store.Exchanges(editable=True) as db_exchanges:
             for name in config.ACTIVE_EXCHANGES:
-                db_exchanges |= [
-                    dict(instrument, **{f'health-{engine_name}': instrument['symbol'] not in health})
-                    for instrument in db_exchanges[name]
-                ]
+                instruments = db_exchanges[name]
+                for i in instruments:
+                    i.__dict__[f'health-{engine_name}'] = i.symbol not in health
+                db_exchanges |= instruments
 
 
 def main():

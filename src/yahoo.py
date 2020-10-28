@@ -4,7 +4,8 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 from io import StringIO
-from typing import List, Dict
+from types import SimpleNamespace
+from typing import List, Dict, Optional
 
 from src import tool, store, session
 
@@ -28,19 +29,18 @@ def timestamp_from_yahoo(date: str):
     return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_yahoo(dt: Dict, symbol: str) -> Dict:
+def price_from_yahoo(dt: Dict, symbol: str) -> Optional[SimpleNamespace]:
     try:
-        return {
-            'symbol': symbol,
-            'timestamp': timestamp_from_yahoo(dt['Date']),
-            'open': float(dt['Open']),
-            'close': float(dt['Close']),
-            'low': float(dt['Low']),
-            'high': float(dt['High']),
-            'volume': int(dt['Volume'])
-        }
+        return SimpleNamespace(symbol=symbol,
+                               timestamp=timestamp_from_yahoo(dt['Date']),
+                               open=float(dt['Open']),
+                               close=float(dt['Close']),
+                               low=float(dt['Low']),
+                               high=float(dt['High']),
+                               volume=int(dt['Volume']))
+
     except:
-        return {}
+        return None
 
 
 class Session(session.Session):
@@ -53,7 +53,7 @@ class Session(session.Session):
         self.crumb = found.group(1)
         return self
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[SimpleNamespace]:
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []
@@ -64,25 +64,23 @@ class Session(session.Session):
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)
-        params = {
-            'period1': yahoo_from,
-            'period2': yahoo_to,
-            'interval': yahoo_interval,
-            'events': 'history',
-            'crumb': self.crumb
-        }
+        params = dict(period1=yahoo_from,
+                      period2=yahoo_to,
+                      interval=yahoo_interval,
+                      events='history',
+                      crumb=self.crumb)
         time.sleep(0.6)
         response = self.get(url, params=params)
         if response.status_code in (400, 404):
             return []
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
-        if len(data) == 2 and data[0]['timestamp'] == data[1]['timestamp']:
+        if len(data) == 2 and data[0].timestamp == data[1].timestamp:
             data = data[0:1]  # if yahoo returns 2 rows with duplicated values
         data = [
             datum
             for datum in data
-            if datum and yahoo_from <= datum['timestamp'] <= yahoo_to
+            if datum and yahoo_from <= datum.timestamp <= yahoo_to
         ]
         return data
 

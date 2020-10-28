@@ -1,4 +1,4 @@
-from src import web, tool
+from src import web
 
 
 def test_select():
@@ -15,7 +15,4 @@ def test_select():
     ]
     query = '{currency} contains usd && {type} contains stock && {symbol} contains xom'
     selected = web.select_instruments(instruments, query=query)
-    assert len(selected) == 1
-
-    selected = [i for i in tool.dict_it(selected, ('symbol', 'country'))]
     assert len(selected) == 1

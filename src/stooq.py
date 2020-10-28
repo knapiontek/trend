@@ -4,6 +4,7 @@ import zipfile
 from datetime import datetime, timezone, timedelta
 from io import StringIO
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Dict, List, Optional
 
 import requests
@@ -75,19 +76,18 @@ def timestamp_from_stooq(date: str):
     return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_stooq(dt: Dict, symbol: str) -> Dict:
+def price_from_stooq(dt: Dict, symbol: str) -> Optional[SimpleNamespace]:
     try:
-        return {
-            'symbol': symbol,
-            'timestamp': timestamp_from_stooq(dt['<DATE>']),
-            'open': float(dt['<OPEN>']),
-            'close': float(dt['<CLOSE>']),
-            'low': float(dt['<LOW>']),
-            'high': float(dt['<HIGH>']),
-            'volume': int(dt['<VOL>'])
-        }
+        return SimpleNamespace(symbol=symbol,
+                               timestamp=timestamp_from_stooq(dt['<DATE>']),
+                               open=float(dt['<OPEN>']),
+                               close=float(dt['<CLOSE>']),
+                               low=float(dt['<LOW>']),
+                               high=float(dt['<HIGH>']),
+                               volume=int(dt['<VOL>']))
+
     except:
-        return {}
+        return None
 
 
 class Session(session.Session):
@@ -123,7 +123,7 @@ class Session(session.Session):
                 zip_path = stooq_zip_path(interval, exchange)
                 LOG.debug(f'zip_path: {zip_path.as_posix()} size: {zip_path.stat().st_size / 1024 / 1024:.2f}M')
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[SimpleNamespace]:
         short_symbol, exchange = tool.symbol_split(symbol)
         ts_from = tool.to_timestamp(dt_from)
         ts_to = tool.to_timestamp(dt_to)
@@ -136,7 +136,7 @@ class Session(session.Session):
                 return [
                     price
                     for price in prices
-                    if price and ts_from <= price['timestamp'] <= ts_to
+                    if price and ts_from <= price.timestamp <= ts_to
                 ]
         return []
 

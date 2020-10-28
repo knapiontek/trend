@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict
+from types import SimpleNamespace
+from typing import List, Dict, Optional
 
 import requests
 
@@ -23,23 +24,17 @@ def interval_to_exante(interval: timedelta):
     }[interval]
 
 
-def timestamp_from_exante(ts: int):
-    return ts // 1000
-
-
-def price_from_exante(dt: Dict, symbol: str) -> Dict:
+def price_from_exante(dt: Dict, symbol: str) -> Optional[SimpleNamespace]:
     try:
-        return {
-            'symbol': symbol,
-            'timestamp': timestamp_from_exante(dt['timestamp']),
-            'open': float(dt['open']),
-            'close': float(dt['close']),
-            'low': float(dt['low']),
-            'high': float(dt['high']),
-            'volume': int(dt['volume'])
-        }
+        return SimpleNamespace(symbol=symbol,
+                               timestamp=dt['timestamp'] // 1000,
+                               open=float(dt['open']),
+                               close=float(dt['close']),
+                               low=float(dt['low']),
+                               high=float(dt['high']),
+                               volume=int(dt['volume']))
     except:
-        return {}
+        return None
 
 
 class Session(session.Session):
@@ -60,7 +55,7 @@ class Session(session.Session):
                 'short-symbol': 'ticker'}
         return [{k: item[v] for k, v in keys.items()} for item in response.json()]
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Dict]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[SimpleNamespace]:
         exante_from = dt_to_exante(dt_from)
         exante_to = dt_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)

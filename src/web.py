@@ -136,10 +136,10 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.Exchanges() as db_exchanges:
             instruments = db_exchanges[exchange_name]
         boolean = ['[-]', '[+]']
-        instruments = [dict(i,
-                            shortable=boolean[i['shortable']],
-                            health=boolean[i[f'health-{engine_name}']],
-                            info=i['description'])
+        instruments = [dict(i.__dict__,
+                            shortable=boolean[i.shortable],
+                            health=boolean[i.__dict__[f'health-{engine_name}']],
+                            info=i.description)
                        for i in instruments]
         return select_instruments(instruments, query)
     return []
@@ -183,20 +183,20 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             ts_from = tool.to_timestamp(dt_from)
             ts_vma_from = tool.to_timestamp(dt_from - timedelta(days=vma_size))
 
-            vma_series = [dt for dt in time_series if dt['timestamp'] > ts_vma_from]
+            vma_series = [ts for ts in time_series if ts.timestamp > ts_vma_from]
             vma = analyse.vma(vma_series, vma_size)
-            vma = [dt for dt in vma if dt['timestamp'] > ts_from]
+            vma = [ts for ts in vma if ts.timestamp > ts_from]
             vma_trans = tool.transpose(vma, ('timestamp', 'value'))
             vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
 
-            time_series = [dt for dt in time_series if dt['timestamp'] > ts_from]
+            time_series = [ts for ts in time_series if ts.timestamp > ts_from]
             series = analyse.simplify(time_series, 'close', order)
             series_trans = tool.transpose(series, ('timestamp', 'close', 'volume'))
             series_dates = [tool.from_timestamp(ts) for ts in series_trans['timestamp']]
 
             # create traces
             price_trace = go.Scatter(x=series_dates, y=series_trans['close'],
-                                     name='Close', customdata=series, line=dict(width=1.5))
+                                     name='Close', customdata=[s.__dict__ for s in series], line=dict(width=1.5))
             vma_trace = go.Scatter(x=vma_dates, y=vma_trans['value'], name='VMA', line=dict(width=1.5))
             volume_trace = go.Bar(x=series_dates, y=series_trans['volume'], name='Volume')
 
