@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 from typing import List, Tuple, Any, Dict
 
 import orjson as json
@@ -53,9 +52,9 @@ def exchange_update():
                 exchange_index = indices[name]
                 instruments = session.instruments(name)
                 documents = [
-                    SimpleNamespace(**instrument,
-                                    **HEALTH_DEFAULT,
-                                    shortable=instrument['symbol'] in shortables)
+                    tool.Clazz(**instrument,
+                               **HEALTH_DEFAULT,
+                               shortable=instrument['symbol'] in shortables)
                     for instrument in instruments
                     if instrument['short-symbol'] in exchange_index
                 ]

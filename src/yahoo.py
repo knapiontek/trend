@@ -4,7 +4,6 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 from io import StringIO
-from types import SimpleNamespace
 from typing import List, Dict, Optional
 
 from src import tool, store, session
@@ -29,15 +28,15 @@ def timestamp_from_yahoo(date: str):
     return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_yahoo(dt: Dict, symbol: str) -> Optional[SimpleNamespace]:
+def price_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
     try:
-        return SimpleNamespace(symbol=symbol,
-                               timestamp=timestamp_from_yahoo(dt['Date']),
-                               open=float(dt['Open']),
-                               close=float(dt['Close']),
-                               low=float(dt['Low']),
-                               high=float(dt['High']),
-                               volume=int(dt['Volume']))
+        return tool.Clazz(symbol=symbol,
+                          timestamp=timestamp_from_yahoo(dt['Date']),
+                          open=float(dt['Open']),
+                          close=float(dt['Close']),
+                          low=float(dt['Low']),
+                          high=float(dt['High']),
+                          volume=int(dt['Volume']))
 
     except:
         return None
@@ -53,7 +52,7 @@ class Session(session.Session):
         self.crumb = found.group(1)
         return self
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[SimpleNamespace]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []

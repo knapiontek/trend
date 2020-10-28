@@ -1,6 +1,5 @@
 import logging
-from types import SimpleNamespace
-from typing import List, Tuple, Iterable, Dict, Any
+from typing import List, Tuple, Dict, Any
 
 import orjson as json
 from arango import ArangoClient, ArangoServerError
@@ -125,12 +124,12 @@ class SeriesClazz:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __iadd__(self, series: List[SimpleNamespace]) -> 'SeriesClazz':
-        result = self.tnx_collection.insert_many([s.__dict__ for s in series])
+    def __iadd__(self, series: List[tool.Clazz]) -> 'SeriesClazz':
+        result = self.tnx_collection.insert_many(series)
         return self.verify_result(result)
 
-    def __ior__(self, series: List[SimpleNamespace]) -> 'SeriesClazz':
-        result = self.tnx_collection.update_many([s.__dict__ for s in series])
+    def __ior__(self, series: List[tool.Clazz]) -> 'SeriesClazz':
+        result = self.tnx_collection.update_many(series)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'SeriesClazz':
@@ -146,30 +145,30 @@ class Exchanges(SeriesClazz):
     def __init__(self, editable=False):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
 
-    def __getitem__(self, exchange: str) -> List[SimpleNamespace]:
+    def __getitem__(self, exchange: str) -> List[tool.Clazz]:
         query = '''
             FOR series IN @@collection
                 FILTER series.exchange == @exchange
                 RETURN series
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
-        return [SimpleNamespace(**r) for r in records]
+        return [tool.Clazz(**r) for r in records]
 
 
 class Series(SeriesClazz):
     def __init__(self, name: str, editable: bool):
         super().__init__(name, editable, ('symbol', 'timestamp'), SERIES_SCHEMA)
 
-    def __getitem__(self, symbol: str) -> List[SimpleNamespace]:
+    def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
             FOR series IN @@collection
                 FILTER series.symbol == @symbol
                 RETURN series
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
-        return [SimpleNamespace(**r) for r in records]
+        return [tool.Clazz(**r) for r in records]
 
-    def time_range(self) -> List[SimpleNamespace]:
+    def time_range(self) -> List[tool.Clazz]:
         query = '''
             FOR series IN @@collection
                 COLLECT symbol = series.symbol
@@ -177,7 +176,7 @@ class Series(SeriesClazz):
                 RETURN {symbol, min_ts, max_ts}
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
-        return [SimpleNamespace(**r) for r in records]
+        return [tool.Clazz(**r) for r in records]
 
 
 def exchange_clean():

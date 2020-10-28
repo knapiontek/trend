@@ -4,10 +4,29 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
-from types import SimpleNamespace
 from typing import List, Dict, Iterable, Tuple, Union, Sized, Set, Any
 
 from more_itertools import windowed
+
+
+class Clazz(dict):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __getattr__(self, key):
+        return super().__getitem__(key)
+
+    def __setattr__(self, key, value):
+        return super().__setitem__(key, value)
+
+    def from_dict(self, dt: Dict) -> 'Clazz':
+        for key, value in dt.items():
+            super().__setitem__(key, value)
+        return self
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(self)
 
 
 def url_encode(name: str) -> str:
@@ -737,11 +756,11 @@ def find_gaps(series: List[datetime], interval: timedelta) -> List[datetime]:
     return results
 
 
-def transpose(lst: Iterable[SimpleNamespace], keys: Iterable[str]) -> Dict[str, List]:
+def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Dict[str, List]:
     dt = defaultdict(list)
-    for i in lst:
+    for i in items:
         for k in keys:
-            dt[k].append(i.__dict__[k])
+            dt[k].append(i[k])
     return dt
 
 
@@ -774,23 +793,3 @@ class Progress:
     def __call__(self, message: str):
         self.count += 1
         print_line(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
-
-
-class Clazz(dict):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def __getattr__(self, key):
-        return super().__getitem__(key)
-
-    def __setattr__(self, key, value):
-        return super().__setitem__(key, value)
-
-    def from_dict(self, dt: Dict) -> 'Clazz':
-        for key, value in dt.items():
-            super().__setitem__(key, value)
-        return self
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self)

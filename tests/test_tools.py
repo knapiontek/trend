@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from types import SimpleNamespace
+
 
 from src import tool, config
 
@@ -54,7 +54,7 @@ def test_time_slices():
 
 
 def test_transpose():
-    result = tool.transpose([SimpleNamespace(key='v1'), SimpleNamespace(key='v2')], ['key'])
+    result = tool.transpose([tool.Clazz(key='v1'), tool.Clazz(key='v2')], ['key'])
     assert result == {'key': ['v1', 'v2']}
 
 

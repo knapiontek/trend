@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from types import SimpleNamespace
 from typing import List, Dict, Optional
 
 import requests
@@ -24,15 +23,15 @@ def interval_to_exante(interval: timedelta):
     }[interval]
 
 
-def price_from_exante(dt: Dict, symbol: str) -> Optional[SimpleNamespace]:
+def price_from_exante(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
     try:
-        return SimpleNamespace(symbol=symbol,
-                               timestamp=dt['timestamp'] // 1000,
-                               open=float(dt['open']),
-                               close=float(dt['close']),
-                               low=float(dt['low']),
-                               high=float(dt['high']),
-                               volume=int(dt['volume']))
+        return tool.Clazz(symbol=symbol,
+                          timestamp=dt['timestamp'] // 1000,
+                          open=float(dt['open']),
+                          close=float(dt['close']),
+                          low=float(dt['low']),
+                          high=float(dt['high']),
+                          volume=int(dt['volume']))
     except:
         return None
 
@@ -55,7 +54,7 @@ class Session(session.Session):
                 'short-symbol': 'ticker'}
         return [{k: item[v] for k, v in keys.items()} for item in response.json()]
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[SimpleNamespace]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
         exante_from = dt_to_exante(dt_from)
         exante_to = dt_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)
