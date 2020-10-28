@@ -1,4 +1,5 @@
 import logging
+from types import SimpleNamespace
 from typing import List, Tuple, Iterable, Dict, Any
 
 import orjson as json
@@ -177,15 +178,15 @@ class Series(SeriesClazz):
         result = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
         return list(result)
 
-    def time_range(self) -> List[Dict]:
+    def time_range(self) -> List[SimpleNamespace]:
         query = '''
             FOR series IN @@collection
                 COLLECT symbol = series.symbol
                 AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
                 RETURN {symbol, min_ts, max_ts}
         '''
-        result = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
-        return list(result)
+        records = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
+        return [SimpleNamespace(**r) for r in records]
 
 
 def exchange_clean():

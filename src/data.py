@@ -68,8 +68,8 @@ def series_range(engine: Any):
 
     with engine.Series(tool.INTERVAL_1D) as db_series:
         time_range = {
-            symbol: [tool.ts_format(min_ts), tool.ts_format(max_ts)]
-            for symbol, min_ts, max_ts in tool.tuple_it(db_series.time_range(), ('symbol', 'min_ts', 'max_ts'))
+            tr.symbol: [tool.ts_format(tr.min_ts), tool.ts_format(tr.max_ts)]
+            for tr in db_series.time_range()
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
@@ -84,7 +84,7 @@ def series_update(engine: Any):
     with engine.Series(interval) as db_series:
         time_range = db_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
-        series_latest = {tr['symbol']: tool.from_timestamp(tr['max_ts']) for tr in time_range}
+        series_latest = {tr.symbol: tool.from_timestamp(tr.max_ts) for tr in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.Exchanges() as db_exchanges:
@@ -144,12 +144,12 @@ def series_verify(engine: Any):
 
     with store.FileStore(health_name, editable=True) as health:
         with tool.Progress(health_name, time_range) as progress:
-            for symbol, ts_from, ts_to in tool.tuple_it(time_range, ('symbol', 'min_ts', 'max_ts')):
-                progress(symbol)
+            for tr in time_range:
+                progress(tr.symbol)
                 overlap, missing = verify_symbol_series(engine,
-                                                        symbol,
-                                                        tool.from_timestamp(ts_from),
-                                                        tool.from_timestamp(ts_to),
+                                                        tr.symbol,
+                                                        tool.from_timestamp(tr.min_ts),
+                                                        tool.from_timestamp(tr.max_ts),
                                                         interval)
                 info = {}
                 if overlap:
@@ -157,7 +157,7 @@ def series_verify(engine: Any):
                 if missing:
                     info['missing'] = missing
                 if info:
-                    health[symbol] = info
+                    health[tr.symbol] = info
 
     with store.FileStore(health_name) as health:
         with store.Exchanges(editable=True) as db_exchanges:
