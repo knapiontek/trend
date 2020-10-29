@@ -113,17 +113,16 @@ def time_series_verify(engine: Any,
         time_series = security_series[symbol]
 
     _, exchange = tool.symbol_split(symbol)
+    dates = [tool.from_timestamp(s.timestamp) for s in time_series]
     holidays = tool.holidays(exchange)
-    dates = {tool.from_timestamp(s.timestamp) for s in time_series}
 
     overlap = [tool.dt_format(d) for d in dates if d in holidays]
 
     missing = []
-    all_days = dates | holidays
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
-            if start not in all_days:
+            if start not in dates and start not in holidays:
                 missing.append(tool.dt_format(start))
         start += interval
 
