@@ -28,7 +28,7 @@ def timestamp_from_yahoo(date: str):
     return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
     try:
         return tool.Clazz(symbol=symbol,
                           timestamp=timestamp_from_yahoo(dt['Date']),
@@ -36,8 +36,10 @@ def price_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
                           close=float(dt['Close']),
                           low=float(dt['Low']),
                           high=float(dt['High']),
-                          volume=int(dt['Volume']))
-
+                          volume=int(dt['Volume']),
+                          sma=None,
+                          vma=None,
+                          order=None)
     except:
         return None
 
@@ -63,17 +65,13 @@ class Session(session.Session):
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)
-        params = dict(period1=yahoo_from,
-                      period2=yahoo_to,
-                      interval=yahoo_interval,
-                      events='history',
-                      crumb=self.crumb)
+        params = dict(period1=yahoo_from, period2=yahoo_to, interval=yahoo_interval, events='history', crumb=self.crumb)
         time.sleep(0.6)
         response = self.get(url, params=params)
         if response.status_code in (400, 404):
             return []
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
-        data = [price_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
+        data = [datum_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]
         if len(data) == 2 and data[0].timestamp == data[1].timestamp:
             data = data[0:1]  # if yahoo returns 2 rows with duplicated values
         data = [
@@ -84,7 +82,7 @@ class Session(session.Session):
         return data
 
 
-class Series(store.Series):
+class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
+        name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)

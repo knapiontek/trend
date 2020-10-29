@@ -2,7 +2,7 @@ from src import web
 
 
 def test_select():
-    instruments = [
+    securities = [
         {
             'name': 'Exxon Mobil Corporation',
             'symbol': 'XOM.NYSE',
@@ -14,5 +14,5 @@ def test_select():
         }
     ]
     query = '{currency} contains usd && {type} contains stock && {symbol} contains xom'
-    selected = web.select_instruments(instruments, query=query)
+    selected = web.select_securities(securities, query=query)
     assert len(selected) == 1

@@ -9,12 +9,12 @@ def i_windowed(sized: Sized, size: int):
     return windowed(range(len(sized)), size)
 
 
-def simplify_3_points(series: List[tool.Clazz], key: str) -> List[tool.Clazz]:
+def simplify_3_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     reduced: List[Optional[tool.Clazz]] = series[:]
     for i1, i2, i3 in i_windowed(series, 3):
-        c1 = series[i1][key]
-        c2 = series[i2][key]
-        c3 = series[i3][key]
+        c1 = series[i1].close
+        c2 = series[i2].close
+        c3 = series[i3].close
         if c1 <= c2 <= c3:
             reduced[i2] = None
             if c1 == c3:
@@ -26,13 +26,13 @@ def simplify_3_points(series: List[tool.Clazz], key: str) -> List[tool.Clazz]:
     return [s for s in reduced if s]
 
 
-def simplify_4_points(series: List[tool.Clazz], key: str) -> List[tool.Clazz]:
+def simplify_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     reduced: List[Optional[tool.Clazz]] = series[:]
     for i1, i2, i3, i4 in i_windowed(series, 4):
-        c1 = series[i1][key]
-        c2 = series[i2][key]
-        c3 = series[i3][key]
-        c4 = series[i4][key]
+        c1 = series[i1].close
+        c2 = series[i2].close
+        c3 = series[i3].close
+        c4 = series[i4].close
         if c1 <= c3 <= c2 <= c4:
             reduced[i2] = None
             reduced[i3] = None
@@ -42,13 +42,13 @@ def simplify_4_points(series: List[tool.Clazz], key: str) -> List[tool.Clazz]:
     return [s for s in reduced if s]
 
 
-def simplify(series: List[tool.Clazz], key: str, order: int) -> List[tool.Clazz]:
+def simplify(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
     if not order:
         return series
-    reduced = simplify_3_points(series, key)
+    reduced = simplify_3_points(series)
     for o in range(order - 1):
-        reduced = simplify_4_points(reduced, key)
-        reduced = simplify_3_points(reduced, key)
+        reduced = simplify_4_points(reduced)
+        reduced = simplify_3_points(reduced)
     return reduced
 
 

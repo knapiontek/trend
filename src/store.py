@@ -51,7 +51,6 @@ EXCHANGE_SCHEMA = {
             'health-yahoo': {'type': 'boolean'},
             'health-stooq': {'type': 'boolean'},
             'total': {'type': 'number', 'format': 'float'}
-
         },
         'required': ['symbol',
                      'type',
@@ -68,8 +67,8 @@ EXCHANGE_SCHEMA = {
     }
 }
 
-SERIES_SCHEMA = {
-    'message': 'series-schema',
+SECURITY_SCHEMA = {
+    'message': 'security-schema',
     'level': 'strict',
     'rule': {
         'type': 'object',
@@ -81,9 +80,12 @@ SERIES_SCHEMA = {
             'close': {'type': 'number', 'format': 'float'},
             'low': {'type': 'number', 'format': 'float'},
             'high': {'type': 'number', 'format': 'float'},
-            'volume': {'type': 'integer'}
+            'volume': {'type': 'integer'},
+            'sma': {'type': 'number', 'format': 'float'},
+            'vma': {'type': 'number', 'format': 'float'},
+            'order': {'type': 'integer'}
         },
-        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
+        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume', 'sma', 'vma', 'order']
     }
 }
 
@@ -104,7 +106,7 @@ def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, sch
         collection.add_hash_index(fields=unique_fields, unique=True)
 
 
-class SeriesClazz:
+class Series:
     def __init__(self, name: str, editable: bool, unique_fields: Tuple, schema: Dict):
         self.name = name
         self.editable = editable
@@ -124,15 +126,15 @@ class SeriesClazz:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __iadd__(self, series: List[tool.Clazz]) -> 'SeriesClazz':
+    def __iadd__(self, series: List[tool.Clazz]) -> 'Series':
         result = self.tnx_collection.insert_many(series)
         return self.verify_result(result)
 
-    def __ior__(self, series: List[tool.Clazz]) -> 'SeriesClazz':
+    def __ior__(self, series: List[tool.Clazz]) -> 'Series':
         result = self.tnx_collection.update_many(series)
         return self.verify_result(result)
 
-    def verify_result(self, result: List) -> 'SeriesClazz':
+    def verify_result(self, result: List) -> 'Series':
         errors = [str(e) for e in result if isinstance(e, ArangoServerError)]
         if len(errors):
             error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
@@ -141,38 +143,38 @@ class SeriesClazz:
         return self
 
 
-class Exchanges(SeriesClazz):
+class ExchangeSeries(Series):
     def __init__(self, editable=False):
         super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
 
     def __getitem__(self, exchange: str) -> List[tool.Clazz]:
         query = '''
-            FOR series IN @@collection
-                FILTER series.exchange == @exchange
-                RETURN series
+            FOR datum IN @@collection
+                FILTER datum.exchange == @exchange
+                RETURN datum
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
         return [tool.Clazz(**r) for r in records]
 
 
-class Series(SeriesClazz):
+class SecuritySeries(Series):
     def __init__(self, name: str, editable: bool):
-        super().__init__(name, editable, ('symbol', 'timestamp'), SERIES_SCHEMA)
+        super().__init__(name, editable, ('symbol', 'timestamp'), SECURITY_SCHEMA)
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
-            FOR series IN @@collection
-                FILTER series.symbol == @symbol
-                RETURN series
+            FOR datum IN @@collection
+                FILTER datum.symbol == @symbol
+                RETURN datum
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
         return [tool.Clazz(**r) for r in records]
 
     def time_range(self) -> List[tool.Clazz]:
         query = '''
-            FOR series IN @@collection
-                COLLECT symbol = series.symbol
-                AGGREGATE min_ts = MIN(series.timestamp), max_ts = MAX(series.timestamp)
+            FOR datum IN @@collection
+                COLLECT symbol = datum.symbol
+                AGGREGATE min_ts = MIN(datum.timestamp), max_ts = MAX(datum.timestamp)
                 RETURN {symbol, min_ts, max_ts}
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
@@ -191,14 +193,14 @@ def exchange_clean():
             assert deleted
 
 
-def series_clean(engine: Any):
+def security_clean(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {series_clean.__name__}({engine_name})')
+    LOG.info(f'>> {security_clean.__name__}({engine_name})')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
-        if name.startswith(f'series_{tool.module_name(engine.__name__)}'):
+        if name.startswith(f'security_{tool.module_name(engine.__name__)}'):
             LOG.debug(f'Cleaning arango collection: {name}')
             deleted = db.delete_collection(name)
             assert deleted

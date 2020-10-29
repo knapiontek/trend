@@ -34,9 +34,9 @@ if 'gunicorn' in sys.modules:
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
-ORDER_RANGE = 7
+ORDER_RANGE = 6
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
-XAXES_FORMAT = '%Y-%m-%d'
+XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
 
@@ -109,7 +109,7 @@ app.layout = dbc.Row(
 PATTERN = re.compile('{(\\w+)} contains (.+)')
 
 
-def select_instruments(instruments: List[Dict], query) -> List[Dict]:
+def select_securities(securities: List[Dict], query) -> List[Dict]:
     if query:
         matches = [re.search(PATTERN, f) for f in query.split(' && ')]
         if all(matches):
@@ -117,13 +117,13 @@ def select_instruments(instruments: List[Dict], query) -> List[Dict]:
             columns = dict([m.groups() for m in matches])
             # select-phrase in value for all select-columns
             return [
-                i for i in instruments
-                if all(v.lower() in str(i[k]).lower() for k, v in columns.items())
+                security for security in securities
+                if all(v.lower() in str(security[k]).lower() for k, v in columns.items())
             ]
         else:
             return []
     else:
-        return instruments
+        return securities
 
 
 @app.callback(Output('symbol-table', 'data'),
@@ -133,15 +133,15 @@ def select_instruments(instruments: List[Dict], query) -> List[Dict]:
 def cb_symbol_table(exchange_name, engine_name, query):
     if exchange_name and engine_name:
         LOG.debug(f'Loading symbols with query: "{query or "*"}"')
-        with store.Exchanges() as db_exchanges:
-            instruments = db_exchanges[exchange_name]
+        with store.ExchangeSeries() as db_exchanges:
+            securities = db_exchanges[exchange_name]
         boolean = ['[-]', '[+]']
-        instruments = [dict(i,
-                            shortable=boolean[i.shortable],
-                            health=boolean[i[f'health-{engine_name}']],
-                            info=i.description)
-                       for i in instruments]
-        return select_instruments(instruments, query)
+        securities = [dict(security,
+                           shortable=boolean[security.shortable],
+                           health=boolean[security[f'health-{engine_name}']],
+                           info=security.description)
+                      for security in securities]
+        return select_securities(securities, query)
     return []
 
 
@@ -174,8 +174,8 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
         # engine series
         engine = ENGINES[engine_name]
-        with engine.Series(interval) as db_series:
-            time_series = db_series[symbol]
+        with engine.SecuritySeries(interval) as db_securities:
+            time_series = db_securities[symbol]
 
         if time_series:
             # customize data
@@ -189,8 +189,8 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             vma_trans = tool.transpose(vma, ('timestamp', 'value'))
             vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
 
-            time_series = [ts for ts in time_series if ts.timestamp > ts_from]
-            series = analyse.simplify(time_series, 'close', order)
+            time_series = [s for s in time_series if s.timestamp > ts_from]
+            series = analyse.simplify(time_series, order)
             series_trans = tool.transpose(series, ('timestamp', 'close', 'volume'))
             series_dates = [tool.from_timestamp(ts) for ts in series_trans['timestamp']]
 
@@ -205,7 +205,7 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             figure.add_trace(price_trace, row=1, col=1)
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
-            figure.update_xaxes(tickformat=XAXES_FORMAT,
+            figure.update_xaxes(tickformat=XAXIS_FORMAT,
                                 rangebreaks=[dict(values=tool.find_gaps(vma_dates, interval))])
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)

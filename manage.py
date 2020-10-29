@@ -19,10 +19,10 @@ def get_args():
 
     parser.add_argument('--engines', nargs='+', required=True)
 
-    parser.add_argument('--series-clean', action='store_true')
-    parser.add_argument('--series-range', action='store_true')
-    parser.add_argument('--series-update', action='store_true')
-    parser.add_argument('--series-verify', action='store_true')
+    parser.add_argument('--security-clean', action='store_true')
+    parser.add_argument('--security-range', action='store_true')
+    parser.add_argument('--security-update', action='store_true')
+    parser.add_argument('--security-verify', action='store_true')
 
     parser.add_argument('--log-to-file', action='store_true')
     parser.add_argument('--log-to-screen', action='store_true')
@@ -52,14 +52,14 @@ def main():
         engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
         for datum in args.engines:
             engine = engines[datum]
-            if args.series_clean:
-                store.series_clean(engine)
-            if args.series_range:
-                data.series_range(engine)
-            if args.series_update:
-                data.series_update(engine)
-            if args.series_verify:
-                data.series_verify(engine)
+            if args.security_clean:
+                store.security_clean(engine)
+            if args.security_range:
+                data.security_range(engine)
+            if args.security_update:
+                data.security_update(engine)
+            if args.security_verify:
+                data.security_verify(engine)
     except:
         LOG.exception('TrendApp failed')
 

@@ -59,8 +59,8 @@ def load_trading_data():
     data.exchange_update()
 
     for engine in (yahoo, exante, stooq):
-        data.series_update(engine)
-        data.series_verify(engine)
+        data.security_update(engine)
+        data.security_verify(engine)
 
 
 def run_schedule(debug: bool):

@@ -75,7 +75,7 @@ def timestamp_from_stooq(date: str):
     return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def price_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def datum_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
     try:
         return tool.Clazz(symbol=symbol,
                           timestamp=timestamp_from_stooq(dt['<DATE>']),
@@ -83,8 +83,10 @@ def price_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
                           close=float(dt['<CLOSE>']),
                           low=float(dt['<LOW>']),
                           high=float(dt['<HIGH>']),
-                          volume=int(dt['<VOL>']))
-
+                          volume=int(dt['<VOL>']),
+                          sma=None,
+                          vma=None,
+                          order=None)
     except:
         return None
 
@@ -131,16 +133,16 @@ class Session(session.Session):
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
             if relative_path:
                 content = zip_io.read(relative_path).decode('utf-8')
-                prices = [price_from_stooq(dt, symbol) for dt in csv.DictReader(StringIO(content))]
+                data = [datum_from_stooq(dt, symbol) for dt in csv.DictReader(StringIO(content))]
                 return [
-                    price
-                    for price in prices
-                    if price and ts_from <= price.timestamp <= ts_to
+                    datum
+                    for datum in data
+                    if datum and ts_from <= datum.timestamp <= ts_to
                 ]
         return []
 
 
-class Series(store.Series):
+class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
+        name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)

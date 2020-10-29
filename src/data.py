@@ -46,80 +46,80 @@ def exchange_update():
     shortables = exante.read_shortables()
 
     store.exchange_clean()
-    with store.Exchanges(editable=True) as db_exchanges:
+    with store.ExchangeSeries(editable=True) as db_exchanges:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
                 exchange_index = indices[name]
-                instruments = session.instruments(name)
+                securities = session.securities(name)
                 documents = [
-                    tool.Clazz(**instrument,
+                    tool.Clazz(**security,
                                **HEALTH_DEFAULT,
-                               shortable=instrument['symbol'] in shortables)
-                    for instrument in instruments
-                    if instrument['short-symbol'] in exchange_index
+                               shortable=security['symbol'] in shortables)
+                    for security in securities
+                    if security['short-symbol'] in exchange_index
                 ]
                 db_exchanges += documents
-                LOG.info(f'Imported {len(documents)} instruments from exchange {name}')
+                LOG.info(f'Securities {len(documents)} imported from the exchange {name}')
 
 
-def series_range(engine: Any):
+def security_range(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {series_range.__name__}({engine_name})')
+    LOG.info(f'>> {security_range.__name__}({engine_name})')
 
-    with engine.Series(tool.INTERVAL_1D) as db_series:
+    with engine.SecuritySeries(tool.INTERVAL_1D) as db_securities:
         time_range = {
-            tr.symbol: [tool.ts_format(tr.min_ts), tool.ts_format(tr.max_ts)]
-            for tr in db_series.time_range()
+            t.symbol: [tool.ts_format(t.min_ts), tool.ts_format(t.max_ts)]
+            for t in db_securities.time_range()
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-def series_update(engine: Any):
+def security_update(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {series_update.__name__}({engine_name})')
+    LOG.info(f'>> {security_update.__name__}({engine_name})')
 
     interval = tool.INTERVAL_1D
     dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
-    with engine.Series(interval) as db_series:
-        time_range = db_series.time_range()
+    with engine.SecuritySeries(interval) as db_securities:
+        time_range = db_securities.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
-        series_latest = {tr.symbol: tool.from_timestamp(tr.max_ts) for tr in time_range}
+        series_latest = {t.symbol: tool.from_timestamp(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
-        with store.Exchanges() as db_exchanges:
-            instruments = db_exchanges[exchange_name]
+        with store.ExchangeSeries() as db_exchanges:
+            securities = db_exchanges[exchange_name]
 
-        LOG.info(f'Updating exchange: {exchange_name} instruments: {len(instruments)}')
-        latest = {i.symbol: series_latest.get(i.symbol) or dt_from_default for i in instruments}
+        LOG.info(f'Updating exchange: {exchange_name} securities: {len(securities)}')
+        security_latest = {s.symbol: series_latest.get(s.symbol) or dt_from_default for s in securities}
 
         with engine.Session() as session:
-            with tool.Progress(f'series-update: {exchange_name}', latest) as progress:
-                for symbol, dt_from in latest.items():
+            with tool.Progress(f'series-update: {exchange_name}', security_latest) as progress:
+                for symbol, dt_from in security_latest.items():
                     progress(symbol)
                     dt_to = tool.dt_last(exchange_name, interval, tool.utc_now())
                     for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
-                        with engine.Series(interval, editable=True) as db_series:
-                            db_series += time_series
+                        with engine.SecuritySeries(interval, editable=True) as db_securities:
+                            db_securities += time_series
 
 
-def verify_symbol_series(engine: Any,
-                         symbol: str,
-                         dt_from: datetime, dt_to: datetime,
-                         interval: timedelta) -> Tuple[List, List]:
-    with engine.Series(interval) as db_series:
-        series = db_series[symbol]
+def time_series_verify(engine: Any,
+                       symbol: str,
+                       dt_from: datetime, dt_to: datetime,
+                       interval: timedelta) -> Tuple[List, List]:
+    with engine.SecuritySeries(interval) as db_securities:
+        time_series = db_securities[symbol]
 
     _, exchange = tool.symbol_split(symbol)
-    dt_holidays = tool.holidays(exchange)
-    dt_series = {tool.from_timestamp(s.timestamp) for s in series}
+    holidays = tool.holidays(exchange)
+    dates = {tool.from_timestamp(s.timestamp) for s in time_series}
 
-    overlap = [tool.dt_format(d) for d in dt_series & dt_holidays]
+    overlap = [tool.dt_format(d) for d in dates & holidays]
 
     missing = []
-    all_days = dt_series | dt_holidays
+    all_days = dates | holidays
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
@@ -130,50 +130,50 @@ def verify_symbol_series(engine: Any,
     return overlap, missing
 
 
-def series_verify(engine: Any):
+def security_verify(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {series_verify.__name__}({engine_name})')
+    LOG.info(f'>> {security_verify.__name__}({engine_name})')
 
     interval = tool.INTERVAL_1D
     health_name = f'health-{engine_name}-{tool.interval_name(interval)}'
 
-    with engine.Series(interval) as db_series:
-        time_range = db_series.time_range()
+    with engine.SecuritySeries(interval) as db_securities:
+        time_range = db_securities.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.FileStore(health_name, editable=True) as health:
         with tool.Progress(health_name, time_range) as progress:
-            for tr in time_range:
-                progress(tr.symbol)
-                overlap, missing = verify_symbol_series(engine,
-                                                        tr.symbol,
-                                                        tool.from_timestamp(tr.min_ts),
-                                                        tool.from_timestamp(tr.max_ts),
-                                                        interval)
+            for t in time_range:
+                progress(t.symbol)
+                overlap, missing = time_series_verify(engine,
+                                                      t.symbol,
+                                                      tool.from_timestamp(t.min_ts),
+                                                      tool.from_timestamp(t.max_ts),
+                                                      interval)
                 info = {}
                 if overlap:
                     info['overlap'] = overlap
                 if missing:
                     info['missing'] = missing
                 if info:
-                    health[tr.symbol] = info
+                    health[t.symbol] = info
 
     with store.FileStore(health_name) as health:
-        with store.Exchanges(editable=True) as db_exchanges:
+        with store.ExchangeSeries(editable=True) as db_exchanges:
             for name in config.ACTIVE_EXCHANGES:
-                instruments = db_exchanges[name]
-                for i in instruments:
-                    i[f'health-{engine_name}'] = i.symbol not in health
-                db_exchanges |= instruments
+                securities = db_exchanges[name]
+                for security in securities:
+                    security[f'health-{engine_name}'] = security.symbol not in health
+                db_exchanges |= securities
 
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
     exchange_update()
     from src import stooq as engine
-    series_range(engine)
-    series_update(engine)
-    series_verify(engine)
+    security_range(engine)
+    security_update(engine)
+    security_verify(engine)
 
 
 if __name__ == '__main__':

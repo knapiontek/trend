@@ -23,15 +23,22 @@ def interval_to_exante(interval: timedelta):
     }[interval]
 
 
-def price_from_exante(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def ts_from_exante(timestamp: int):
+    return timestamp // 1000
+
+
+def datum_from_exante(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
     try:
         return tool.Clazz(symbol=symbol,
-                          timestamp=dt['timestamp'] // 1000,
+                          timestamp=ts_from_exante(dt['timestamp']),
                           open=float(dt['open']),
                           close=float(dt['close']),
                           low=float(dt['low']),
                           high=float(dt['high']),
-                          volume=int(dt['volume']))
+                          volume=int(dt['volume']),
+                          sma=None,
+                          vma=None,
+                          order=None)
     except:
         return None
 
@@ -41,7 +48,7 @@ class Session(session.Session):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
 
-    def instruments(self, exchange: str) -> List[Dict]:
+    def securities(self, exchange: str) -> List[Dict]:
         url = f'{DATA_URL}/exchanges/{exchange}'
         response = self.get(url)
         assert response.status_code == 200, f'url: {url} reply: {response.text}'
@@ -61,22 +68,17 @@ class Session(session.Session):
 
         url = f'{DATA_URL}/ohlc/{tool.url_encode(symbol)}/{exante_interval}'
         max_size = 4096
-        params = {
-            'from': exante_from,
-            'to': exante_to,
-            'size': max_size,
-            'type': 'trades'
-        }
+        params = {'from': exante_from, 'to': exante_to, 'size': max_size, 'type': 'trades'}
         response = self.get(url, params=params)
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
-        data = [price_from_exante(datum, symbol) for datum in response.json()]
+        data = [datum_from_exante(datum, symbol) for datum in response.json()]
         assert len(data) < max_size
         return list(filter(None, data))
 
 
-class Series(store.Series):
+class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False):
-        name = f'series_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
+        name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable)
 
 
