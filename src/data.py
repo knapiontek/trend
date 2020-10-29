@@ -5,7 +5,7 @@ from typing import List, Tuple, Any, Dict
 import orjson as json
 import pandas as pd
 
-from src import store, tool, exante, log, config
+from src import store, tool, exante, log, config, analyse
 
 LOG = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ def security_update(engine: Any):
         security_latest = {s.symbol: series_latest.get(s.symbol) or dt_from_default for s in securities}
 
         with engine.Session() as session:
-            with tool.Progress(f'series-update: {exchange_name}', security_latest) as progress:
+            with tool.Progress(f'security-update: {exchange_name}', security_latest) as progress:
                 for symbol, dt_from in security_latest.items():
                     progress(symbol)
                     dt_to = tool.dt_last(exchange_name, interval, tool.utc_now())
@@ -168,6 +168,29 @@ def security_verify(engine: Any):
                 exchange_series |= securities
 
 
+def security_analyse(engine: Any):
+    engine_name = tool.module_name(engine.__name__)
+    LOG.info(f'>> {security_analyse.__name__} engine: {engine_name}')
+
+    w_size = 100
+    interval = tool.INTERVAL_1D
+
+    for exchange_name in config.ACTIVE_EXCHANGES:
+        with store.ExchangeSeries() as exchange_series:
+            securities = exchange_series[exchange_name]
+
+        with tool.Progress(f'security-analyse {exchange_name}', securities) as progress:
+            for security in securities:
+                progress(security.symbol)
+                with engine.SecuritySeries(interval, editable=True) as security_series:
+                    time_series = security_series[security.symbol]
+
+                    analyse.sma(time_series, w_size)
+                    analyse.vma(time_series, w_size)
+
+                    security_series |= time_series
+
+
 def main():
     log.init(__file__, debug=True, to_screen=True)
     exchange_update()
@@ -175,6 +198,7 @@ def main():
     security_range(engine)
     security_update(engine)
     security_verify(engine)
+    security_analyse(engine)
 
 
 if __name__ == '__main__':

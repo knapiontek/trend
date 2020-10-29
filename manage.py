@@ -7,6 +7,15 @@ from src import log, data, store, yahoo, exante, stooq
 
 LOG = logging.getLogger(__name__)
 
+EXCHANGE_ACTIONS = dict(clean=store.exchange_clean,
+                        update=data.exchange_update)
+ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
+ENGINE_ACTIONS = dict(clean=store.exchange_clean,
+                      range=data.security_range,
+                      update=data.security_update,
+                      verify=data.security_verify,
+                      analyse=data.security_analyse)
+
 
 def get_args():
     parser = argparse.ArgumentParser(description='Trend Tools')
@@ -14,15 +23,9 @@ def get_args():
     parser.add_argument('--web', action='store_true')
     parser.add_argument('--schedule', action='store_true')
 
-    parser.add_argument('--exchange-clean', action='store_true')
-    parser.add_argument('--exchange-update', action='store_true')
-
-    parser.add_argument('--engines', nargs='+', required=True)
-
-    parser.add_argument('--security-clean', action='store_true')
-    parser.add_argument('--security-range', action='store_true')
-    parser.add_argument('--security-update', action='store_true')
-    parser.add_argument('--security-verify', action='store_true')
+    parser.add_argument('--exchange', nargs='+')
+    parser.add_argument('--engine', nargs='+')
+    parser.add_argument('--security', nargs='+')
 
     parser.add_argument('--log-to-file', action='store_true')
     parser.add_argument('--log-to-screen', action='store_true')
@@ -43,23 +46,11 @@ def main():
         if args.schedule:
             from src import schedule
             schedule.run_schedule(args.debug)
-
-        if args.exchange_clean:
-            store.exchange_clean()
-        if args.exchange_update:
-            data.exchange_update()
-
-        engines = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-        for datum in args.engines:
-            engine = engines[datum]
-            if args.security_clean:
-                store.security_clean(engine)
-            if args.security_range:
-                data.security_range(engine)
-            if args.security_update:
-                data.security_update(engine)
-            if args.security_verify:
-                data.security_verify(engine)
+        for action_name in args.exchange or []:
+            EXCHANGE_ACTIONS[action_name]()
+        for engine_name in args.engine or []:
+            for action_name in args.security or []:
+                ENGINE_ACTIONS[action_name](ENGINES[engine_name])
     except:
         LOG.exception('TrendApp failed')
 

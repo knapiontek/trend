@@ -23,7 +23,7 @@ def simplify_3_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
             reduced[i2] = None
             if c1 == c3:
                 reduced[i1] = None
-    return [s for s in reduced if s]
+    return [r for r in reduced if r]
 
 
 def simplify_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
@@ -39,7 +39,7 @@ def simplify_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
         elif c1 >= c3 >= c2 >= c4:
             reduced[i2] = None
             reduced[i3] = None
-    return [s for s in reduced if s]
+    return [r for r in reduced if r]
 
 
 def simplify(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
@@ -52,33 +52,14 @@ def simplify(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
     return reduced
 
 
-def smooth(series: List[tool.Clazz]) -> List[tool.Clazz]:
-    w_size = 3
-    result = []
-    for window in windowed(series, w_size):
-        values = [s.value for s in window]
-        timestamp = window[-1].timestamp
-        dt = tool.Clazz(value=sum(values) / w_size, timestamp=timestamp)
-        result.append(dt)
-    return result
-
-
-def sma(series: List[tool.Clazz], w_size: int) -> List[tool.Clazz]:
-    result = []
+def sma(series: List[tool.Clazz], w_size: int):
     for window in windowed(series, w_size):
         closes = [s.close for s in window]
-        timestamp = window[-1].timestamp
-        dt = tool.Clazz(value=sum(closes) / w_size, timestamp=timestamp)
-        result.append(dt)
-    return smooth(result)
+        window[-1].sma = sum(closes) / w_size
 
 
-def vma(series: List[tool.Clazz], w_size: int) -> List[tool.Clazz]:
-    result = []
+def vma(series: List[tool.Clazz], w_size: int):
     for window in windowed(series, w_size):
         weighted_closes = [s.close * s.volume for s in window]
         volumes = [s.volume for s in window]
-        timestamp = window[-1].timestamp
-        dt = tool.Clazz(value=sum(weighted_closes) / sum(volumes), timestamp=timestamp)
-        result.append(dt)
-    return smooth(result)
+        window[-1].vma = sum(weighted_closes) / sum(volumes)
