@@ -64,7 +64,7 @@ def exchange_update():
 
 def security_range(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_range.__name__}({engine_name})')
+    LOG.info(f'>> {security_range.__name__} engine: {engine_name}')
 
     with engine.SecuritySeries(tool.INTERVAL_1D) as security_series:
         time_range = {
@@ -76,7 +76,7 @@ def security_range(engine: Any):
 
 def security_update(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_update.__name__}({engine_name})')
+    LOG.info(f'>> {security_update.__name__} engine: {engine_name}')
 
     interval = tool.INTERVAL_1D
     dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
@@ -132,7 +132,7 @@ def time_series_verify(engine: Any,
 
 def security_verify(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_verify.__name__}({engine_name})')
+    LOG.info(f'>> {security_verify.__name__} engine: {engine_name}')
 
     interval = tool.INTERVAL_1D
     health_name = f'health-{engine_name}-{tool.interval_name(interval)}'
@@ -142,6 +142,7 @@ def security_verify(engine: Any):
         LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.FileStore(health_name, editable=True) as health:
+        health.clear()
         with tool.Progress(health_name, time_range) as progress:
             for t in time_range:
                 progress(t.symbol)
