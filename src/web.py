@@ -133,8 +133,8 @@ def select_securities(securities: List[Dict], query) -> List[Dict]:
 def cb_symbol_table(exchange_name, engine_name, query):
     if exchange_name and engine_name:
         LOG.debug(f'Loading symbols with query: "{query or "*"}"')
-        with store.ExchangeSeries() as db_exchanges:
-            securities = db_exchanges[exchange_name]
+        with store.ExchangeSeries() as exchange_series:
+            securities = exchange_series[exchange_name]
         boolean = ['[-]', '[+]']
         securities = [dict(security,
                            shortable=boolean[security.shortable],
@@ -174,8 +174,8 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
         # engine series
         engine = ENGINES[engine_name]
-        with engine.SecuritySeries(interval) as db_securities:
-            time_series = db_securities[symbol]
+        with engine.SecuritySeries(interval) as security_series:
+            time_series = security_series[symbol]
 
         if time_series:
             # customize data

@@ -46,7 +46,7 @@ def exchange_update():
     shortables = exante.read_shortables()
 
     store.exchange_clean()
-    with store.ExchangeSeries(editable=True) as db_exchanges:
+    with store.ExchangeSeries(editable=True) as exchange_series:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
                 exchange_index = indices[name]
@@ -58,7 +58,7 @@ def exchange_update():
                     for security in securities
                     if security['short-symbol'] in exchange_index
                 ]
-                db_exchanges += documents
+                exchange_series += documents
                 LOG.info(f'Securities {len(documents)} imported from the exchange {name}')
 
 
@@ -66,10 +66,10 @@ def security_range(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_range.__name__}({engine_name})')
 
-    with engine.SecuritySeries(tool.INTERVAL_1D) as db_securities:
+    with engine.SecuritySeries(tool.INTERVAL_1D) as security_series:
         time_range = {
             t.symbol: [tool.ts_format(t.min_ts), tool.ts_format(t.max_ts)]
-            for t in db_securities.time_range()
+            for t in security_series.time_range()
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
@@ -81,14 +81,14 @@ def security_update(engine: Any):
     interval = tool.INTERVAL_1D
     dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
-    with engine.SecuritySeries(interval) as db_securities:
-        time_range = db_securities.time_range()
+    with engine.SecuritySeries(interval) as security_series:
+        time_range = security_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
         series_latest = {t.symbol: tool.from_timestamp(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
-        with store.ExchangeSeries() as db_exchanges:
-            securities = db_exchanges[exchange_name]
+        with store.ExchangeSeries() as exchange_series:
+            securities = exchange_series[exchange_name]
 
         LOG.info(f'Updating exchange: {exchange_name} securities: {len(securities)}')
         security_latest = {s.symbol: series_latest.get(s.symbol) or dt_from_default for s in securities}
@@ -101,16 +101,16 @@ def security_update(engine: Any):
                     for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
-                        with engine.SecuritySeries(interval, editable=True) as db_securities:
-                            db_securities += time_series
+                        with engine.SecuritySeries(interval, editable=True) as security_series:
+                            security_series += time_series
 
 
 def time_series_verify(engine: Any,
                        symbol: str,
                        dt_from: datetime, dt_to: datetime,
                        interval: timedelta) -> Tuple[List, List]:
-    with engine.SecuritySeries(interval) as db_securities:
-        time_series = db_securities[symbol]
+    with engine.SecuritySeries(interval) as security_series:
+        time_series = security_series[symbol]
 
     _, exchange = tool.symbol_split(symbol)
     holidays = tool.holidays(exchange)
@@ -137,8 +137,8 @@ def security_verify(engine: Any):
     interval = tool.INTERVAL_1D
     health_name = f'health-{engine_name}-{tool.interval_name(interval)}'
 
-    with engine.SecuritySeries(interval) as db_securities:
-        time_range = db_securities.time_range()
+    with engine.SecuritySeries(interval) as security_series:
+        time_range = security_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.FileStore(health_name, editable=True) as health:
@@ -159,12 +159,12 @@ def security_verify(engine: Any):
                     health[t.symbol] = info
 
     with store.FileStore(health_name) as health:
-        with store.ExchangeSeries(editable=True) as db_exchanges:
+        with store.ExchangeSeries(editable=True) as exchange_series:
             for name in config.ACTIVE_EXCHANGES:
-                securities = db_exchanges[name]
+                securities = exchange_series[name]
                 for security in securities:
                     security[f'health-{engine_name}'] = security.symbol not in health
-                db_exchanges |= securities
+                exchange_series |= securities
 
 
 def main():

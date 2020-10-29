@@ -81,9 +81,9 @@ SECURITY_SCHEMA = {
             'low': {'type': 'number', 'format': 'float'},
             'high': {'type': 'number', 'format': 'float'},
             'volume': {'type': 'integer'},
-            'sma': {'type': 'number', 'format': 'float'},
-            'vma': {'type': 'number', 'format': 'float'},
-            'order': {'type': 'integer'}
+            'sma': {'type': ['number', 'null'], 'format': 'float'},
+            'vma': {'type': ['number', 'null'], 'format': 'float'},
+            'order': {'type': ['integer', 'null']}
         },
         'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume', 'sma', 'vma', 'order']
     }
