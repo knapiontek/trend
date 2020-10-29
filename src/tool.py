@@ -25,7 +25,7 @@ class Clazz(dict):
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.__dict__
+        return dict(self)
 
 
 def url_encode(name: str) -> str:

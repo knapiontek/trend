@@ -116,7 +116,7 @@ def time_series_verify(engine: Any,
     holidays = tool.holidays(exchange)
     dates = {tool.from_timestamp(s.timestamp) for s in time_series}
 
-    overlap = [tool.dt_format(d) for d in dates & holidays]
+    overlap = [tool.dt_format(d) for d in dates if d in holidays]
 
     missing = []
     all_days = dates | holidays
@@ -142,22 +142,23 @@ def security_verify(engine: Any):
         LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.FileStore(health_name, editable=True) as health:
-        health.clear()
+        health.update({e: {} for e in config.ACTIVE_EXCHANGES})
         with tool.Progress(health_name, time_range) as progress:
             for t in time_range:
                 progress(t.symbol)
+                short_symbol, exchange = tool.symbol_split(t.symbol)
                 overlap, missing = time_series_verify(engine,
                                                       t.symbol,
                                                       tool.from_timestamp(t.min_ts),
                                                       tool.from_timestamp(t.max_ts),
                                                       interval)
-                info = {}
+                security_health = tool.Clazz()
                 if overlap:
-                    info['overlap'] = overlap
+                    security_health.overlap = overlap
                 if missing:
-                    info['missing'] = missing
-                if info:
-                    health[t.symbol] = info
+                    security_health.missing = missing
+                if security_health:
+                    health[exchange][short_symbol] = security_health
 
     with store.FileStore(health_name) as health:
         with store.ExchangeSeries(editable=True) as exchange_series:
