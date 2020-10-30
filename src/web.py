@@ -92,16 +92,12 @@ app.layout = dbc.Row(
     [
         dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
-            dbc.Row([
-                dbc.Col(date_choice),
-                dbc.Col(exchange_choice),
-                dbc.Col(engine_choice)
-            ], className='frame'),
+            dbc.Row([dbc.Col(date_choice), dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row(dbc.Col(order_choice), className='frame'),
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
-        dbc.Col(dbc.Spinner(series_graph), width=9)
+        dbc.Col(dbc.Spinner(series_graph))
     ],
     className='dashboard'
 )
