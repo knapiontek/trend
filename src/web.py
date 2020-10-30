@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import date, timedelta
+from datetime import date
 from typing import Dict, List
 
 import dash
@@ -181,32 +181,26 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
             # customize data
             dt_from = tool.d_parse(d_from)
             ts_from = tool.to_timestamp(dt_from)
-            ts_vma_from = tool.to_timestamp(dt_from - timedelta(days=vma_size))
-
-            vma_series = [ts for ts in time_series if ts.timestamp > ts_vma_from]
-            vma = analyse.vma(vma_series, vma_size)
-            vma = [ts for ts in vma if ts.timestamp > ts_from]
-            vma_trans = tool.transpose(vma, ('timestamp', 'value'))
-            vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
-
             time_series = [s for s in time_series if s.timestamp > ts_from]
-            series = analyse.simplify(time_series, order)
-            series_trans = tool.transpose(series, ('timestamp', 'close', 'volume'))
-            series_dates = [tool.from_timestamp(ts) for ts in series_trans['timestamp']]
+            simple_series = analyse.simplify(time_series, order)
+            trans = tool.transpose(simple_series, ('timestamp', 'close'))
+            vma_trans = tool.transpose(time_series, ('timestamp', 'vma', 'volume'))
+            dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
+            vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
+            date_gaps = tool.find_gaps(vma_dates, interval)
+            custom = [s.to_dict() for s in simple_series]
 
             # create traces
-            price_trace = go.Scatter(x=series_dates, y=series_trans['close'],
-                                     name='Close', customdata=[s.to_dict() for s in series], line=dict(width=1.5))
-            vma_trace = go.Scatter(x=vma_dates, y=vma_trans['value'], name='VMA', line=dict(width=1.5))
-            volume_trace = go.Bar(x=series_dates, y=series_trans['volume'], name='Volume')
+            close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
+            vma_trace = go.Scatter(x=vma_dates, y=vma_trans['vma'], name='VMA', line=dict(width=1.5))
+            volume_trace = go.Bar(x=vma_dates, y=vma_trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
-            figure.add_trace(price_trace, row=1, col=1)
+            figure.add_trace(close_trace, row=1, col=1)
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
-            figure.update_xaxes(tickformat=XAXIS_FORMAT,
-                                rangebreaks=[dict(values=tool.find_gaps(vma_dates, interval))])
+            figure.update_xaxes(tickformat=XAXIS_FORMAT, rangebreaks=[dict(values=date_gaps)])
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 

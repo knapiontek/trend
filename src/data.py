@@ -90,7 +90,7 @@ def security_update(engine: Any):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
-        LOG.info(f'Updating exchange: {exchange_name} securities: {len(securities)}')
+        LOG.debug(f'Updating exchange: {exchange_name} securities: {len(securities)}')
         security_latest = {s.symbol: series_latest.get(s.symbol) or dt_from_default for s in securities}
 
         with engine.Session() as session:
