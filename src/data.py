@@ -184,11 +184,10 @@ def security_analyse(engine: Any):
                 progress(security.symbol)
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
-
-                    analyse.sma(time_series, w_size)
-                    analyse.vma(time_series, w_size)
-
-                    security_series |= time_series
+                    if len(time_series) >= w_size:
+                        analyse.sma(time_series, w_size)
+                        analyse.vma(time_series, w_size)
+                        security_series |= time_series
 
 
 def main():
