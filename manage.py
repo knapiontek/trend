@@ -10,7 +10,7 @@ LOG = logging.getLogger(__name__)
 EXCHANGE_ACTIONS = dict(clean=store.exchange_clean,
                         update=data.exchange_update)
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-ENGINE_ACTIONS = dict(clean=store.exchange_clean,
+ENGINE_ACTIONS = dict(clean=store.security_clean,
                       range=data.security_range,
                       update=data.security_update,
                       verify=data.security_verify,
