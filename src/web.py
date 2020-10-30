@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_table
 import plotly.graph_objects as go
-from dash.dependencies import Output, Input
+from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
 from src import store, tool, yahoo, config, log, exante, stooq, analyse
@@ -156,15 +156,14 @@ def cb_relayout_data(relayout_data):
 
 
 @app.callback(Output('series-graph', 'figure'),
-              [Input('engine-choice', 'value'),
+              [Input('date-from', 'date'),
+               Input('engine-choice', 'value'),
                Input('order-choice', 'value'),
-               Input('date-from', 'date'),
-               Input('relayout-data', 'data'),
-               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_rows):
-    if engine_name and d_from and selected_rows and data and selected_rows:
+               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
+              State('relayout-data', 'data'))
+def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_data):
+    if engine_name and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
-        vma_size = 100
         row = data[selected_rows[0]]
         symbol, info = row['symbol'], row['info']
 
