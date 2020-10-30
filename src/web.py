@@ -101,7 +101,7 @@ app.layout = dbc.Row(
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
-        dbc.Col(series_graph, width=9)
+        dbc.Col(dbc.Spinner(series_graph), width=9)
     ],
     className='dashboard'
 )
