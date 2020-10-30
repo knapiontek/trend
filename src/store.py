@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import List, Tuple, Dict, Any
 
 import orjson as json
@@ -158,16 +159,19 @@ class ExchangeSeries(Series):
 
 
 class SecuritySeries(Series):
-    def __init__(self, name: str, editable: bool):
+    def __init__(self, name: str, editable: bool, dt_from: datetime):
         super().__init__(name, editable, ('symbol', 'timestamp'), SECURITY_SCHEMA)
+        self.ts_from = tool.to_timestamp(dt_from)
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
             FOR datum IN @@collection
-                FILTER datum.symbol == @symbol
+                SORT datum.timestamp
+                FILTER datum.symbol == @symbol and datum.timestamp > @timestamp
                 RETURN datum
         '''
-        records = self.tnx_db.aql.execute(query, bind_vars={'symbol': symbol, '@collection': self.name})
+        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from}
+        records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
         return [tool.Clazz(**r) for r in records]
 
     def time_range(self) -> List[tool.Clazz]:

@@ -77,9 +77,9 @@ class Session(session.Session):
 
 
 class SecuritySeries(store.SecuritySeries):
-    def __init__(self, interval: timedelta, editable=False):
+    def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
-        super().__init__(name, editable)
+        super().__init__(name, editable, dt_from or config.DT_FROM_DEFAULT)
 
 
 def read_shortables() -> Dict[str, bool]:

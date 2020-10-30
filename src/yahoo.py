@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict, Optional
 
-from src import tool, store, session
+from src import tool, store, session, config
 
 LOG = logging.getLogger(__name__)
 
@@ -83,6 +83,6 @@ class Session(session.Session):
 
 
 class SecuritySeries(store.SecuritySeries):
-    def __init__(self, interval: timedelta, editable=False):
+    def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
-        super().__init__(name, editable)
+        super().__init__(name, editable, dt_from or config.DT_FROM_DEFAULT)

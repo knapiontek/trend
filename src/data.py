@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import List, Tuple, Any, Dict
 
 import orjson as json
@@ -79,11 +79,10 @@ def security_update(engine: Any):
     LOG.info(f'>> {security_update.__name__} engine: {engine_name}')
 
     interval = tool.INTERVAL_1D
-    dt_from_default = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
-        LOG.info(f'Time range entries: {len(time_range)}')
+        LOG.debug(f'Time range entries: {len(time_range)}')
         series_latest = {t.symbol: tool.from_timestamp(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
@@ -91,7 +90,7 @@ def security_update(engine: Any):
             securities = exchange_series[exchange_name]
 
         LOG.debug(f'Updating exchange: {exchange_name} securities: {len(securities)}')
-        security_latest = {s.symbol: series_latest.get(s.symbol) or dt_from_default for s in securities}
+        security_latest = {s.symbol: series_latest.get(s.symbol) or config.DT_FROM_DEFAULT for s in securities}
 
         with engine.Session() as session:
             with tool.Progress(f'security-update: {exchange_name}', security_latest) as progress:

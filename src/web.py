@@ -174,14 +174,12 @@ def cb_series_graph(engine_name, order, d_from, relayout_data, data, selected_ro
 
         # engine series
         engine = ENGINES[engine_name]
-        with engine.SecuritySeries(interval) as security_series:
+        dt_from = tool.d_parse(d_from)
+        with engine.SecuritySeries(interval, dt_from=dt_from) as security_series:
             time_series = security_series[symbol]
 
         if time_series:
             # customize data
-            dt_from = tool.d_parse(d_from)
-            ts_from = tool.to_timestamp(dt_from)
-            time_series = [s for s in time_series if s.timestamp > ts_from]
             simple_series = analyse.simplify(time_series, order)
             trans = tool.transpose(simple_series, ('timestamp', 'close'))
             vma_trans = tool.transpose(time_series, ('timestamp', 'vma', 'volume'))

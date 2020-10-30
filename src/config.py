@@ -1,4 +1,5 @@
 import pathlib
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Tuple, Any
 
@@ -15,6 +16,7 @@ EXANTE_PATH = TREND_PATH.joinpath('exante')
 LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
+DT_FROM_DEFAULT = datetime(2006, 12, 31, tzinfo=timezone.utc)
 
 ACTIVE_EXCHANGES = ('NYSE', 'NASDAQ', 'LSE', 'XETRA', 'WSE')
 
