@@ -176,7 +176,6 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
             # customize data
             trans = tool.transpose(time_series, ('timestamp', 'close', 'vma', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
-            gap_dates = tool.find_gaps(dates, interval)
             custom = [s.to_dict() for s in time_series]
 
             # create traces
@@ -189,7 +188,7 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
             figure.add_trace(close_trace, row=1, col=1)
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
-            figure.update_xaxes(tickformat=XAXIS_FORMAT, rangebreaks=[dict(values=gap_dates)])
+            figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 

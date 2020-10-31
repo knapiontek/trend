@@ -6,8 +6,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict, Iterable, Tuple, Union, Sized, Set, Any
 
-from more_itertools import windowed
-
 
 class Clazz(dict):
 
@@ -891,16 +889,6 @@ def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: i
     while start + interval <= dt_to:
         yield start + interval, min(start + delta, dt_to)
         start += delta
-
-
-def find_gaps(series: List[datetime], interval: timedelta) -> List[datetime]:
-    results = []
-    for dt1, dt2 in windowed(series, 2):
-        dt1 += interval
-        while dt1 < dt2:
-            results.append(dt1)
-            dt1 += interval
-    return results
 
 
 def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Dict[str, List]:
