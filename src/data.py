@@ -60,7 +60,7 @@ def exchange_update():
                     if security['short-symbol'] in exchange_index
                 ]
                 exchange_series += documents
-                LOG.info(f'Securities {len(documents)} imported from the exchange {name}')
+                LOG.info(f'Securities: {len(documents)} imported from the exchange {name}')
 
 
 def security_range(engine: Any):
@@ -190,6 +190,8 @@ def security_analyse(engine: Any):
                         analyse.vma(time_series, w_size)
                         analyse.reduce(time_series, config.MAX_SERIES_ORDER)
                         security_series |= time_series
+
+        LOG.info(f'Securities: {len(securities)} analysed from the exchange {exchange_name}')
 
 
 def main():
