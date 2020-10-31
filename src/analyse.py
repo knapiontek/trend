@@ -9,7 +9,7 @@ def i_windowed(sized: Sized, size: int):
     return windowed(range(len(sized)), size)
 
 
-def simplify_3_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
+def reduce_3_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     reduced: List[Optional[tool.Clazz]] = series[:]
     for i1, i2, i3 in i_windowed(series, 3):
         c1 = series[i1].close
@@ -26,7 +26,7 @@ def simplify_3_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     return [r for r in reduced if r]
 
 
-def simplify_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
+def reduce_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     reduced: List[Optional[tool.Clazz]] = series[:]
     for i1, i2, i3, i4 in i_windowed(series, 4):
         c1 = series[i1].close
@@ -42,13 +42,13 @@ def simplify_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     return [r for r in reduced if r]
 
 
-def simplify(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
+def reduce(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
     if not order:
         return series
-    reduced = simplify_3_points(series)
+    reduced = reduce_3_points(series)
     for o in range(order - 1):
-        reduced = simplify_4_points(reduced)
-        reduced = simplify_3_points(reduced)
+        reduced = reduce_4_points(reduced)
+        reduced = reduce_3_points(reduced)
     return reduced
 
 

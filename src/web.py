@@ -175,7 +175,7 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            simple_series = analyse.simplify(time_series, order)
+            simple_series = analyse.reduce(time_series, order)
             trans = tool.transpose(simple_series, ('timestamp', 'close'))
             vma_trans = tool.transpose(time_series, ('timestamp', 'vma', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
