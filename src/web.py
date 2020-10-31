@@ -13,6 +13,7 @@ from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
 from src import store, tool, yahoo, config, log, exante, stooq, analyse
+from src.config import SERIES_ORDER
 
 LOG = logging.getLogger(__name__)
 
@@ -34,7 +35,6 @@ if 'gunicorn' in sys.modules:
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
 SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
-ORDER_RANGE = 6
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
@@ -53,8 +53,8 @@ engine_choice = dcc.Dropdown(id='engine-choice',
 date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-order_choice = dcc.Slider(id='order-choice', min=0, max=ORDER_RANGE - 1,
-                          marks={i: f'Order.{i}' for i in range(ORDER_RANGE)}, value=1)
+order_choice = dcc.Slider(id='order-choice', min=0, max=SERIES_ORDER - 1,
+                          marks={i: f'Order.{i}' for i in range(SERIES_ORDER)}, value=1)
 
 
 def table_style(**kwargs):

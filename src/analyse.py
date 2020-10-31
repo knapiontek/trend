@@ -42,13 +42,20 @@ def reduce_4_points(series: List[tool.Clazz]) -> List[tool.Clazz]:
     return [r for r in reduced if r]
 
 
+def set_order(reduced: List[tool.Clazz], order: int):
+    for r in reduced:
+        r.order = order
+
+
 def reduce(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
     if not order:
         return series
     reduced = reduce_3_points(series)
+    set_order(reduced, 0)
     for o in range(order - 1):
         reduced = reduce_4_points(reduced)
         reduced = reduce_3_points(reduced)
+        set_order(reduced, order)
     return reduced
 
 
