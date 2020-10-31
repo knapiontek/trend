@@ -53,7 +53,7 @@ date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
 order_choice = dcc.Slider(id='order-choice', min=0, max=config.MAX_SERIES_ORDER,
-                          marks={i: f'Order.{i}' for i in range(config.MAX_SERIES_ORDER + 1)}, value=2)
+                          marks={i: f'Order.{i}' for i in range(config.MAX_SERIES_ORDER + 1)}, value=1)
 
 
 def table_style(**kwargs):
