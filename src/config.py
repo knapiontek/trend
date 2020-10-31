@@ -10,6 +10,7 @@ from src import schema
 
 TREND_PATH = pathlib.Path(__file__).parent.parent
 SRC_PATH = TREND_PATH.joinpath('src')
+TESTS_PATH = TREND_PATH.joinpath('tests')
 ASSETS_PATH = SRC_PATH.joinpath('assets')
 STORE_PATH = TREND_PATH.joinpath('store')
 EXANTE_PATH = TREND_PATH.joinpath('exante')
