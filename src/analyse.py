@@ -47,15 +47,15 @@ def set_order(reduced: List[tool.Clazz], order: int):
         r.order = order
 
 
-def reduce(series: List[tool.Clazz], order: int) -> List[tool.Clazz]:
-    if not order:
+def reduce(series: List[tool.Clazz], max_order: int) -> List[tool.Clazz]:
+    if not max_order:
         return series
     reduced = reduce_3_points(series)
     set_order(reduced, 0)
-    for o in range(order - 1):
+    for o in range(max_order + 1):
         reduced = reduce_4_points(reduced)
         reduced = reduce_3_points(reduced)
-        set_order(reduced, order)
+        set_order(reduced, o)
     return reduced
 
 

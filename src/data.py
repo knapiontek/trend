@@ -186,7 +186,7 @@ def security_analyse(engine: Any):
                     if len(time_series) >= w_size:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                        analyse.reduce(time_series, config.SERIES_ORDER)
+                        analyse.reduce(time_series, config.MAX_SERIES_ORDER)
                         security_series |= time_series
 
 

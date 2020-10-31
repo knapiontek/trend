@@ -13,7 +13,6 @@ from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
 from src import store, tool, yahoo, config, log, exante, stooq
-from src.config import SERIES_ORDER
 
 LOG = logging.getLogger(__name__)
 
@@ -53,8 +52,8 @@ engine_choice = dcc.Dropdown(id='engine-choice',
 date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-order_choice = dcc.Slider(id='order-choice', min=0, max=SERIES_ORDER - 1,
-                          marks={i: f'Order.{i}' for i in range(SERIES_ORDER)}, value=2)
+order_choice = dcc.Slider(id='order-choice', min=0, max=config.MAX_SERIES_ORDER,
+                          marks={i: f'Order.{i}' for i in range(config.MAX_SERIES_ORDER + 1)}, value=2)
 
 
 def table_style(**kwargs):
