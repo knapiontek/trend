@@ -12,10 +12,11 @@ dependencies:
   - xlrd==1.2.0
   - apscheduler==3.6.3
   - numba==0.51.2
+  - tenacity==6.2.0
+  - tqdm==4.50.0
   - pip:
       - orjson==3.3.1
       - lxml==4.4.2
       - dash==1.17.0
       - dash-bootstrap-components==0.10.7
       - python-arango==6.0.0
-      - tqdm==4.50.0

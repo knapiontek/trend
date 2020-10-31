@@ -4,6 +4,7 @@ from typing import List, Tuple, Any, Dict
 
 import orjson as json
 import pandas as pd
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from src import store, tool, exante, log, config, analyse
 
@@ -74,6 +75,7 @@ def security_range(engine: Any):
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
+@retry(stop=stop_after_attempt(2), wait=wait_fixed(100))
 def security_update(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_update.__name__} engine: {engine_name}')
