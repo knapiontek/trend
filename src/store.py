@@ -159,18 +159,19 @@ class ExchangeSeries(Series):
 
 
 class SecuritySeries(Series):
-    def __init__(self, name: str, editable: bool, dt_from: datetime):
+    def __init__(self, name: str, editable: bool, dt_from: datetime, order: bool):
         super().__init__(name, editable, ('symbol', 'timestamp'), SECURITY_SCHEMA)
         self.ts_from = tool.to_timestamp(dt_from)
+        self.order = order
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
             FOR datum IN @@collection
                 SORT datum.timestamp
-                FILTER datum.symbol == @symbol and datum.timestamp > @timestamp
+                FILTER datum.symbol == @symbol and datum.timestamp >= @timestamp and datum.order >= @order
                 RETURN datum
         '''
-        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from}
+        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from, 'order': self.order}
         records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
         return [tool.Clazz(**r) for r in records]
 

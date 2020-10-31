@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
-from src import store, tool, yahoo, config, log, exante, stooq, analyse
+from src import store, tool, yahoo, config, log, exante, stooq
 from src.config import SERIES_ORDER
 
 LOG = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
 order_choice = dcc.Slider(id='order-choice', min=0, max=SERIES_ORDER - 1,
-                          marks={i: f'Order.{i}' for i in range(SERIES_ORDER)}, value=1)
+                          marks={i: f'Order.{i}' for i in range(SERIES_ORDER)}, value=2)
 
 
 def table_style(**kwargs):
@@ -170,30 +170,27 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
         # engine series
         engine = ENGINES[engine_name]
         dt_from = tool.d_parse(d_from)
-        with engine.SecuritySeries(interval, dt_from=dt_from) as security_series:
+        with engine.SecuritySeries(interval, dt_from=dt_from, order=order) as security_series:
             time_series = security_series[symbol]
 
         if time_series:
             # customize data
-            simple_series = analyse.reduce(time_series, order)
-            trans = tool.transpose(simple_series, ('timestamp', 'close'))
-            vma_trans = tool.transpose(time_series, ('timestamp', 'vma', 'volume'))
+            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
-            vma_dates = [tool.from_timestamp(ts) for ts in vma_trans['timestamp']]
-            date_gaps = tool.find_gaps(vma_dates, interval)
-            custom = [s.to_dict() for s in simple_series]
+            gap_dates = tool.find_gaps(dates, interval)
+            custom = [s.to_dict() for s in time_series]
 
             # create traces
             close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
-            vma_trace = go.Scatter(x=vma_dates, y=vma_trans['vma'], name='VMA', line=dict(width=1.5))
-            volume_trace = go.Bar(x=vma_dates, y=vma_trans['volume'], name='Volume')
+            vma_trace = go.Scatter(x=dates, y=trans['vma'], name='VMA', line=dict(width=1.5))
+            volume_trace = go.Bar(x=dates, y=trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
             figure.add_trace(close_trace, row=1, col=1)
             figure.add_trace(vma_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
-            figure.update_xaxes(tickformat=XAXIS_FORMAT, rangebreaks=[dict(values=date_gaps)])
+            figure.update_xaxes(tickformat=XAXIS_FORMAT, rangebreaks=[dict(values=gap_dates)])
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 
