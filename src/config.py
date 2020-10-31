@@ -18,7 +18,7 @@ LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
 DT_FROM_DEFAULT = datetime(2006, 12, 31, tzinfo=timezone.utc)
-MAX_SERIES_ORDER = 5
+MAX_SERIES_ORDER = 4
 
 ACTIVE_EXCHANGES = ('NYSE', 'NASDAQ', 'LSE', 'XETRA', 'WSE')
 
