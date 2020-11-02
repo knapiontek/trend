@@ -53,6 +53,8 @@ def main():
                 ENGINE_ACTIONS[action_name](ENGINES[engine_name])
     except:
         LOG.exception('TrendApp failed')
+    else:
+        LOG.info('TrendApp done')
 
 
 if __name__ == '__main__':

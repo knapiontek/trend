@@ -84,9 +84,9 @@ def datum_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
                           low=float(dt['<LOW>']),
                           high=float(dt['<HIGH>']),
                           volume=int(dt['<VOL>']),
-                          sma=None,
-                          vma=None,
-                          order=None)
+                          sma=0.0,
+                          vma=0.0,
+                          order=0)
     except:
         return None
 

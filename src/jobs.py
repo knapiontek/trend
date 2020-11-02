@@ -7,7 +7,7 @@ import orjson as json
 import schedule
 from flask import Flask, request
 
-from src import data, log, yahoo, exante, stooq, config, tool
+from src import data, log, yahoo, exante, stooq, config
 
 LOG = logging.getLogger(__name__)
 
@@ -26,14 +26,47 @@ if 'gunicorn' in sys.modules:
 
 
 def load_trading_data():
-    LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
+    try:
+        LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
 
-    data.exchange_update()
+        data.exchange_update()
 
-    for engine in (yahoo, exante, stooq):
-        data.security_update(engine)
-        data.security_verify(engine)
-        data.security_analyse(engine)
+        for engine in (yahoo, exante, stooq):
+            data.security_update(engine)
+            data.security_verify(engine)
+            data.security_analyse(engine)
+    except:
+        LOG.exception(f'{load_trading_data.__name__} failed')
+    else:
+        LOG.info(f'{load_trading_data.__name__} done')
+
+
+@app.route("/schedule/", methods=['GET', 'POST'])
+def schedule_update_job():
+    if request.method == 'POST':
+        LOG.info(f'Scheduling {load_trading_data.__name__}')
+        thread = threading.Thread(target=load_trading_data, name=load_trading_data.__name__)
+        thread.start()
+
+    LOG.info('Listing threads')
+    threads = [
+        {
+            'name': thread.name,
+            'daemon': thread.daemon,
+            'alive': thread.is_alive()
+        }
+        for thread in threading.enumerate()
+    ]
+    LOG.info('Listing scheduled jobs')
+    jobs = [
+        {
+            'name': job.job_func.__name__,
+            'last_run': job.last_run,
+            'next_run': job.next_run
+        }
+        for job in schedule.jobs
+    ]
+    return json.dumps(dict(threads=threads, jobs=jobs), option=json.OPT_INDENT_2).decode('utf-8')
 
 
 schedule.every().day.at('02:30').do(load_trading_data)
@@ -45,27 +78,8 @@ def run_scheduled_jobs():
         time.sleep(60)
 
 
-@app.route("/schedule/", methods=['GET', 'POST'])
-def schedule_update_job():
-    if request.method == 'POST':
-        LOG.info(f'Scheduling {load_trading_data.__name__}')
-        thread = threading.Thread(target=load_trading_data)
-        thread.start()
-
-    LOG.info('Listing scheduled tasks')
-    jobs = [
-        {
-            'name': job.job_func.__name__,
-            'last_run': tool.dt_format(job.last_run) if job.last_run else None,
-            'next_run': tool.dt_format(job.next_run)
-        }
-        for job in schedule.jobs
-    ]
-    return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
-
-
 def run_schedule(debug: bool):
-    thread = threading.Thread(target=run_scheduled_jobs)
+    thread = threading.Thread(target=run_scheduled_jobs, name=run_scheduled_jobs.__name__)
     thread.start()
     return app.run(debug=debug)
 

@@ -36,9 +36,9 @@ def datum_from_exante(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
                           low=float(dt['low']),
                           high=float(dt['high']),
                           volume=int(dt['volume']),
-                          sma=None,
-                          vma=None,
-                          order=None)
+                          sma=0.0,
+                          vma=0.0,
+                          order=0)
     except:
         return None
 
