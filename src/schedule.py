@@ -1,13 +1,12 @@
-import atexit
 import logging
 import sys
-from datetime import timedelta
+import threading
 
+import eventlet
 import orjson as json
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, request
 
-from src import data, tool, log, yahoo, exante, stooq, config
+from src import data, log, yahoo, exante, stooq, config
 
 LOG = logging.getLogger(__name__)
 
@@ -24,44 +23,34 @@ if 'gunicorn' in sys.modules:
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
-scheduler = BackgroundScheduler(daemon=True)
-scheduler.start()
 
-
-@app.route("/schedule/", methods=['GET', 'POST'])
-def schedule_update_job():
-    if request.method == 'POST':
-        LOG.info(f'Scheduling {load_trading_data.__name__}')
-        dt = tool.utc_now() + timedelta(minutes=1)
-        scheduler.add_job(load_trading_data, 'date', run_date=dt)
-
-    LOG.info('Listing scheduled tasks')
-    jobs = [
-        {
-            'name': job.name,
-            'next-run-at': tool.dt_format(job.next_run_time),
-            'pending': job.pending
-        }
-        for job in scheduler.get_jobs()
-    ]
-    return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
-
-
-@atexit.register
-def shutdown():
-    LOG.info('Shutting down the scheduler')
-    scheduler.shutdown()
-
-
-@scheduler.scheduled_job('cron', hour=2, minute=30)
 def load_trading_data():
     LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
+
     data.exchange_update()
 
     for engine in (yahoo, exante, stooq):
         data.security_update(engine)
         data.security_verify(engine)
         data.security_analyse(engine)
+
+
+@app.route("/schedule/", methods=['GET', 'POST'])
+def schedule_update_job():
+    if request.method == 'POST':
+        LOG.info(f'Scheduling {load_trading_data.__name__}')
+        eventlet.spawn(load_trading_data)
+
+    LOG.info('Listing scheduled tasks')
+    threads = [
+        {
+            'name': thread.name,
+            'alive': thread.is_alive(),
+            'daemon': thread.daemon
+        }
+        for thread in threading.enumerate()
+    ]
+    return json.dumps(threads, option=json.OPT_INDENT_2).decode('utf-8')
 
 
 def run_schedule(debug: bool):

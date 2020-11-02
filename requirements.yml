@@ -1,23 +1,21 @@
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python==3.7.5
+  - pip==19.2.2
+  - gunicorn==20.0.4
+  - python-arango==6.0.0
+  - dash==1.17.0
+  - dash-bootstrap-components==0.10.7
+  - requests==2.24.0
   - jsonschema==3.2.0
   - pandas==1.1.1
-  - requests==2.24.0
-  - pip==19.2.2
   - pytest==6.0.1
-  - aiohttp==3.6.2
-  - gunicorn==20.0.4
-  - xlrd==1.2.0
-  - apscheduler==3.6.3
-  - numba==0.51.2
+  - eventlet==0.29.1
   - tenacity==6.2.0
   - tqdm==4.50.0
-  - pip:
-      - orjson==3.3.1
-      - lxml==4.4.2
-      - dash==1.17.0
-      - dash-bootstrap-components==0.10.7
-      - python-arango==6.0.0
-      - eventlet==0.29.1
+  - orjson==3.4.3
+  - lxml==4.6.1
+  - xlrd==1.2.0
+  - numba==0.51.2
