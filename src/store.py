@@ -1,8 +1,8 @@
 import logging
-import time
 from datetime import datetime
 from typing import List, Tuple, Dict, Any
 
+import eventlet
 import orjson as json
 from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
@@ -110,7 +110,7 @@ def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, sch
 
 class Series:
     def __init__(self, name: str, editable: bool, unique_fields: Tuple, schema: Dict):
-        time.sleep(0.2)
+        eventlet.sleep(0.6)
         self.name = name
         self.editable = editable
         self.db = db_connect()
