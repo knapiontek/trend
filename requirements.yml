@@ -9,10 +9,10 @@ dependencies:
   - dash==1.17.0
   - dash-bootstrap-components==0.10.7
   - requests==2.24.0
+  - schedule==0.6.0
   - jsonschema==3.2.0
   - pandas==1.1.1
   - pytest==6.0.1
-  - eventlet==0.29.1
   - tenacity==6.2.0
   - tqdm==4.50.0
   - orjson==3.4.3

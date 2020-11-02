@@ -1,7 +1,6 @@
 import csv
 import logging
 import re
-import time
 from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict, Optional
@@ -66,7 +65,6 @@ class Session(session.Session):
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)
         params = dict(period1=yahoo_from, period2=yahoo_to, interval=yahoo_interval, events='history', crumb=self.crumb)
-        time.sleep(0.6)
         response = self.get(url, params=params)
         if response.status_code in (400, 404):
             return []

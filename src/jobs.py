@@ -1,12 +1,13 @@
 import logging
 import sys
 import threading
+import time
 
-import eventlet
 import orjson as json
+import schedule
 from flask import Flask, request
 
-from src import data, log, yahoo, exante, stooq, config
+from src import data, log, yahoo, exante, stooq, config, tool
 
 LOG = logging.getLogger(__name__)
 
@@ -35,25 +36,37 @@ def load_trading_data():
         data.security_analyse(engine)
 
 
+schedule.every().day.at('02:30').do(load_trading_data)
+
+
+def run_scheduled_jobs():
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
+
+
 @app.route("/schedule/", methods=['GET', 'POST'])
 def schedule_update_job():
     if request.method == 'POST':
         LOG.info(f'Scheduling {load_trading_data.__name__}')
-        eventlet.spawn(load_trading_data)
+        thread = threading.Thread(target=load_trading_data)
+        thread.start()
 
     LOG.info('Listing scheduled tasks')
-    threads = [
+    jobs = [
         {
-            'name': thread.name,
-            'alive': thread.is_alive(),
-            'daemon': thread.daemon
+            'name': job.job_func.__name__,
+            'last_run': tool.dt_format(job.last_run) if job.last_run else None,
+            'next_run': tool.dt_format(job.next_run)
         }
-        for thread in threading.enumerate()
+        for job in schedule.jobs
     ]
-    return json.dumps(threads, option=json.OPT_INDENT_2).decode('utf-8')
+    return json.dumps(jobs, option=json.OPT_INDENT_2).decode('utf-8')
 
 
 def run_schedule(debug: bool):
+    thread = threading.Thread(target=run_scheduled_jobs)
+    thread.start()
     return app.run(debug=debug)
 
 

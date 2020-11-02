@@ -1,4 +1,5 @@
 import sys
+import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -928,3 +929,4 @@ class Progress:
     def __call__(self, message: str):
         self.count += 1
         print_line(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
+        time.sleep(0.6)
