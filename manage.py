@@ -21,7 +21,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='Trend Tools')
 
     parser.add_argument('--web', action='store_true')
-    parser.add_argument('--jobs', action='store_true')
+    parser.add_argument('--schedule', action='store_true')
 
     parser.add_argument('--exchange', nargs='+')
     parser.add_argument('--engine', nargs='+')
@@ -43,9 +43,9 @@ def main():
         if args.web:
             from src import web
             web.run_dash(args.debug)
-        if args.jobs:
-            from src import jobs
-            jobs.run_schedule(args.debug)
+        if args.schedule:
+            from src import schedule
+            schedule.run_tasks(args.debug)
         for action_name in args.exchange or []:
             EXCHANGE_ACTIONS[action_name]()
         for engine_name in args.engine or []:

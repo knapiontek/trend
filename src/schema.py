@@ -5,13 +5,24 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
+                'system': {'$ref': '#/definitions/System'},
                 'exante': {'$ref': '#/definitions/Exante'},
                 'quandl': {'$ref': '#/definitions/Quandl'},
                 'iex': {'$ref': '#/definitions/IEX'},
                 'notify-run': {'$ref': '#/definitions/NotifyRun'},
                 'arango-db': {'$ref': '#/definitions/ArangoDB'}
             },
-            'required': ['exante', 'quandl', 'iex', 'notify-run', 'arango-db']
+            'required': ['system', 'exante', 'quandl', 'iex', 'notify-run', 'arango-db']
+        },
+        'System': {
+            'type': 'object',
+            'additionalProperties': False,
+            'properties': {
+                'loop-delay': {'type': 'number', 'format': 'float'},
+                'date-time-from': {'type': 'string', 'format': 'date-time'},
+                'max-time-series-order': {'type': 'integer'}
+            },
+            'required': ['loop-delay', 'date-time-from', 'max-time-series-order']
         },
         'Exante': {
             'type': 'object',

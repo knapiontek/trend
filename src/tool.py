@@ -7,6 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict, Iterable, Tuple, Union, Sized, Set, Any
 
+from src import config
+
 
 class Clazz(dict):
 
@@ -918,15 +920,15 @@ class Progress:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.length:
-            self.count += 1
-            print_line(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
-            if not exc_type:
+        if not exc_type:
+            if self.length:
+                self.count += 1
+                print_line(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
                 assert self.count == self.length
-        else:
-            print_line(f'{self.title}: done{SPACES}\n')
+            else:
+                print_line(f'{self.title}: done{SPACES}\n')
 
     def __call__(self, message: str):
         self.count += 1
         print_line(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
-        time.sleep(0.6)
+        time.sleep(config.loop_delay())

@@ -186,11 +186,10 @@ def security_analyse(engine: Any):
                 progress(security.symbol)
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
-                    if len(time_series) >= w_size:
-                        analyse.sma(time_series, w_size)
-                        analyse.vma(time_series, w_size)
-                        analyse.reduce(time_series, config.MAX_SERIES_ORDER)
-                        security_series |= time_series
+                    analyse.sma(time_series, w_size)
+                    analyse.vma(time_series, w_size)
+                    analyse.reduce(time_series, config.max_time_series_order())
+                    security_series |= time_series
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')
 

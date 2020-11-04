@@ -1,7 +1,7 @@
 import pathlib
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import lru_cache
-from typing import Tuple, Any
+from typing import Tuple, Text
 
 import jsonschema
 import orjson as json
@@ -17,8 +17,6 @@ EXANTE_PATH = TREND_PATH.joinpath('exante')
 LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
-DT_FROM_DEFAULT = datetime(2006, 12, 31, tzinfo=timezone.utc)
-MAX_SERIES_ORDER = 4
 
 ACTIVE_EXCHANGES = ('NYSE', 'NASDAQ', 'LSE', 'XETRA', 'WSE')
 
@@ -29,6 +27,21 @@ def load_file():
         config = json.loads(read_io.read())
         jsonschema.validate(config, schema.CONFIG_SCHEMA)
         return config
+
+
+def loop_delay() -> float:
+    config = load_file()
+    return config['system']['loop-delay']
+
+
+def datetime_from() -> datetime:
+    config = load_file()
+    return config['system']['date-time-from']
+
+
+def max_time_series_order() -> int:
+    config = load_file()
+    return config['system']['max-time-series-order']
 
 
 def exante_auth() -> Tuple[str, str]:
@@ -52,7 +65,7 @@ def iex_auth() -> str:
     return config['iex']['shared-key']
 
 
-def arango_db_auth() -> Tuple[Any, ...]:
+def arango_db_auth() -> Tuple[Text, Text, Text, Text]:
     config = load_file()
     arango_config = config['arango-db']
-    return tuple(arango_config[key] for key in ('url', 'username', 'password', 'database'))
+    return arango_config['url'], arango_config['username'], arango_config['password'], arango_config['database']

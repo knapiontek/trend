@@ -4,7 +4,6 @@ import threading
 import time
 
 import orjson as json
-import schedule
 from flask import Flask, request
 
 from src import data, log, yahoo, exante, stooq, config
@@ -19,18 +18,30 @@ def wsgi(environ, start_response):
     return app(environ, start_response)
 
 
+def execute(function):
+    thread = threading.Thread(target=function, name=function.__name__)
+    thread.start()
+
+
+def run_scheduled_jobs():
+    tasks = [(2, 30)]
+    while True:
+        for hours, minutes in tasks:
+            load_trading_data()
+        time.sleep(60)
+
+
 if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
+    execute(run_scheduled_jobs)
 
 
 def load_trading_data():
     try:
         LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
-
         data.exchange_update()
-
         for engine in (yahoo, exante, stooq):
             data.security_update(engine)
             data.security_verify(engine)
@@ -45,8 +56,7 @@ def load_trading_data():
 def schedule_update_job():
     if request.method == 'POST':
         LOG.info(f'Scheduling {load_trading_data.__name__}')
-        thread = threading.Thread(target=load_trading_data, name=load_trading_data.__name__)
-        thread.start()
+        execute(load_trading_data)
 
     LOG.info('Listing threads')
     threads = [
@@ -57,37 +67,18 @@ def schedule_update_job():
         }
         for thread in threading.enumerate()
     ]
-    LOG.info('Listing scheduled jobs')
-    jobs = [
-        {
-            'name': job.job_func.__name__,
-            'last_run': job.last_run,
-            'next_run': job.next_run
-        }
-        for job in schedule.jobs
-    ]
-    return json.dumps(dict(threads=threads, jobs=jobs), option=json.OPT_INDENT_2).decode('utf-8')
+    return json.dumps(threads, option=json.OPT_INDENT_2).decode('utf-8')
 
 
-schedule.every().day.at('02:30').do(load_trading_data)
-
-
-def run_scheduled_jobs():
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-
-def run_schedule(debug: bool):
-    thread = threading.Thread(target=run_scheduled_jobs, name=run_scheduled_jobs.__name__)
-    thread.start()
+def run_tasks(debug: bool):
+    execute(run_scheduled_jobs)
     return app.run(debug=debug)
 
 
 def main():
     debug = True
     log.init(__file__, debug=debug, to_screen=True)
-    run_schedule(debug=debug)
+    run_tasks(debug=debug)
 
 
 if __name__ == "__main__":
