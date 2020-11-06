@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-from src import tool, config, session, store
+from src import tool, config, session, store, progrezz
 
 LOG = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class Session(session.Session):
                     # streaming to the zip file
                     zip_path_pending = zip_path.with_suffix('.pending')
                     with zip_path_pending.open('wb') as zip_io:
-                        with tool.Progress(message, size) as progress:
+                        with progrezz.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
                                 progress('+')
                                 zip_io.write(chunk)
@@ -145,4 +145,4 @@ class Session(session.Session):
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None, order: bool = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
-        super().__init__(name, editable, dt_from or config.DT_FROM_DEFAULT, order or 0)
+        super().__init__(name, editable, dt_from or config.datetime_from(), order or 0)

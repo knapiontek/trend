@@ -6,7 +6,7 @@ from typing import Tuple, Text
 import jsonschema
 import orjson as json
 
-from src import schema
+from src import schema, tool
 
 TREND_PATH = pathlib.Path(__file__).parent.parent
 SRC_PATH = TREND_PATH.joinpath('src')
@@ -36,7 +36,7 @@ def loop_delay() -> float:
 
 def datetime_from() -> datetime:
     config = load_file()
-    return config['system']['date-time-from']
+    return tool.dt_parse(config['system']['date-time-from'])
 
 
 def max_time_series_order() -> int:

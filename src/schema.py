@@ -70,3 +70,60 @@ CONFIG_SCHEMA = {
         }
     }
 }
+
+EXCHANGE_SCHEMA = {
+    'message': 'exchange-schema',
+    'level': 'strict',
+    'rule': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'symbol': {'type': 'string'},
+            'type': {'type': 'string'},
+            'exchange': {'type': 'string'},
+            'currency': {'type': 'string'},
+            'name': {'type': 'string'},
+            'description': {'type': 'string'},
+            'short-symbol': {'type': 'string'},
+            'shortable': {'type': 'boolean'},
+            'health-exante': {'type': 'boolean'},
+            'health-yahoo': {'type': 'boolean'},
+            'health-stooq': {'type': 'boolean'},
+            'total': {'type': 'number', 'format': 'float'}
+        },
+        'required': ['symbol',
+                     'type',
+                     'exchange',
+                     'currency',
+                     'name',
+                     'description',
+                     'short-symbol',
+                     'shortable',
+                     'health-exante',
+                     'health-yahoo',
+                     'health-stooq',
+                     'total']
+    }
+}
+
+SECURITY_SCHEMA = {
+    'message': 'security-schema',
+    'level': 'strict',
+    'rule': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'symbol': {'type': 'string'},
+            'timestamp': {'type': 'integer'},
+            'open': {'type': 'number', 'format': 'float'},
+            'close': {'type': 'number', 'format': 'float'},
+            'low': {'type': 'number', 'format': 'float'},
+            'high': {'type': 'number', 'format': 'float'},
+            'volume': {'type': 'integer'},
+            'sma': {'type': 'number', 'format': 'float'},
+            'vma': {'type': 'number', 'format': 'float'},
+            'order': {'type': 'integer'}
+        },
+        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume', 'sma', 'vma', 'order']
+    }
+}

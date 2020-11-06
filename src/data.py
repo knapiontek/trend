@@ -6,7 +6,7 @@ import orjson as json
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from src import store, tool, exante, log, config, analyse
+from src import store, tool, exante, log, config, analyse, progrezz
 
 LOG = logging.getLogger(__name__)
 
@@ -91,10 +91,10 @@ def security_update(engine: Any):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
-        security_latest = {s.symbol: series_latest.get(s.symbol) or config.DT_FROM_DEFAULT for s in securities}
+        security_latest = {s.symbol: series_latest.get(s.symbol) or config.datetime_from() for s in securities}
 
         with engine.Session() as session:
-            with tool.Progress(f'security-update: {exchange_name}', security_latest) as progress:
+            with progrezz.Progress(f'security-update: {exchange_name}', security_latest) as progress:
                 for symbol, dt_from in security_latest.items():
                     progress(symbol)
                     dt_to = tool.dt_last(exchange_name, interval, tool.utc_now())
@@ -116,7 +116,7 @@ def time_series_verify(engine: Any,
 
     _, exchange = tool.symbol_split(symbol)
     dates = [tool.from_timestamp(s.timestamp) for s in time_series]
-    holidays = tool.holidays(exchange)
+    holidays = tool.exchange_holidays(exchange)
 
     overlap = [tool.dt_format(d) for d in dates if d in holidays]
 
@@ -144,7 +144,7 @@ def security_verify(engine: Any):
 
     with store.FileStore(health_name, editable=True) as health:
         health.update({e: {} for e in config.ACTIVE_EXCHANGES})
-        with tool.Progress(health_name, time_range) as progress:
+        with progrezz.Progress(health_name, time_range) as progress:
             for t in time_range:
                 progress(t.symbol)
                 short_symbol, exchange = tool.symbol_split(t.symbol)
@@ -181,7 +181,7 @@ def security_analyse(engine: Any):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
-        with tool.Progress(f'security-analyse {exchange_name}', securities) as progress:
+        with progrezz.Progress(f'security-analyse {exchange_name}', securities) as progress:
             for security in securities:
                 progress(security.symbol)
                 with engine.SecuritySeries(interval, editable=True) as security_series:

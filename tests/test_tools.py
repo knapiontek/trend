@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 from src import tool, config
 
 
-def test_holidays():
+def test_exchange_holidays():
     for exchange in config.ACTIVE_EXCHANGES:
-        result = tool.holidays(exchange)
+        result = tool.exchange_holidays(exchange)
         assert isinstance(result, set)
 
 
@@ -55,10 +55,3 @@ def test_time_slices():
 def test_transpose():
     result = tool.transpose([tool.Clazz(key='v1'), tool.Clazz(key='v2')], ['key'])
     assert result == {'key': ['v1', 'v2']}
-
-
-def test_progress():
-    lst = [1, 2]
-    with tool.Progress(test_progress.__name__, lst) as progress:
-        progress('1')
-        progress('2')

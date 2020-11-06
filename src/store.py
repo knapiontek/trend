@@ -6,7 +6,7 @@ import orjson as json
 from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
 
-from src import config, tool
+from src import config, tool, schema
 
 LOG = logging.getLogger(__name__)
 
@@ -31,64 +31,6 @@ class FileStore(dict):
     def __setitem__(self, key: str, value: Any):
         assert self.editable
         super().__setitem__(key, value)
-
-
-EXCHANGE_SCHEMA = {
-    'message': 'exchange-schema',
-    'level': 'strict',
-    'rule': {
-        'type': 'object',
-        'additionalProperties': False,
-        'properties': {
-            'symbol': {'type': 'string'},
-            'type': {'type': 'string'},
-            'exchange': {'type': 'string'},
-            'currency': {'type': 'string'},
-            'name': {'type': 'string'},
-            'description': {'type': 'string'},
-            'short-symbol': {'type': 'string'},
-            'shortable': {'type': 'boolean'},
-            'health-exante': {'type': 'boolean'},
-            'health-yahoo': {'type': 'boolean'},
-            'health-stooq': {'type': 'boolean'},
-            'total': {'type': 'number', 'format': 'float'}
-        },
-        'required': ['symbol',
-                     'type',
-                     'exchange',
-                     'currency',
-                     'name',
-                     'description',
-                     'short-symbol',
-                     'shortable',
-                     'health-exante',
-                     'health-yahoo',
-                     'health-stooq',
-                     'total']
-    }
-}
-
-SECURITY_SCHEMA = {
-    'message': 'security-schema',
-    'level': 'strict',
-    'rule': {
-        'type': 'object',
-        'additionalProperties': False,
-        'properties': {
-            'symbol': {'type': 'string'},
-            'timestamp': {'type': 'integer'},
-            'open': {'type': 'number', 'format': 'float'},
-            'close': {'type': 'number', 'format': 'float'},
-            'low': {'type': 'number', 'format': 'float'},
-            'high': {'type': 'number', 'format': 'float'},
-            'volume': {'type': 'integer'},
-            'sma': {'type': 'number', 'format': 'float'},
-            'vma': {'type': 'number', 'format': 'float'},
-            'order': {'type': 'integer'}
-        },
-        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume', 'sma', 'vma', 'order']
-    }
-}
 
 
 def db_connect() -> StandardDatabase:
@@ -146,7 +88,7 @@ class Series:
 
 class ExchangeSeries(Series):
     def __init__(self, editable=False):
-        super().__init__('exchange', editable, ('exchange', 'short-symbol'), EXCHANGE_SCHEMA)
+        super().__init__('exchange', editable, ('exchange', 'short-symbol'), schema.EXCHANGE_SCHEMA)
 
     def __getitem__(self, exchange: str) -> List[tool.Clazz]:
         query = '''
@@ -160,7 +102,7 @@ class ExchangeSeries(Series):
 
 class SecuritySeries(Series):
     def __init__(self, name: str, editable: bool, dt_from: datetime, order: bool):
-        super().__init__(name, editable, ('symbol', 'timestamp'), SECURITY_SCHEMA)
+        super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
         self.ts_from = tool.to_timestamp(dt_from)
         self.order = order
 
