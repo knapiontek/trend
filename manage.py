@@ -42,10 +42,10 @@ def main():
     try:
         if args.web:
             from src import web
-            web.run_dash(args.debug)
+            web.run_module(args.debug)
         if args.schedule:
             from src import schedule
-            schedule.run_tasks(args.debug)
+            schedule.run_module(args.debug)
         for action_name in args.exchange or []:
             EXCHANGE_ACTIONS[action_name]()
         for engine_name in args.engine or []:

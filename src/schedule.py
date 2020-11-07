@@ -6,7 +6,7 @@ import time
 import orjson as json
 from flask import Flask, request
 
-from src import data, log, yahoo, exante, stooq, config
+from src import data, log, yahoo, exante, stooq, config, tool
 
 LOG = logging.getLogger(__name__)
 
@@ -23,11 +23,37 @@ def execute(function):
     thread.start()
 
 
-def run_scheduled_jobs():
-    tasks = [(2, 30)]
+@tool.catch_exception(LOG)
+def maintain_task():
+    LOG.info(f'Running task: {maintain_task.__name__}')
+    data.exchange_update()
+    for engine in (yahoo, exante, stooq):
+        data.security_update(engine)
+        data.security_verify(engine)
+        data.security_analyse(engine)
+
+
+TASKS = [tool.Clazz(hour=2, minute=30, next_run=None, last_run=None, running=False, function=maintain_task)]
+
+
+def run_scheduled_tasks():
     while True:
-        for hours, minutes in tasks:
-            load_trading_data()
+        for task in TASKS:
+            if task.next_run:
+                if task.next_run < tool.utc_now():
+                    try:
+                        task.running = True
+                        task.function()
+                    except:
+                        pass
+                    finally:
+                        task.running = False
+                        task.last_run = tool.utc_now()
+            else:
+                now = tool.utc_now()
+                task.next_run = now.replace(hour=task.hour, minute=task.minute)
+                if task.next_run < now:
+                    task.next_run += tool.INTERVAL_1D
         time.sleep(60)
 
 
@@ -35,28 +61,14 @@ if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
-    execute(run_scheduled_jobs)
-
-
-def load_trading_data():
-    try:
-        LOG.info(f'Running scheduled task: {load_trading_data.__name__}')
-        data.exchange_update()
-        for engine in (yahoo, exante, stooq):
-            data.security_update(engine)
-            data.security_verify(engine)
-            data.security_analyse(engine)
-    except:
-        LOG.exception(f'{load_trading_data.__name__} failed')
-    else:
-        LOG.info(f'{load_trading_data.__name__} done')
+    execute(run_scheduled_tasks)
 
 
 @app.route("/schedule/", methods=['GET', 'POST'])
-def schedule_update_job():
+def schedule_endpoint():
     if request.method == 'POST':
-        LOG.info(f'Scheduling {load_trading_data.__name__}')
-        execute(load_trading_data)
+        LOG.info(f'Scheduling {maintain_task.__name__}')
+        execute(maintain_task)
 
     LOG.info('Listing threads')
     threads = [
@@ -67,18 +79,18 @@ def schedule_update_job():
         }
         for thread in threading.enumerate()
     ]
-    return json.dumps(threads, option=json.OPT_INDENT_2).decode('utf-8')
+    return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2).decode('utf-8')
 
 
-def run_tasks(debug: bool):
-    execute(run_scheduled_jobs)
+def run_module(debug: bool):
+    execute(run_scheduled_tasks)
     return app.run(debug=debug)
 
 
 def main():
     debug = True
     log.init(__file__, debug=debug, to_screen=True)
-    run_tasks(debug=debug)
+    run_module(debug=debug)
 
 
 if __name__ == "__main__":

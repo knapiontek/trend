@@ -215,14 +215,14 @@ def cb_details_table(data):
     return []
 
 
-def run_dash(debug: bool):
+def run_module(debug: bool):
     return app.run_server(debug=debug)
 
 
 def main():
     debug = True
     log.init(__file__, debug=debug, to_screen=True)
-    run_dash(debug=debug)
+    run_module(debug=debug)
 
 
 if __name__ == '__main__':

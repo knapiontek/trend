@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 
 from src import tool, config
@@ -55,3 +56,21 @@ def test_time_slices():
 def test_transpose():
     result = tool.transpose([tool.Clazz(key='v1'), tool.Clazz(key='v2')], ['key'])
     assert result == {'key': ['v1', 'v2']}
+
+
+def test_catch_exception(caplog):
+    log = logging.getLogger(__name__)
+
+    @tool.catch_exception(log)
+    def function1():
+        return 1 / 0
+
+    function1()
+    assert 'function1 has failed' in caplog.text
+
+    @tool.catch_exception(log)
+    def function2():
+        return None
+
+    function2()
+    assert 'function2 done' in caplog.text

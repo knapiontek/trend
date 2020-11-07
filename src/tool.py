@@ -1,3 +1,4 @@
+import logging
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -144,3 +145,21 @@ def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Dict[str, List]:
         for k in keys:
             dt[k].append(i[k])
     return dt
+
+
+def catch_exception(logger: logging.Logger):
+    def decorator(function):
+
+        def wrapper(*args, **kwargs):
+            result = None
+            try:
+                result = function(*args, **kwargs)
+            except:
+                logger.exception(f'{function.__name__} has failed')
+            else:
+                logger.exception(f'{function.__name__} done')
+            return result
+
+        return wrapper
+
+    return decorator
