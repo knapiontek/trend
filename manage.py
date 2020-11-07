@@ -51,6 +51,8 @@ def main():
         for engine_name in args.engine or []:
             for action_name in args.security or []:
                 ENGINE_ACTIONS[action_name](ENGINES[engine_name])
+    except KeyboardInterrupt:
+        LOG.info('TrendApp interrupted')
     except:
         LOG.exception('TrendApp failed')
     else:
