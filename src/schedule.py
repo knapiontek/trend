@@ -49,9 +49,12 @@ def run_scheduled_tasks():
                 except:
                     pass
                 finally:
-                    task.running = False
-                    task.last_run = tool.utc_now()
                     LOG.info(f'Task: {task.function.__name__} finished')
+                    if 'last_run' in task:
+                        task.running = False
+                        task.last_run = tool.utc_now()
+                    else:
+                        TASKS.remove(task)
         time.sleep(60)
 
 
@@ -67,7 +70,7 @@ def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
         soon = tool.utc_now() + timedelta(seconds=1)
-        task = tool.Clazz(next_run=soon, last_run=None, running=False, function=maintain_task)
+        task = tool.Clazz(next_run=soon, running=False, function=maintain_task)
         TASKS.append(task)
 
     LOG.info('Listing threads')
