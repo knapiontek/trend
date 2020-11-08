@@ -1,4 +1,5 @@
 import logging
+import threading
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -50,7 +51,7 @@ def to_timestamp(dt: datetime) -> int:
     return int(dt.timestamp())
 
 
-def utc_now():
+def utc_now() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
@@ -58,19 +59,19 @@ DT_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 D_FORMAT = '%Y-%m-%d'
 
 
-def dt_parse(dt: str):
+def dt_parse(dt: str) -> datetime:
     return datetime.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
 
 
-def d_parse(dt: str):
+def d_parse(dt: str) -> datetime:
     return datetime.strptime(dt, D_FORMAT).replace(tzinfo=timezone.utc)
 
 
-def dt_format(dt: datetime):
+def dt_format(dt: datetime) -> str:
     return dt.strftime(DT_FORMAT)
 
 
-def ts_format(ts: int):
+def ts_format(ts: int) -> str:
     dt = from_timestamp(ts)
     return dt_format(dt)
 
@@ -164,3 +165,8 @@ def catch_exception(logger: logging.Logger):
         return wrapper
 
     return decorator
+
+
+def execute(function):
+    thread = threading.Thread(target=function, name=function.__name__)
+    thread.start()

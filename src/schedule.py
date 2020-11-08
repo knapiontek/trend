@@ -18,11 +18,6 @@ def wsgi(environ, start_response):
     return app(environ, start_response)
 
 
-def execute(function):
-    thread = threading.Thread(target=function, name=function.__name__)
-    thread.start()
-
-
 @tool.catch_exception(LOG)
 def maintain_task():
     data.exchange_update()
@@ -45,6 +40,7 @@ def run_scheduled_tasks():
     while True:
         for task in TASKS:
             if task.next_run < tool.utc_now():
+                task.next_run += tool.INTERVAL_1D
                 try:
                     LOG.info(f'Task: {task.function.__name__} started')
                     task.running = True
@@ -62,14 +58,14 @@ if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
-    execute(run_scheduled_tasks)
+    tool.execute(run_scheduled_tasks)
 
 
 @app.route("/schedule", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
-        LOG.info(f'Scheduling {maintain_task.__name__}')
-        execute(maintain_task)
+        LOG.info(f'Executing {maintain_task.__name__}')
+        tool.execute(maintain_task)
 
     LOG.info('Listing threads')
     threads = [
@@ -89,7 +85,7 @@ def schedule_endpoint():
 
 
 def run_module(debug: bool):
-    execute(run_scheduled_tasks)
+    tool.execute(run_scheduled_tasks)
     return app.run(debug=debug)
 
 
