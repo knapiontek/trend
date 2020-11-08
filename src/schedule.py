@@ -2,6 +2,7 @@ import logging
 import sys
 import threading
 import time
+from datetime import timedelta
 
 import orjson as json
 from flask import Flask, request
@@ -64,8 +65,10 @@ if 'gunicorn' in sys.modules:
 @app.route("/schedule", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
-        LOG.info(f'Executing {maintain_task.__name__}')
-        tool.execute(maintain_task)
+        LOG.info(f'Scheduling function {maintain_task.__name__}')
+        soon = tool.utc_now() + timedelta(seconds=1)
+        task = tool.Clazz(next_run=soon, last_run=None, running=False, function=maintain_task)
+        TASKS.append(task)
 
     LOG.info('Listing threads')
     threads = [
