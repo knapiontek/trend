@@ -62,7 +62,7 @@ if 'gunicorn' in sys.modules:
     tool.execute(run_scheduled_tasks)
 
 
-@app.route("/schedule", methods=['GET', 'POST'])
+@app.route("/schedule/", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
