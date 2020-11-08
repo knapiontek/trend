@@ -1,36 +1,42 @@
+import logging
 import sys
 import time
 from typing import Union, Sized
 
 from src import config
 
+LOG = logging.getLogger(__name__)
+
 SPACES = ' ' * 43
-
-
-def print_line(message: str):
-    sys.stdout.write(message)
-    sys.stdout.flush()
 
 
 class Progress:
     def __init__(self, title: str, size: Union[int, Sized]):
-        self.count = -1
+        self.count = 0
         self.title = title
         self.length = len(size) if isinstance(size, Sized) else size
+        self.last_message = None
 
     def __enter__(self) -> 'Progress':
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not exc_type:
+        if exc_type:
+            if self.last_message:
+                LOG.warning(self.last_message)
+        else:
             if self.length:
-                self.count += 1
-                print_line(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
+                self.print(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
                 assert self.count == self.length
             else:
-                print_line(f'{self.title}: done{SPACES}\n')
+                self.print(f'{self.title}: done{SPACES}\n')
 
     def __call__(self, message: str):
+        self.print(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
         self.count += 1
-        print_line(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
         time.sleep(config.loop_delay())
+
+    def print(self, message: str):
+        sys.stdout.write(message)
+        sys.stdout.flush()
+        self.last_message = message

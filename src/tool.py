@@ -160,6 +160,7 @@ def catch_exception(logger: logging.Logger):
                 logger.exception(f'{function.__name__} done')
             return result
 
+        wrapper.__name__ = function.__name__
         return wrapper
 
     return decorator

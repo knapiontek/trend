@@ -25,7 +25,6 @@ def execute(function):
 
 @tool.catch_exception(LOG)
 def maintain_task():
-    LOG.info(f'Running task: {maintain_task.__name__}')
     data.exchange_update()
     for engine in (yahoo, exante, stooq):
         data.security_update(engine)
@@ -37,23 +36,25 @@ TASKS = [tool.Clazz(hour=2, minute=30, next_run=None, last_run=None, running=Fal
 
 
 def run_scheduled_tasks():
+    for task in TASKS:
+        utc_now = tool.utc_now()
+        task.next_run = utc_now.replace(hour=task.hour, minute=task.minute)
+        if task.next_run < utc_now:
+            task.next_run += tool.INTERVAL_1D
+
     while True:
         for task in TASKS:
-            if task.next_run:
-                if task.next_run < tool.utc_now():
-                    try:
-                        task.running = True
-                        task.function()
-                    except:
-                        pass
-                    finally:
-                        task.running = False
-                        task.last_run = tool.utc_now()
-            else:
-                now = tool.utc_now()
-                task.next_run = now.replace(hour=task.hour, minute=task.minute)
-                if task.next_run < now:
-                    task.next_run += tool.INTERVAL_1D
+            if task.next_run < tool.utc_now():
+                try:
+                    LOG.info(f'Task: {task.function.__name__} started')
+                    task.running = True
+                    task.function()
+                except:
+                    pass
+                finally:
+                    task.running = False
+                    task.last_run = tool.utc_now()
+                    LOG.info(f'Task: {task.function.__name__} finished')
         time.sleep(60)
 
 
@@ -64,7 +65,7 @@ if 'gunicorn' in sys.modules:
     execute(run_scheduled_tasks)
 
 
-@app.route("/schedule/", methods=['GET', 'POST'])
+@app.route("/schedule", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling {maintain_task.__name__}')
@@ -79,7 +80,12 @@ def schedule_endpoint():
         }
         for thread in threading.enumerate()
     ]
-    return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2).decode('utf-8')
+
+    def default(obj):
+        if callable(obj):
+            return obj.__name__
+
+    return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
 
 
 def run_module(debug: bool):
