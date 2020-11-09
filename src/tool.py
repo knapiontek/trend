@@ -158,7 +158,7 @@ def catch_exception(logger: logging.Logger):
             except:
                 logger.exception(f'{function.__name__} has failed')
             else:
-                logger.exception(f'{function.__name__} done')
+                logger.info(f'{function.__name__} done')
             return result
 
         wrapper.__name__ = function.__name__

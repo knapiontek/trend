@@ -2,7 +2,6 @@ import logging
 import sys
 import threading
 import time
-from datetime import timedelta
 
 import orjson as json
 from flask import Flask, request
@@ -28,29 +27,37 @@ def maintain_task():
         data.security_analyse(engine)
 
 
-TASKS = [tool.Clazz(hour=2, minute=30, next_run=None, last_run=None, running=False, function=maintain_task)]
+TASKS = [
+    tool.Clazz(interval=tool.INTERVAL_1D,
+               hour=2,
+               minute=30,
+               next_run=None,
+               last_run=None,
+               running=False,
+               function=maintain_task)
+]
 
 
 def run_scheduled_tasks():
     for task in TASKS:
         utc_now = tool.utc_now()
-        task.next_run = utc_now.replace(hour=task.hour, minute=task.minute)
+        task.next_run = utc_now.replace(hour=task.hour, minute=task.minute, second=0, microsecond=0)
         if task.next_run < utc_now:
-            task.next_run += tool.INTERVAL_1D
+            task.next_run += task.interval
 
     while True:
         for task in TASKS:
             if task.next_run < tool.utc_now():
-                task.next_run += tool.INTERVAL_1D
+                task.next_run += task.interval
                 try:
-                    LOG.info(f'Task: {task.function.__name__} started')
+                    LOG.info(f'Task: {task.function.__name__} has started')
                     task.running = True
                     task.function()
                 except:
                     pass
                 finally:
-                    LOG.info(f'Task: {task.function.__name__} finished')
-                    if 'last_run' in task:
+                    LOG.info(f'Task: {task.function.__name__} has finished')
+                    if 'interval' in task:
                         task.running = False
                         task.last_run = tool.utc_now()
                     else:
@@ -69,8 +76,7 @@ if 'gunicorn' in sys.modules:
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
-        soon = tool.utc_now() + timedelta(seconds=1)
-        task = tool.Clazz(next_run=soon, running=False, function=maintain_task)
+        task = tool.Clazz(next_run=tool.utc_now(), running=False, function=maintain_task)
         TASKS.append(task)
 
     LOG.info('Listing threads')
