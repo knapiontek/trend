@@ -1,13 +1,13 @@
+import atexit
 import logging
 import sys
 import threading
-import time
 from datetime import timedelta
 
 import orjson as json
 from flask import Flask, request
 
-from src import data, log, yahoo, exante, stooq, config, tool
+from src import data, log, yahoo, exante, stooq, config, tool, flow
 
 LOG = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def run_scheduled_tasks():
         if task.next_run < utc_now:
             task.next_run += task.interval
 
-    while True:
+    while flow.wait(60):
         for task in TASKS:
             if task.next_run < tool.utc_now():
                 task.next_run += task.interval
@@ -63,7 +63,6 @@ def run_scheduled_tasks():
                         task.last_run = tool.utc_now()
                     else:
                         TASKS.remove(task)
-        time.sleep(60)
 
 
 if 'gunicorn' in sys.modules:
@@ -80,7 +79,7 @@ def schedule_endpoint():
         task = tool.Clazz(next_run=tool.utc_now(), running=False, function=maintain_task)
         TASKS.append(task)
 
-    LOG.info('Listing threads')
+    LOG.info('Listing threads and tasks')
     threads = [
         {
             'name': thread.name,
@@ -97,6 +96,11 @@ def schedule_endpoint():
             return str(obj)
 
     return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
+
+
+@atexit.register
+def shutdown():
+    flow.shutdown()
 
 
 def run_module(debug: bool):

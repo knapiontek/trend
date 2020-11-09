@@ -1,12 +1,11 @@
 import csv
 import logging
 import re
-import time
 from datetime import datetime, timedelta, timezone
 from io import StringIO
 from typing import List, Dict, Optional
 
-from src import tool, store, session, config
+from src import tool, store, session, config, flow
 
 LOG = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ class Session(session.Session):
         return self
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
-        time.sleep(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the progress
+        flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []

@@ -1,11 +1,25 @@
 import logging
 import sys
-import time
+import threading
 from typing import Union, Sized
 
 from src import config
 
 LOG = logging.getLogger(__name__)
+
+EXIT_EVENT = threading.Event()
+
+
+def shutdown():
+    LOG.info('Shutting down the system')
+    EXIT_EVENT.set()
+
+
+def wait(timeout: float) -> bool:
+    if EXIT_EVENT.is_set():
+        raise KeyboardInterrupt()
+    return EXIT_EVENT.wait(timeout)
+
 
 SPACES = ' ' * 43
 
@@ -34,7 +48,7 @@ class Progress:
     def __call__(self, message: str):
         self.print(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
         self.count += 1
-        time.sleep(config.loop_delay())
+        wait(config.loop_delay())
 
     def print(self, message: str):
         sys.stdout.write(message)

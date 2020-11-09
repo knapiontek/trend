@@ -78,6 +78,7 @@ trade break-outs with build-up
 - time to sell
 
 ### Market Sentiment
+
 - PUT/CALL ratio
 - Sentiment Research
 - Funds cash flow
@@ -85,6 +86,23 @@ trade break-outs with build-up
 - Truck Tonnage vs S&P500
 - Fear & Greed Index
 - Dollar Index (reverse correlation to the stock)
+
+### Global Financial Indices
+
+- Euro Stoxx 50	Strefa
+- DAX	Niemcy
+- FTSE 100	W.Brytania
+- CAC 40	Francja
+- IBEX 35	Hiszpania
+- FTSE MIB	Włochy
+- ASE	Grecja
+- BUX	Węgry
+- PX	Czechy
+- RTS INDEX (w USD)	Rosja
+- BIST 100	Turcja
+- WIG 20	Polska
+- WIG	Polska
+- mWIG 40	Polska
 
 # CLI
 

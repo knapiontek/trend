@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-from src import tool, config, session, store, progress
+from src import tool, config, session, store, flow
 
 LOG = logging.getLogger(__name__)
 
@@ -112,9 +112,9 @@ class Session(session.Session):
                     # streaming to the zip file
                     zip_path_pending = zip_path.with_suffix('.pending')
                     with zip_path_pending.open('wb') as zip_io:
-                        with progress.Progress(message, size) as progrezz:
+                        with flow.Progress(message, size) as progress:
                             for chunk in response.iter_content(URL_CHUNK_SIZE):
-                                progrezz('+')
+                                progress('+')
                                 zip_io.write(chunk)
                     zip_path_pending.rename(zip_path)
 
