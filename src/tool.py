@@ -155,8 +155,10 @@ def catch_exception(logger: logging.Logger):
             result = None
             try:
                 result = function(*args, **kwargs)
+            except KeyboardInterrupt:
+                logger.info(f'{function.__name__} interrupted')
             except:
-                logger.exception(f'{function.__name__} has failed')
+                logger.exception(f'{function.__name__} failed')
             else:
                 logger.info(f'{function.__name__} done')
             return result

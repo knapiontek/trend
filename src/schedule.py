@@ -1,4 +1,3 @@
-import atexit
 import logging
 import sys
 import threading
@@ -96,11 +95,6 @@ def schedule_endpoint():
             return str(obj)
 
     return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
-
-
-@atexit.register
-def shutdown():
-    flow.shutdown()
 
 
 def run_module(debug: bool):

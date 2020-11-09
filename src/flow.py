@@ -1,3 +1,4 @@
+import atexit
 import logging
 import sys
 import threading
@@ -10,15 +11,18 @@ LOG = logging.getLogger(__name__)
 EXIT_EVENT = threading.Event()
 
 
+def wait(timeout: float) -> bool:
+    """:returns True except shutdown has been triggered"""
+    is_set = EXIT_EVENT.wait(timeout)
+    if is_set:
+        raise KeyboardInterrupt()
+    return True
+
+
+@atexit.register
 def shutdown():
     LOG.info('Shutting down the system')
     EXIT_EVENT.set()
-
-
-def wait(timeout: float) -> bool:
-    if EXIT_EVENT.is_set():
-        raise KeyboardInterrupt()
-    return EXIT_EVENT.wait(timeout)
 
 
 SPACES = ' ' * 43
