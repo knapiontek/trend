@@ -2,6 +2,7 @@ import logging
 import sys
 import threading
 import time
+from datetime import timedelta
 
 import orjson as json
 from flask import Flask, request
@@ -92,6 +93,8 @@ def schedule_endpoint():
     def default(obj):
         if callable(obj):
             return obj.__name__
+        elif isinstance(obj, timedelta):
+            return str(obj)
 
     return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
 
