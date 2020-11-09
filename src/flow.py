@@ -13,9 +13,11 @@ EXIT_EVENT = threading.Event()
 
 def wait(timeout: float) -> bool:
     """:returns True except shutdown has been triggered"""
-    is_set = EXIT_EVENT.wait(timeout)
-    if is_set:
+    LOG.info(f'waiting {timeout} ...')
+    if EXIT_EVENT.wait(timeout):
+        LOG.info(f'raise KeyboardInterrupt()')
         raise KeyboardInterrupt()
+    LOG.info('back from waiting')
     return True
 
 
@@ -23,6 +25,12 @@ def wait(timeout: float) -> bool:
 def shutdown():
     LOG.info('Shutting down the system')
     EXIT_EVENT.set()
+
+
+def execute(function):
+    thread = threading.Thread(target=function, name=function.__name__)
+    thread.daemon = True
+    thread.start()
 
 
 SPACES = ' ' * 43

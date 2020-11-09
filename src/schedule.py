@@ -45,7 +45,7 @@ def run_scheduled_tasks():
         if task.next_run < utc_now:
             task.next_run += task.interval
 
-    while flow.wait(60):
+    while flow.wait(60.0):
         for task in TASKS:
             if task.next_run < tool.utc_now():
                 task.next_run += task.interval
@@ -68,14 +68,14 @@ if 'gunicorn' in sys.modules:
     gunicorn_logger = logging.getLogger('gunicorn.error')
     logging.basicConfig(level=gunicorn_logger.level, handlers=gunicorn_logger.handlers)
     logging.getLogger('urllib3').setLevel(logging.INFO)
-    tool.execute(run_scheduled_tasks)
+    flow.execute(run_scheduled_tasks)
 
 
 @app.route("/schedule/", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
-        task = tool.Clazz(next_run=tool.utc_now(), running=False, function=maintain_task)
+        task = tool.Clazz(next_run=tool.utc_now().replace(microsecond=0), running=False, function=maintain_task)
         TASKS.append(task)
 
     LOG.info('Listing threads and tasks')
@@ -98,7 +98,7 @@ def schedule_endpoint():
 
 
 def run_module(debug: bool):
-    tool.execute(run_scheduled_tasks)
+    flow.execute(run_scheduled_tasks)
     return app.run(debug=debug)
 
 

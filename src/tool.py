@@ -1,5 +1,4 @@
 import logging
-import threading
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -167,8 +166,3 @@ def catch_exception(logger: logging.Logger):
         return wrapper
 
     return decorator
-
-
-def execute(function):
-    thread = threading.Thread(target=function, name=function.__name__)
-    thread.start()
