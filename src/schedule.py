@@ -48,7 +48,6 @@ def run_scheduled_tasks():
     while flow.wait(60.0):
         for task in TASKS:
             if task.next_run < tool.utc_now():
-                task.next_run += task.interval
                 try:
                     LOG.info(f'Task: {task.function.__name__} has started')
                     task.running = True
@@ -58,8 +57,9 @@ def run_scheduled_tasks():
                 finally:
                     LOG.info(f'Task: {task.function.__name__} has finished')
                     if 'interval' in task:
-                        task.running = False
+                        task.next_run += task.interval
                         task.last_run = tool.utc_now()
+                        task.running = False
                     else:
                         TASKS.remove(task)
 
