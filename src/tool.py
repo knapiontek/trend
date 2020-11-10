@@ -143,7 +143,7 @@ def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Dict[str, List]:
     dt = defaultdict(list)
     for i in items:
         for k in keys:
-            dt[k].append(i[k])
+            dt[k].append(i.get(k))
     return dt
 
 
