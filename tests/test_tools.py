@@ -58,19 +58,24 @@ def test_transpose():
     assert result == {'key': ['v1', 'v2']}
 
 
+def test_no_exception(caplog):
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+
+    @tool.catch_exception(log)
+    def function_x():
+        return None
+
+    function_x()
+    assert 'function_x done' in caplog.text
+
+
 def test_catch_exception(caplog):
     log = logging.getLogger(__name__)
 
     @tool.catch_exception(log)
-    def function1():
+    def function_x():
         return 1 / 0
 
-    function1()
-    assert 'function1 has failed' in caplog.text
-
-    @tool.catch_exception(log)
-    def function2():
-        return None
-
-    function2()
-    assert 'function2 done' in caplog.text
+    function_x()
+    assert 'function_x failed' in caplog.text

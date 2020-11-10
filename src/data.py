@@ -174,7 +174,7 @@ def security_analyse(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_analyse.__name__} engine: {engine_name}')
 
-    w_size = 100
+    w_sizes = [50, 100, 200]
     interval = tool.INTERVAL_1D
 
     for exchange_name in config.ACTIVE_EXCHANGES:
@@ -186,8 +186,9 @@ def security_analyse(engine: Any):
                 progress(security.symbol)
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
-                    analyse.sma(time_series, w_size)
-                    analyse.vma(time_series, w_size)
+                    for w_size in w_sizes:
+                        analyse.sma(time_series, w_size)
+                        analyse.vma(time_series, w_size)
                     analyse.reduce(time_series, config.max_time_series_order())
                     security_series |= time_series
 

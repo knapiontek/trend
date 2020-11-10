@@ -35,10 +35,7 @@ def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
                           close=float(dt['Close']),
                           low=float(dt['Low']),
                           high=float(dt['High']),
-                          volume=int(dt['Volume']),
-                          sma=0.0,
-                          vma=0.0,
-                          order=0)
+                          volume=int(dt['Volume']))
     except:
         return None
 

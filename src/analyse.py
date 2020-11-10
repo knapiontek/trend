@@ -66,15 +66,21 @@ def reduce(series: List[tool.Clazz], max_order: int) -> List[tool.Clazz]:
 def sma(series: List[tool.Clazz], w_size: int):
     if len(series) < w_size:
         return series
+    name = f'sma-{w_size}'
     for window in windowed(series, w_size):
-        closes = [s.close for s in window]
-        window[-1].sma = sum(closes) / w_size
+        last = window[-1]
+        if name not in last:
+            closes = [s.close for s in window]
+            last[name] = sum(closes) / w_size
 
 
 def vma(series: List[tool.Clazz], w_size: int):
     if len(series) < w_size:
         return series
+    name = f'vma-{w_size}'
     for window in windowed(series, w_size):
-        weighted_closes = [s.close * s.volume for s in window]
-        volumes = [s.volume for s in window]
-        window[-1].vma = sum(weighted_closes) / sum(volumes)
+        last = window[-1]
+        if name not in last:
+            weighted_closes = [s.close * s.volume for s in window]
+            volumes = [s.volume for s in window]
+            last[name] = sum(weighted_closes) / sum(volumes)

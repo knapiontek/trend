@@ -111,7 +111,7 @@ SECURITY_SCHEMA = {
     'level': 'strict',
     'rule': {
         'type': 'object',
-        'additionalProperties': False,
+        'additionalProperties': True,
         'properties': {
             'symbol': {'type': 'string'},
             'timestamp': {'type': 'integer'},
@@ -119,11 +119,8 @@ SECURITY_SCHEMA = {
             'close': {'type': 'number', 'format': 'float'},
             'low': {'type': 'number', 'format': 'float'},
             'high': {'type': 'number', 'format': 'float'},
-            'volume': {'type': 'integer'},
-            'sma': {'type': 'number', 'format': 'float'},
-            'vma': {'type': 'number', 'format': 'float'},
-            'order': {'type': 'integer'}
+            'volume': {'type': 'integer'}
         },
-        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume', 'sma', 'vma', 'order']
+        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
     }
 }

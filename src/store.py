@@ -43,18 +43,18 @@ def db_connect() -> StandardDatabase:
     return db
 
 
-def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, schema: Dict):
+def create_collection(db: StandardDatabase, name: str, unique_fields: Tuple, _schema: Dict):
     if not db.has_collection(name):
-        collection = db.create_collection(name=name, schema=schema)
+        collection = db.create_collection(name=name, schema=_schema)
         collection.add_hash_index(fields=unique_fields, unique=True)
 
 
 class Series:
-    def __init__(self, name: str, editable: bool, unique_fields: Tuple, schema: Dict):
+    def __init__(self, name: str, editable: bool, unique_fields: Tuple, _schema: Dict):
         self.name = name
         self.editable = editable
         self.db = db_connect()
-        create_collection(self.db, self.name, unique_fields, schema)
+        create_collection(self.db, self.name, unique_fields, _schema)
 
     def __enter__(self):
         write = self.name if self.editable else None

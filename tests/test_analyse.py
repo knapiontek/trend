@@ -3,36 +3,16 @@ import orjson as json
 from src import analyse, tool, config
 
 SERIES = [
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1514851200,
-               open=1.0, close=1.0, low=1.0, high=1.0, volume=3, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1514937600,
-               open=1.0, close=2.0, low=1.0, high=1.0, volume=8, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515024000,
-               open=1.0, close=3.0, low=1.0, high=1.0, volume=1, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515110400,
-               open=1.0, close=4.0, low=1.0, high=1.0, volume=13, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515196800,
-               open=1.0, close=5.0, low=1.0, high=1.0, volume=23, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515369600,
-               open=1.0, close=4.0, low=1.0, high=1.0, volume=8, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515456000,
-               open=1.0, close=3.0, low=1.0, high=1.0, volume=4, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515542400,
-               open=1.0, close=4.0, low=1.0, high=1.0, volume=31, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515628800,
-               open=1.0, close=5.0, low=1.0, high=1.0, volume=14, sma=0.0, vma=0.0, order=0),
-    tool.Clazz(symbol='XOM.NYSE',
-               timestamp=1515715200,
-               open=1.0, close=6.0, low=1.0, high=1.0, volume=15, sma=0.0, vma=0.0, order=0)
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1514851200, open=1.0, close=1.0, low=1.0, high=1.0, volume=3),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1514937600, open=1.0, close=2.0, low=1.0, high=1.0, volume=8),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515024000, open=1.0, close=3.0, low=1.0, high=1.0, volume=1),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515110400, open=1.0, close=4.0, low=1.0, high=1.0, volume=13),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515196800, open=1.0, close=5.0, low=1.0, high=1.0, volume=23),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515369600, open=1.0, close=4.0, low=1.0, high=1.0, volume=8),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515456000, open=1.0, close=3.0, low=1.0, high=1.0, volume=4),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515542400, open=1.0, close=4.0, low=1.0, high=1.0, volume=31),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515628800, open=1.0, close=5.0, low=1.0, high=1.0, volume=14),
+    tool.Clazz(symbol='XOM.NYSE', timestamp=1515715200, open=1.0, close=6.0, low=1.0, high=1.0, volume=15)
 ]
 
 
@@ -57,7 +37,7 @@ def test_reduce_1():
 def test_sma():
     series = SERIES[:]
     analyse.sma(series, 3)
-    sma = [(s.timestamp, s.sma) for s in series[2:]]
+    sma = [(s.timestamp, s['sma-3']) for s in series if 'sma-3' in s]
     assert sma == [(1515024000, 2.0),
                    (1515110400, 3.0),
                    (1515196800, 4.0),
@@ -71,7 +51,7 @@ def test_sma():
 def test_vma():
     series = SERIES[:]
     analyse.vma(series, 3)
-    vma = [(s.timestamp, s.vma) for s in series[2:]]
+    vma = [(s.timestamp, s['vma-3']) for s in series if 'vma-3' in s]
     assert vma == [(1515024000, 1.8333333333333333),
                    (1515110400, 3.227272727272727),
                    (1515196800, 4.594594594594595),
