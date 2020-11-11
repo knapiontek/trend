@@ -197,11 +197,13 @@ def security_analyse(engine: Any):
 
 def main():
     log.init(__file__, debug=True, to_screen=True)
-    exchange_update()
+
     from src import stooq as engine
-    security_range(engine)
-    security_update(engine)
-    security_verify(engine)
+
+    # exchange_update()
+    # security_range(engine)
+    # security_update(engine)
+    # security_verify(engine)
     security_analyse(engine)
 
 

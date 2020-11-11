@@ -81,4 +81,4 @@ class Session(session.Session):
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None, order: bool = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
-        super().__init__(name, editable, dt_from or config.datetime_from(), order or 0)
+        super().__init__(name, editable, dt_from, order)
