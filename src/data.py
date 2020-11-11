@@ -46,7 +46,7 @@ def exchange_update():
     indices = read_major_indices()
     shortables = exante.read_shortables()
 
-    store.exchange_clean()
+    store.exchange_erase()
     with store.ExchangeSeries(editable=True) as exchange_series:
         with exante.Session() as session:
             for name in config.ACTIVE_EXCHANGES:
@@ -170,6 +170,27 @@ def security_verify(engine: Any):
                 exchange_series |= securities
 
 
+def security_clean(engine: Any):
+    engine_name = tool.module_name(engine.__name__)
+    LOG.info(f'>> {security_clean.__name__} engine: {engine_name}')
+
+    interval = tool.INTERVAL_1D
+
+    for exchange_name in config.ACTIVE_EXCHANGES:
+        with store.ExchangeSeries() as exchange_series:
+            securities = exchange_series[exchange_name]
+
+        with flow.Progress(f'security-clean {exchange_name}', securities) as progress:
+            for security in securities:
+                progress(security.symbol)
+                with engine.SecuritySeries(interval, editable=True) as security_series:
+                    time_series = security_series[security.symbol]
+                    analyse.clean(time_series)
+                    security_series |= time_series
+
+        LOG.info(f'Securities: {len(securities)} cleaned in the exchange: {exchange_name}')
+
+
 def security_analyse(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_analyse.__name__} engine: {engine_name}')
@@ -204,7 +225,8 @@ def main():
     # security_range(engine)
     # security_update(engine)
     # security_verify(engine)
-    security_analyse(engine)
+    security_clean(engine)
+    # security_analyse(engine)
 
 
 if __name__ == '__main__':

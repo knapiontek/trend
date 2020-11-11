@@ -7,13 +7,14 @@ from src import log, data, store, yahoo, exante, stooq
 
 LOG = logging.getLogger(__name__)
 
-EXCHANGE_ACTIONS = dict(clean=store.exchange_clean,
+EXCHANGE_ACTIONS = dict(erase=store.exchange_erase,
                         update=data.exchange_update)
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-ENGINE_ACTIONS = dict(clean=store.security_clean,
+ENGINE_ACTIONS = dict(erase=store.security_erase,
                       range=data.security_range,
                       update=data.security_update,
                       verify=data.security_verify,
+                      clean=data.security_clean,
                       analyse=data.security_analyse)
 
 

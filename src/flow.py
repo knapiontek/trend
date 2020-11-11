@@ -12,7 +12,7 @@ EXIT_EVENT = threading.Event()
 
 
 def wait(timeout: float) -> bool:
-    """:returns True except shutdown has been triggered"""
+    """:returns True except the shutdown has been triggered"""
     if EXIT_EVENT.wait(timeout):
         raise KeyboardInterrupt()
     return True

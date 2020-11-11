@@ -74,7 +74,7 @@ class Series:
         return self.verify_result(result)
 
     def __ior__(self, series: List[tool.Clazz]) -> 'Series':
-        result = self.tnx_collection.update_many(series)
+        result = self.tnx_collection.update_many(series, keep_none=False)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'Series':
@@ -130,26 +130,26 @@ class SecuritySeries(Series):
         return [tool.Clazz(**r) for r in records]
 
 
-def exchange_clean():
-    LOG.info(f'>> {exchange_clean.__name__}')
+def exchange_erase():
+    LOG.info(f'>> {exchange_erase.__name__}')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith('exchange'):
-            LOG.debug(f'Cleaning arango collection: {name}')
+            LOG.debug(f'Erasing arango collection: {name}')
             deleted = db.delete_collection(name)
             assert deleted
 
 
-def security_clean(engine: Any):
+def security_erase(engine: Any):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_clean.__name__}({engine_name})')
+    LOG.info(f'>> {security_erase.__name__}({engine_name})')
 
     db = db_connect()
     names = [c['name'] for c in db.collections()]
     for name in names:
         if name.startswith(f'security_{tool.module_name(engine.__name__)}'):
-            LOG.debug(f'Cleaning arango collection: {name}')
+            LOG.debug(f'Erasing arango collection: {name}')
             deleted = db.delete_collection(name)
             assert deleted
