@@ -74,7 +74,7 @@ class Series:
         return self.verify_result(result)
 
     def __ior__(self, series: List[tool.Clazz]) -> 'Series':
-        result = self.tnx_collection.update_many(series, keep_none=False)
+        result = self.tnx_collection.replace_many(series)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'Series':
