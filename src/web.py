@@ -1,7 +1,6 @@
 import logging
 import re
 import sys
-from datetime import date
 from typing import Dict, List
 
 import dash
@@ -12,7 +11,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
-from src import store, tool, yahoo, config, log, exante, stooq
+from src import config, log, tool, store, yahoo, exante, stooq
 
 LOG = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              value=list(ENGINES.keys())[0],
                              placeholder='engine', className='choice')
 
-date_choice = dcc.DatePickerSingle(id='date-from', date=date(2017, 1, 1),
+date_choice = dcc.DatePickerSingle(id='date-from', date=config.datetime_from().date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
 order_choice = dcc.Slider(id='order-choice', min=0, max=config.max_time_series_order(),
@@ -174,13 +173,13 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-100', 'volume'))
+            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-50', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
             custom = [s.to_dict() for s in time_series]
 
             # create traces
             close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
-            vma_100_trace = go.Scatter(x=dates, y=trans['vma-100'], name='VMA-100', line=dict(width=1.5))
+            vma_100_trace = go.Scatter(x=dates, y=trans['vma-50'], name='VMA-50', line=dict(width=1.5))
             volume_trace = go.Bar(x=dates, y=trans['volume'], name='Volume')
 
             # create a graph

@@ -6,7 +6,7 @@ import orjson as json
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from src import store, tool, exante, log, config, analyse, flow
+from src import log, config, tool, flow, store, exante, analyse
 
 LOG = logging.getLogger(__name__)
 
