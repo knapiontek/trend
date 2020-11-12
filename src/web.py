@@ -179,13 +179,13 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
 
             # create traces
             close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
-            vma_100_trace = go.Scatter(x=dates, y=trans['vma-50'], name='VMA-50', line=dict(width=1.5))
+            vma_50_trace = go.Scatter(x=dates, y=trans['vma-50'], name='VMA-50', line=dict(width=1.5))
             volume_trace = go.Bar(x=dates, y=trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
             figure.add_trace(close_trace, row=1, col=1)
-            figure.add_trace(vma_100_trace, row=1, col=1)
+            figure.add_trace(vma_50_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
