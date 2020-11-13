@@ -39,9 +39,9 @@ def datetime_from() -> datetime:
     return tool.dt_parse(config['system']['date-time-from'])
 
 
-def max_time_series_order() -> int:
+def max_grade() -> int:
     config = load_file()
-    return config['system']['max-time-series-order']
+    return config['system']['max-grade']
 
 
 def exante_auth() -> Tuple[str, str]:

@@ -70,11 +70,11 @@ class Series:
                 self.tnx_db.commit_transaction()
 
     def __iadd__(self, series: List[tool.Clazz]) -> 'Series':
-        result = self.tnx_collection.insert_many(series)
+        result = self.tnx_collection.insert_many(series, sync=True)
         return self.verify_result(result)
 
     def __ior__(self, series: List[tool.Clazz]) -> 'Series':
-        result = self.tnx_collection.replace_many(series)
+        result = self.tnx_collection.replace_many(series, sync=True)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'Series':
@@ -101,10 +101,10 @@ class ExchangeSeries(Series):
 
 
 class SecuritySeries(Series):
-    def __init__(self, name: str, editable: bool, dt_from: datetime, order: bool):
+    def __init__(self, name: str, editable: bool, dt_from: datetime, grade: bool):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
         self.ts_from = tool.to_timestamp(dt_from or config.datetime_from())
-        self.order = order
+        self.grade = grade
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
@@ -112,10 +112,10 @@ class SecuritySeries(Series):
                 SORT datum.timestamp
                 FILTER datum.symbol == @symbol
                     AND datum.timestamp >= @timestamp
-                    AND (@order == NULL OR datum.order >= @order)
+                    AND (@grade == NULL OR datum.grade >= @grade)
                 RETURN datum
         '''
-        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from, 'order': self.order}
+        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from, 'grade': self.grade}
         records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
         return [tool.Clazz(**r) for r in records]
 

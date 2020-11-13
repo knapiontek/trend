@@ -213,7 +213,7 @@ def security_analyse(engine: Any):
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                    analyse.reduce(time_series, config.max_time_series_order())
+                    analyse.reduce(time_series, config.max_grade())
                     security_series |= time_series
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')

@@ -51,8 +51,8 @@ engine_choice = dcc.Dropdown(id='engine-choice',
 date_choice = dcc.DatePickerSingle(id='date-from', date=config.datetime_from().date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-order_choice = dcc.Slider(id='order-choice', min=0, max=config.max_time_series_order(),
-                          marks={i: f'Order.{i}' for i in range(config.max_time_series_order() + 1)}, value=1)
+grade_choice = dcc.Slider(id='grade-choice', min=0, max=config.max_grade(),
+                          marks={i: f'Grade.{i}' for i in range(config.max_grade() + 1)}, value=1)
 
 
 def table_style(**kwargs):
@@ -91,7 +91,7 @@ app.layout = dbc.Row(
         dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
             dbc.Row([dbc.Col(date_choice), dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
-            dbc.Row(dbc.Col(order_choice), className='frame'),
+            dbc.Row(dbc.Col(grade_choice), className='frame'),
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
@@ -156,10 +156,10 @@ def cb_relayout_data(relayout_data):
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
-               Input('order-choice', 'value'),
+               Input('grade-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
               State('relayout-data', 'data'))
-def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_data):
+def cb_series_graph(d_from, engine_name, grade, data, selected_rows, relayout_data):
     if engine_name and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
@@ -168,7 +168,7 @@ def cb_series_graph(d_from, engine_name, order, data, selected_rows, relayout_da
         # engine series
         engine = ENGINES[engine_name]
         dt_from = tool.d_parse(d_from)
-        with engine.SecuritySeries(interval, dt_from=dt_from, order=order) as security_series:
+        with engine.SecuritySeries(interval, dt_from=dt_from, grade=grade) as security_series:
             time_series = security_series[symbol]
 
         if time_series:

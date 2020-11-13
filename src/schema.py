@@ -20,9 +20,9 @@ CONFIG_SCHEMA = {
             'properties': {
                 'loop-delay': {'type': 'number', 'format': 'float'},
                 'date-time-from': {'type': 'string', 'format': 'date-time'},
-                'max-time-series-order': {'type': 'integer'}
+                'max-grade': {'type': 'integer'}
             },
-            'required': ['loop-delay', 'date-time-from', 'max-time-series-order']
+            'required': ['loop-delay', 'date-time-from', 'max-grade']
         },
         'Exante': {
             'type': 'object',
