@@ -88,5 +88,7 @@ def vma(series: List[tool.Clazz], w_size: int):
             if name not in last:
                 weighted_closes = [s.close * s.volume for s in window]
                 volumes = [s.volume for s in window]
-                last[name] = sum(weighted_closes) / sum(volumes)
+                sum_volumes = sum(volumes)
+                if sum_volumes:
+                    last[name] = sum(weighted_closes) / sum_volumes
     return series

@@ -88,7 +88,7 @@ class Series:
 
 class ExchangeSeries(Series):
     def __init__(self, editable=False):
-        super().__init__('exchange', editable, ('exchange', 'short-symbol'), schema.EXCHANGE_SCHEMA)
+        super().__init__('exchange', editable, ('exchange', 'short_symbol'), schema.EXCHANGE_SCHEMA)
 
     def __getitem__(self, exchange: str) -> List[tool.Clazz]:
         query = '''

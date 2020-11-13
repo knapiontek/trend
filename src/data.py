@@ -10,6 +10,8 @@ from src import log, config, tool, flow, store, exante, analyse
 
 LOG = logging.getLogger(__name__)
 
+remote_retry = retry(stop=stop_after_attempt(2), wait=wait_fixed(100))
+
 INDEX_SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
 INDEX_FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
 INDEX_WIG30 = ('https://en.wikipedia.org/wiki/WIG30', 0, 'Symbol', '')
@@ -40,27 +42,28 @@ HEALTH_DEFAULT = {
 }
 
 
+@remote_retry
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
 
     indices = read_major_indices()
     shortables = exante.read_shortables()
 
-    store.exchange_erase()
     with store.ExchangeSeries(editable=True) as exchange_series:
         with exante.Session() as session:
-            for name in config.ACTIVE_EXCHANGES:
-                exchange_index = indices[name]
-                securities = session.securities(name)
+            for exchange_name in config.ACTIVE_EXCHANGES:
+                exchange_index = indices[exchange_name]
+                exchange_symbols = [s.symbol for s in exchange_series[exchange_name]]
+                exante_securities = session.securities(exchange_name)
                 documents = [
-                    tool.Clazz(**security,
+                    tool.Clazz(security,
                                **HEALTH_DEFAULT,
-                               shortable=security['symbol'] in shortables)
-                    for security in securities
-                    if security['short-symbol'] in exchange_index
+                               shortable=security.symbol in shortables)
+                    for security in exante_securities
+                    if security.short_symbol in exchange_index and security.symbol not in exchange_symbols
                 ]
                 exchange_series += documents
-                LOG.info(f'Securities: {len(documents)} imported to the exchange: {name}')
+                LOG.info(f'Securities: {len(documents)} imported to the exchange: {exchange_name}')
 
 
 def security_range(engine: Any):
@@ -75,7 +78,7 @@ def security_range(engine: Any):
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-@retry(stop=stop_after_attempt(2), wait=wait_fixed(100))
+@remote_retry
 def security_update(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_update.__name__} engine: {engine_name}')
@@ -221,12 +224,12 @@ def main():
 
     from src import stooq as engine
 
-    # exchange_update()
-    # security_range(engine)
-    # security_update(engine)
-    # security_verify(engine)
+    exchange_update()
+    security_range(engine)
+    security_update(engine)
+    security_verify(engine)
     security_clean(engine)
-    # security_analyse(engine)
+    security_analyse(engine)
 
 
 if __name__ == '__main__':

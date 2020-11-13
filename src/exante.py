@@ -45,18 +45,18 @@ class Session(session.Session):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
 
-    def securities(self, exchange: str) -> List[Dict]:
+    def securities(self, exchange: str) -> List[tool.Clazz]:
         url = f'{DATA_URL}/exchanges/{exchange}'
         response = self.get(url)
         assert response.status_code == 200, f'url: {url} reply: {response.text}'
-        keys = {'symbol': 'symbolId',
-                'type': 'symbolType',
-                'exchange': 'exchange',
-                'currency': 'currency',
-                'name': 'name',
-                'description': 'description',
-                'short-symbol': 'ticker'}
-        return [{k: item[v] for k, v in keys.items()} for item in response.json()]
+        keys = dict(symbol='symbolId',
+                    type='symbolType',
+                    exchange='exchange',
+                    currency='currency',
+                    name='name',
+                    description='description',
+                    short_symbol='ticker')
+        return [tool.Clazz({k: item[v] for k, v in keys.items()}) for item in response.json()]
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
         exante_from = dt_to_exante(dt_from)
