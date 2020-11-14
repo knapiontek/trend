@@ -33,10 +33,10 @@ def reduce(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], 
     return [], []
 
 
-def plot_series(series: List[tool.Clazz], label: str, color: str):
+def plot_series(series: List[tool.Clazz], label: str, color: str, style='-'):
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
-    plt.plot(timestamps, closes, label=label, color=color, linewidth=1)
+    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1)
 
 
 def show():
@@ -47,8 +47,8 @@ def show():
     plot_series(abc_series, 'ABC', 'blue')
 
     min_spikes, max_spikes = reduce(abc_series, 8)
-    plot_series(min_spikes, 'min', 'green')
-    plot_series(max_spikes, 'max', 'red')
+    plot_series(min_spikes, 'min', 'green', 'o')
+    plot_series(max_spikes, 'max', 'red', 'o')
 
     plt.legend(loc='upper left')
     plt.grid()
