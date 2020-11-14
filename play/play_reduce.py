@@ -20,20 +20,23 @@ def reduce(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], 
         max_val = max(closes)
         grade = round((max_val - min_val) / max_grade)
         for i1, i2, i3 in i_windowed(series, w_size):
-            c1 = series[i1].close
-            c2 = series[i2].close
-            c3 = series[i3].close
+            c1, c2, c3 = [series[i].close for i in [i1, i2, i3]]
             if c2 == min(c1, c2, c3):
                 min_spikes = [s for s in min_spikes if s.close < c2]
                 min_spikes.append(series[i2])
+                for s in max_spikes:
+                    s.grade = max(s.grade, abs(s.close - c2))
             if c2 == max(c1, c2, c3):
                 max_spikes = [s for s in max_spikes if s.close > c2]
                 max_spikes.append(series[i2])
+                for s in min_spikes:
+                    s.grade = max(s.grade, abs(s.close - c2))
         return min_spikes, max_spikes
     return [], []
 
 
-def plot_series(series: List[tool.Clazz], label: str, color: str, style='-'):
+def plot_series(series: List[tool.Clazz], grade: float, label: str, color: str, style='-'):
+    series = [s for s in series if s.grade >= grade]
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
     plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1)
@@ -44,11 +47,15 @@ def show(timestamp):
     with yahoo.SecuritySeries(interval) as security_series:
         abc_series = [s for s in security_series['ABC.NYSE'] if s.timestamp < timestamp]
 
-    plot_series(abc_series, 'ABC', 'blue')
+    for s in abc_series:
+        s.grade = 0.0
+    plot_series(abc_series, 0.0, 'ABC', 'grey')
 
     min_spikes, max_spikes = reduce(abc_series, 10)
-    plot_series(min_spikes, 'min', 'green', 'o')
-    plot_series(max_spikes, 'max', 'red', 'o')
+    plot_series(min_spikes, 0.0, 'min', 'green', 'o')
+    plot_series(max_spikes, 0.0, 'max', 'red', 'o')
+    plot_series(min_spikes, 20.0, 'min20', 'orange', 'o')
+    plot_series(max_spikes, 20.0, 'max20', 'blue', 'o')
 
     plt.legend(loc='upper left')
     plt.grid()
@@ -57,5 +64,5 @@ def show(timestamp):
 
 
 if __name__ == '__main__':
-    for ts in [1524750000, 1546000000]:
+    for ts in [1524750000, 1546000000, 1700000000]:
         show(ts)
