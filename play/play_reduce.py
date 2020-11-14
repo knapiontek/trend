@@ -10,7 +10,23 @@ def i_windowed(sized: Sized, size: int):
     return windowed(range(len(sized)), size)
 
 
-def reduce(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], List[tool.Clazz]]:
+def read_data(timestamp) -> List[tool.Clazz]:
+    interval = tool.INTERVAL_1D
+    with yahoo.SecuritySeries(interval) as security_series:
+        abc_series = [s for s in security_series['ABC.NYSE'] if s.timestamp < timestamp]
+    for s in abc_series:
+        s.grade = 0.0
+    return abc_series
+
+
+def plot_series(series: List[tool.Clazz], grade: float, label: str, color: str, style='-'):
+    series = [s for s in series if s.grade >= grade]
+    timestamps = [s.timestamp for s in series]
+    closes = [s.close for s in series]
+    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1)
+
+
+def reduce1(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], List[tool.Clazz]]:
     min_spikes: List[tool.Clazz] = []
     max_spikes: List[tool.Clazz] = []
     w_size = 3
@@ -35,23 +51,11 @@ def reduce(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], 
     return [], []
 
 
-def plot_series(series: List[tool.Clazz], grade: float, label: str, color: str, style='-'):
-    series = [s for s in series if s.grade >= grade]
-    timestamps = [s.timestamp for s in series]
-    closes = [s.close for s in series]
-    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1)
-
-
-def show(timestamp):
-    interval = tool.INTERVAL_1D
-    with yahoo.SecuritySeries(interval) as security_series:
-        abc_series = [s for s in security_series['ABC.NYSE'] if s.timestamp < timestamp]
-
-    for s in abc_series:
-        s.grade = 0.0
+def show1(timestamp):
+    abc_series = read_data(timestamp)
     plot_series(abc_series, 0.0, 'ABC', 'grey')
 
-    min_spikes, max_spikes = reduce(abc_series, 10)
+    min_spikes, max_spikes = reduce1(abc_series, 10)
     plot_series(min_spikes, 0.0, 'min', 'green', 'o')
     plot_series(max_spikes, 0.0, 'max', 'red', 'o')
     plot_series(min_spikes, 20.0, 'min20', 'orange', 'o')
@@ -63,6 +67,31 @@ def show(timestamp):
     plt.show()
 
 
-if __name__ == '__main__':
+def test1():
     for ts in [1524750000, 1546000000, 1700000000]:
-        show(ts)
+        show1(ts)
+
+
+def reduce2(series: List[tool.Clazz], max_grade: int) -> List[tool.Clazz]:
+    return series
+
+
+def show2(timestamp):
+    abc_series = read_data(timestamp)
+    plot_series(abc_series, 0.0, 'ABC', 'grey')
+
+    reduced = reduce2(abc_series, 10)
+    plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
+
+    plt.legend(loc='upper left')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+
+def test2():
+    show2(1700000000)
+
+
+if __name__ == '__main__':
+    test2()
