@@ -1,4 +1,4 @@
-from typing import List, Sized, Tuple
+from typing import List, Sized, Tuple, Optional
 
 import matplotlib.pyplot as plt
 from more_itertools import windowed
@@ -72,6 +72,21 @@ def test1():
         show1(ts)
 
 
+def clean(series: List[tool.Clazz]) -> List[tool.Clazz]:
+    reduced: List[Optional[tool.Clazz]] = series[:]
+    for i1, i2, i3 in i_windowed(series, 3):
+        close1, close2, close3 = [series[i].close for i in [i1, i2, i3]]
+        if close1 <= close2 <= close3:
+            reduced[i2] = None
+            if close1 == close3:
+                reduced[i1] = None
+        elif close1 >= close2 >= close3:
+            reduced[i2] = None
+            if close1 == close3:
+                reduced[i1] = None
+    return list(filter(None, reduced))
+
+
 def reduce2(series: List[tool.Clazz], grade: int) -> List[tool.Clazz]:
     queue: List[tool.Clazz] = []
     for s in series:
@@ -96,10 +111,10 @@ def reduce2(series: List[tool.Clazz], grade: int) -> List[tool.Clazz]:
 
 
 def show2(timestamp):
-    abc_series = read_data(timestamp)
+    abc_series = clean(read_data(timestamp))
     plot_series(abc_series, 0.0, 'ABC', 'grey')
 
-    reduced = reduce2(abc_series, 1)
+    reduced = reduce2(abc_series, 10)
     plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
 
     plt.legend(loc='upper left')
