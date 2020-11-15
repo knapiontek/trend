@@ -23,7 +23,7 @@ def plot_series(series: List[tool.Clazz], grade: float, label: str, color: str, 
     series = [s for s in series if s.grade >= grade]
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
-    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1)
+    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1, markersize=2)
 
 
 def reduce1(series: List[tool.Clazz], max_grade: int) -> Tuple[List[tool.Clazz], List[tool.Clazz]]:
@@ -72,15 +72,34 @@ def test1():
         show1(ts)
 
 
-def reduce2(series: List[tool.Clazz], max_grade: int) -> List[tool.Clazz]:
-    return series
+def reduce2(series: List[tool.Clazz], grade: int) -> List[tool.Clazz]:
+    queue: List[tool.Clazz] = []
+    for s in series:
+        if len(queue) >= 2:
+            close1, close2 = [queue[i].close for i in [-2, -1]]
+            close3 = s.close
+            delta1 = close1 - close2
+            delta2 = close2 - close3
+            if delta1 > 0:
+                if delta2 > 0:
+                    queue[-1] = s
+                elif delta2 < 0 and delta2 < grade:
+                    queue.append(s)
+            if delta1 < 0:
+                if delta2 < 0:
+                    queue[-1] = s
+                elif delta2 > 0 and delta2 > grade:
+                    queue.append(s)
+        else:
+            queue.append(s)
+    return queue
 
 
 def show2(timestamp):
     abc_series = read_data(timestamp)
     plot_series(abc_series, 0.0, 'ABC', 'grey')
 
-    reduced = reduce2(abc_series, 10)
+    reduced = reduce2(abc_series, 1)
     plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
 
     plt.legend(loc='upper left')
@@ -90,7 +109,7 @@ def show2(timestamp):
 
 
 def test2():
-    show2(1700000000)
+    show2(1524750000)
 
 
 if __name__ == '__main__':
