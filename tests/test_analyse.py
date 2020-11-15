@@ -26,7 +26,7 @@ def test_reduce_1():
     series_close = [s.close for s in SERIES]
     assert series_close == [1, 2, 3, 4, 5, 4, 3, 4, 5, 6]
 
-    reduced = analyse.reduce(SERIES, 1)
+    reduced = analyse.reduce(SERIES, 1.0)
     reduced_close = [s.close for s in reduced]
     assert reduced_close == [1, 5, 3, 6]
 
@@ -36,8 +36,8 @@ def test_reduce_4():
         sample = json.loads(sample_io.read())
         security = [tool.Clazz(s) for s in sample['KGH.WSE']]
 
-    reduced = analyse.reduce(security, 4)
-    assert len(reduced) == 15
+    reduced = analyse.reduce(security, 10)
+    assert len(reduced) == 33
 
 
 def test_sma():

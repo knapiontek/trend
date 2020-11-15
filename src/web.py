@@ -1,6 +1,7 @@
 import logging
 import re
 import sys
+from datetime import timedelta
 from typing import Dict, List
 
 import dash
@@ -11,7 +12,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
-from src import config, log, tool, store, yahoo, exante, stooq
+from src import config, log, tool, store, yahoo, exante, stooq, analyse
 
 LOG = logging.getLogger(__name__)
 
@@ -48,11 +49,12 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              value=list(ENGINES.keys())[0],
                              placeholder='engine', className='choice')
 
-date_choice = dcc.DatePickerSingle(id='date-from', date=config.datetime_from().date(),
+datetime_from = config.datetime_from() + timedelta(days=100)
+
+date_choice = dcc.DatePickerSingle(id='date-from', date=datetime_from.date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-grade_choice = dcc.Slider(id='grade-choice', min=0, max=config.max_grade(),
-                          marks={i: f'Grade.{i}' for i in range(config.max_grade() + 1)}, value=1)
+limit_choice = dcc.Input(id='limit-choice', type='number', min=1, max=10, step=1, value=1.0, className='choice')
 
 
 def table_style(**kwargs):
@@ -90,8 +92,8 @@ app.layout = dbc.Row(
     [
         dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
-            dbc.Row([dbc.Col(date_choice), dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
-            dbc.Row(dbc.Col(grade_choice), className='frame'),
+            dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
+            dbc.Row([dbc.Col(date_choice), dbc.Col(limit_choice)], className='frame'),
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
@@ -156,10 +158,10 @@ def cb_relayout_data(relayout_data):
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
-               Input('grade-choice', 'value'),
+               Input('limit-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
               State('relayout-data', 'data'))
-def cb_series_graph(d_from, engine_name, grade, data, selected_rows, relayout_data):
+def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_data):
     if engine_name and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
@@ -168,24 +170,25 @@ def cb_series_graph(d_from, engine_name, grade, data, selected_rows, relayout_da
         # engine series
         engine = ENGINES[engine_name]
         dt_from = tool.d_parse(d_from)
-        with engine.SecuritySeries(interval, dt_from=dt_from, grade=grade) as security_series:
+        with engine.SecuritySeries(interval, dt_from=dt_from) as security_series:
             time_series = security_series[symbol]
+            time_series = analyse.reduce(time_series, limit)
 
         if time_series:
             # customize data
-            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-50', 'volume'))
+            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-100', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
             custom = [s.to_dict() for s in time_series]
 
             # create traces
             close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
-            vma_50_trace = go.Scatter(x=dates, y=trans['vma-50'], name='VMA-50', line=dict(width=1.5))
+            vma_100_trace = go.Scatter(x=dates, y=trans['vma-100'], name='VMA-100', line=dict(width=1.5))
             volume_trace = go.Bar(x=dates, y=trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
             figure.add_trace(close_trace, row=1, col=1)
-            figure.add_trace(vma_50_trace, row=1, col=1)
+            figure.add_trace(vma_100_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',

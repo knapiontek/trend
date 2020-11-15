@@ -88,39 +88,38 @@ def clean(series: List[tool.Clazz]) -> List[tool.Clazz]:
     return list(filter(None, reduced))
 
 
-def reduce2(series: List[tool.Clazz], grade: int) -> List[tool.Clazz]:
+def reduce2(series: List[tool.Clazz], limit: int) -> List[tool.Clazz]:
     queue: List[tool.Clazz] = []
     for s in series:
-        if s.timestamp > 1516.9:
-            print(s.timestamp)
         if len(queue) >= 2:
-            close1, close2 = [queue[i].close for i in [-2, -1]]
-            close3 = s.close
-            delta = close1 - close3
-            delta1 = close1 - close2
-            delta2 = close2 - close3
-            if delta1 > 0:
-                if delta2 > 0:
-                    if delta > delta1:
+            close1, close2, close3 = queue[-2].close, queue[-1].close, s.close
+
+            delta13 = close1 - close3
+            delta12 = close1 - close2
+            delta23 = close2 - close3
+
+            if delta12 > 0:
+                if delta23 > 0:
+                    if delta13 > delta12:
                         queue[-1] = s
-                elif delta2 < -grade:
+                elif delta23 < -limit:
                     queue.append(s)
-            if delta1 < 0:
-                if delta2 < 0:
-                    if delta < delta1:
+            if delta12 < 0:
+                if delta23 < 0:
+                    if delta13 < delta12:
                         queue[-1] = s
-                elif delta2 > grade:
+                elif delta23 > limit:
                     queue.append(s)
         else:
             queue.append(s)
     return queue
 
 
-def show2(timestamp):
-    abc_series = clean(read_data(timestamp))
+def show2(timestamp, grade):
+    abc_series = read_data(timestamp)
     plot_series(abc_series, 0.0, 'ABC', 'grey')
 
-    reduced = reduce2(abc_series, 2)
+    reduced = reduce2(abc_series, grade)
     plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
 
     plt.legend(loc='upper left')
@@ -130,7 +129,7 @@ def show2(timestamp):
 
 
 def test2():
-    show2(1524750000)
+    show2(1524750000, 2)
 
 
 if __name__ == '__main__':

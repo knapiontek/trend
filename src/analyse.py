@@ -15,27 +15,32 @@ def clean(series: List[tool.Clazz]):
         series[i] = tool.Clazz({k: v for k, v in s.items() if k in required})
 
 
-def reduce(series: List[tool.Clazz], max_grade: int) -> List[tool.Clazz]:
-    min_spikes: List[int] = []
-    max_spikes: List[int] = []
-    w_size = 3
-    if len(series) >= w_size:
-        closes = [s.close for s in series]
-        min_val = min(closes)
-        max_val = max(closes)
-        grade = (max_val - min_val) / max_grade
-        for i1, i2, i3 in i_windowed(series, w_size):
-            c1 = series[i1].close
-            c2 = series[i2].close
-            c3 = series[i3].close
-            if c2 == min(c1, c2, c3):
-                min_spikes = [i for i in min_spikes if series[i] > c2]
-                min_spikes.append(i2)
-            if c2 == max(c1, c2, c3):
-                max_spikes = [i for i in max_spikes if series[i] < c2]
-                max_spikes.append(i2)
-        return series
-    return series
+def reduce(series: List[tool.Clazz], limit: float) -> List[tool.Clazz]:
+    queue: List[tool.Clazz] = []
+    for s in series:
+        if len(queue) >= 2:
+            close1, close2, close3 = queue[-2].close, queue[-1].close, s.close
+
+            delta13 = close1 - close3
+            delta12 = close1 - close2
+            delta23 = close2 - close3
+
+            if delta12 > 0:
+                if delta23 > 0:
+                    if delta13 > delta12:
+                        queue[-1] = s
+                elif delta23 < -limit:
+                    queue.append(s)
+
+            if delta12 < 0:
+                if delta23 < 0:
+                    if delta13 < delta12:
+                        queue[-1] = s
+                elif delta23 > limit:
+                    queue.append(s)
+        else:
+            queue.append(s)
+    return queue
 
 
 def sma(series: List[tool.Clazz], w_size: int):

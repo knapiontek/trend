@@ -101,10 +101,9 @@ class ExchangeSeries(Series):
 
 
 class SecuritySeries(Series):
-    def __init__(self, name: str, editable: bool, dt_from: datetime, grade: bool):
+    def __init__(self, name: str, editable: bool, dt_from: datetime):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
         self.ts_from = tool.to_timestamp(dt_from or config.datetime_from())
-        self.grade = grade
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''
@@ -112,10 +111,9 @@ class SecuritySeries(Series):
                 SORT datum.timestamp
                 FILTER datum.symbol == @symbol
                     AND datum.timestamp >= @timestamp
-                    AND (@grade == NULL OR datum.grade >= @grade)
                 RETURN datum
         '''
-        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from, 'grade': self.grade}
+        bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from}
         records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
         return [tool.Clazz(**r) for r in records]
 

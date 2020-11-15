@@ -39,11 +39,6 @@ def datetime_from() -> datetime:
     return tool.dt_parse(config['system']['date-time-from'])
 
 
-def max_grade() -> int:
-    config = load_file()
-    return config['system']['max-grade']
-
-
 def exante_auth() -> Tuple[str, str]:
     config = load_file()
     exante_config = config['exante']
