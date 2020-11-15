@@ -16,6 +16,7 @@ def read_data(timestamp) -> List[tool.Clazz]:
         abc_series = [s for s in security_series['ABC.NYSE'] if s.timestamp < timestamp]
     for s in abc_series:
         s.grade = 0.0
+        s.timestamp /= 1e6
     return abc_series
 
 
@@ -90,20 +91,25 @@ def clean(series: List[tool.Clazz]) -> List[tool.Clazz]:
 def reduce2(series: List[tool.Clazz], grade: int) -> List[tool.Clazz]:
     queue: List[tool.Clazz] = []
     for s in series:
+        if s.timestamp > 1516.9:
+            print(s.timestamp)
         if len(queue) >= 2:
             close1, close2 = [queue[i].close for i in [-2, -1]]
             close3 = s.close
+            delta = close1 - close3
             delta1 = close1 - close2
             delta2 = close2 - close3
             if delta1 > 0:
                 if delta2 > 0:
-                    queue[-1] = s
-                elif delta2 < 0 and delta2 < grade:
+                    if delta > delta1:
+                        queue[-1] = s
+                elif delta2 < -grade:
                     queue.append(s)
             if delta1 < 0:
                 if delta2 < 0:
-                    queue[-1] = s
-                elif delta2 > 0 and delta2 > grade:
+                    if delta < delta1:
+                        queue[-1] = s
+                elif delta2 > grade:
                     queue.append(s)
         else:
             queue.append(s)
@@ -114,7 +120,7 @@ def show2(timestamp):
     abc_series = clean(read_data(timestamp))
     plot_series(abc_series, 0.0, 'ABC', 'grey')
 
-    reduced = reduce2(abc_series, 10)
+    reduced = reduce2(abc_series, 2)
     plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
 
     plt.legend(loc='upper left')
