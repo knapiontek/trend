@@ -54,7 +54,7 @@ datetime_from = config.datetime_from() + timedelta(days=100)
 date_choice = dcc.DatePickerSingle(id='date-from', date=datetime_from.date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-limit_choice = dcc.Input(id='limit-choice', type='number', min=1, max=10, step=1, value=1.0, className='choice')
+limit_choice = dcc.Input(id='limit-choice', type='number', min=0, max=20, step=1, value=1.0, className='choice')
 
 
 def table_style(**kwargs):
@@ -172,10 +172,10 @@ def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_da
         dt_from = tool.d_parse(d_from)
         with engine.SecuritySeries(interval, dt_from=dt_from) as security_series:
             time_series = security_series[symbol]
-            time_series = analyse.reduce(time_series, limit)
 
         if time_series:
             # customize data
+            time_series = analyse.reduce(time_series, limit)
             trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-100', 'volume'))
             dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
             custom = [s.to_dict() for s in time_series]

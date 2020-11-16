@@ -37,7 +37,7 @@ def test_reduce_4():
         security = [tool.Clazz(s) for s in sample['KGH.WSE']]
 
     reduced = analyse.reduce(security, 10)
-    assert len(reduced) == 33
+    assert len(list(reduced)) == 27
 
 
 def test_sma():

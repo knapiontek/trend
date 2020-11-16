@@ -1,4 +1,5 @@
-from typing import List, Sized, Tuple, Optional
+from collections import deque
+from typing import List, Sized, Tuple, Optional, Iterable
 
 import matplotlib.pyplot as plt
 from more_itertools import windowed
@@ -20,7 +21,7 @@ def read_data(timestamp) -> List[tool.Clazz]:
     return abc_series
 
 
-def plot_series(series: List[tool.Clazz], grade: float, label: str, color: str, style='-'):
+def plot_series(series: Iterable[tool.Clazz], grade: float, label: str, color: str, style='-'):
     series = [s for s in series if s.grade >= grade]
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
@@ -88,30 +89,27 @@ def clean(series: List[tool.Clazz]) -> List[tool.Clazz]:
     return list(filter(None, reduced))
 
 
-def reduce2(series: List[tool.Clazz], limit: int) -> List[tool.Clazz]:
-    queue: List[tool.Clazz] = []
-    for s in series:
+def reduce2(series: List[tool.Clazz], limit: int) -> Iterable[tool.Clazz]:
+    queue = deque()
+    for s in reversed(series):
         if len(queue) >= 2:
-            close1, close2, close3 = queue[-2].close, queue[-1].close, s.close
+            close1, close2, close3 = queue[1].close, queue[0].close, s.close
 
-            delta13 = close1 - close3
             delta12 = close1 - close2
             delta23 = close2 - close3
 
             if delta12 > 0:
                 if delta23 > 0:
-                    if delta13 > delta12:
-                        queue[-1] = s
+                    queue[0] = s
                 elif delta23 < -limit:
-                    queue.append(s)
+                    queue.appendleft(s)
             if delta12 < 0:
                 if delta23 < 0:
-                    if delta13 < delta12:
-                        queue[-1] = s
+                    queue[0] = s
                 elif delta23 > limit:
-                    queue.append(s)
+                    queue.appendleft(s)
         else:
-            queue.append(s)
+            queue.appendleft(s)
     return queue
 
 
@@ -129,7 +127,11 @@ def show2(timestamp, grade):
 
 
 def test2():
-    show2(1524750000, 2)
+    show2(1524750000, 0.1)
+    show2(1524750000, 0.5)
+    show2(1524750000, 1)
+    show2(1524750000, 11)
+    show2(1524750000, 21)
 
 
 if __name__ == '__main__':
