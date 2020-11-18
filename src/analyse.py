@@ -18,11 +18,11 @@ def clean(series: List[tool.Clazz]):
 
 def reduce(series: List[tool.Clazz], limit: float) -> Iterable[tool.Clazz]:
     if series and limit > 0:
-        limit = series[-1].close / 100 * limit
+        limit *= series[-1].close / 100
     else:
         return series
 
-    queue = deque()
+    queue = deque()  # reversed to series
     for s in reversed(series):
         if len(queue) >= 2:
             close1, close2, close3 = queue[1].close, queue[0].close, s.close

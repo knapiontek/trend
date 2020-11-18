@@ -62,6 +62,8 @@ zkb gold
 zkb silver
 nom.cn
 trade break-outs with build-up
+RSP/SPX - equally weighted index to S&P500
+MMTH - how many stocks are above SMA-200
 
 ### Pullback in Up-Trend
 
