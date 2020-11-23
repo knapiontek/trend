@@ -60,7 +60,84 @@ def run_keypad():
                                             'FOTG', 'FOTH', 'FOTI', 'FOUG', 'FOUH', 'FOUI', 'FOVG', 'FOVH', 'FOVI']
 
 
+def longestPalindrome(s: str) -> str:
+    results = []
+
+    for pos, _ in enumerate(s):
+        length = min(pos, len(s) - pos - 1)
+        size = 0
+        for i in range(length + 1):
+            if s[pos - i] != s[pos + i]:
+                break
+            size = i
+        result = s[pos - size:pos + size + 1]
+        if result:
+            results.append(result)
+
+    return max(results, key=len)
+
+
+def run_longest_palindrome():
+    s = "babad"
+    result = longestPalindrome(s)
+    assert result == 'bab'
+
+
+def fib(num: int) -> int:
+    if num <= 1:
+        return num
+    else:
+        return fib(num - 1) + fib(num - 2)
+
+
+def run_fib():
+    result = fib(9)
+    assert result == 34
+
+
+def remove_duplicates():
+    _input = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4]
+    length = len(_input)
+    last = 0
+    i = 1
+    while i < length:
+        if _input[i] != _input[last]:
+            last += 1
+            _input[last] = _input[i]
+        i += 1
+    expected = [0, 1, 2, 3, 4]
+    assert expected == _input[:last + 1]
+
+
+def max_profit(lst: List[int]) -> int:
+    length = len(lst)
+    profit = 0
+    i = 1
+    while i < length:
+        delta = lst[i] - lst[i - 1]
+        if delta > 0:
+            profit += delta
+        i += 1
+    return profit
+
+
+def run_max_profit():
+    lst = [7, 1, 5, 3, 6, 4]
+    result = max_profit(lst)
+    expected = 7
+    assert result == expected
+
+    lst = [1, 2, 3, 4, 5]
+    result = max_profit(lst)
+    expected = 4
+    assert result == expected
+
+
 if __name__ == '__main__':
     run_zigzag()
     run_product()
     run_keypad()
+    run_longest_palindrome()
+    run_fib()
+    remove_duplicates()
+    run_max_profit()
