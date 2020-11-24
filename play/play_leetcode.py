@@ -1,4 +1,5 @@
-from typing import List
+from dataclasses import dataclass
+from typing import List, Any, Optional
 
 
 def zigzag(s: str, numRows: int) -> str:
@@ -133,6 +134,58 @@ def run_max_profit():
     assert result == expected
 
 
+@dataclass()
+class LinkedList:
+    val: Any
+    next: 'LinkedList'
+
+
+def linked_to_list(head: LinkedList) -> List:
+    if head.next is None:
+        return [head.val]
+    return [head.val] + linked_to_list(head.next)
+
+
+def reverse_linked_list_recursive(head: LinkedList) -> Optional[LinkedList]:
+    if head.next is None:
+        return head
+    result = reverse_linked_list_recursive(head.next)
+    head.next.next = head
+    head.next = None
+    return result
+
+
+def reverse_linked_list_iterative(head: LinkedList) -> Optional[LinkedList]:
+    prev = None
+    node = head
+    while node:
+        _next = node.next
+        node.next = prev
+        prev = node
+        node = _next
+    return prev
+
+
+def run_reverse_linked_list_recursive():
+    lst = [1, 2, 3]
+    head: Optional[LinkedList] = None
+    for elem in reversed(lst):
+        head = LinkedList(val=elem, next=head)
+    output = reverse_linked_list_recursive(head)
+    output_lst = linked_to_list(output)
+    assert list(reversed(lst)) == output_lst
+
+
+def run_reverse_linked_list_iterative():
+    lst = [1, 2, 3]
+    head: Optional[LinkedList] = None
+    for elem in reversed(lst):
+        head = LinkedList(val=elem, next=head)
+    output = reverse_linked_list_iterative(head)
+    output_lst = linked_to_list(output)
+    assert list(reversed(lst)) == output_lst
+
+
 if __name__ == '__main__':
     run_zigzag()
     run_product()
@@ -141,3 +194,5 @@ if __name__ == '__main__':
     run_fib()
     remove_duplicates()
     run_max_profit()
+    run_reverse_linked_list_recursive()
+    run_reverse_linked_list_iterative()
