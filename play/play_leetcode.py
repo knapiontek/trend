@@ -137,7 +137,7 @@ def run_max_profit():
 @dataclass()
 class LinkedList:
     val: Any
-    next: 'LinkedList'
+    next: 'Optional[LinkedList]'
 
 
 def linked_to_list(head: LinkedList) -> List:
@@ -186,6 +186,33 @@ def run_reverse_linked_list_iterative():
     assert list(reversed(lst)) == output_lst
 
 
+def linked_list_partition(head: LinkedList, x: int) -> LinkedList:
+    begin = begin_head = LinkedList(0, None)
+    end = end_head = LinkedList(0, None)
+
+    while head:
+        if head.val <= x:
+            begin.next = head
+            begin = begin.next
+        else:
+            end.next = head
+            end = end.next
+        head = head.next
+    begin.next = end_head.next
+    end.next = None
+    return begin_head.next
+
+
+def run_linked_list_partition():
+    lst = [1, 3, 2]
+    head: Optional[LinkedList] = None
+    for elem in reversed(lst):
+        head = LinkedList(val=elem, next=head)
+    output = linked_list_partition(head, 2)
+    output_lst = linked_to_list(output)
+    assert [1, 2, 3] == output_lst
+
+
 if __name__ == '__main__':
     run_zigzag()
     run_product()
@@ -196,3 +223,4 @@ if __name__ == '__main__':
     run_max_profit()
     run_reverse_linked_list_recursive()
     run_reverse_linked_list_iterative()
+    run_linked_list_partition()
