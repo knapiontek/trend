@@ -67,6 +67,9 @@ class Session(session.Session):
         max_size = 4096
         params = {'from': exante_from, 'to': exante_to, 'size': max_size, 'type': 'trades'}
         response = self.get(url, params=params)
+        if response.status_code == 404:
+            LOG.warning(response.text)
+            return []
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [datum_from_exante(datum, symbol) for datum in response.json()]
         assert len(data) < max_size
