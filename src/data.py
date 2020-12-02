@@ -57,7 +57,7 @@ def exchange_update():
                 new_documents = []
                 old_documents = []
                 for security in session.securities(exchange_name):
-                    shortable = security.symbol in shortables
+                    shortable = shortables.get(security.symbol, False)
                     if security.short_symbol in exchange_index:
                         if security.symbol in exchange_securities:
                             document = exchange_securities[security.symbol]
@@ -230,9 +230,9 @@ def security_analyse(engine: Any):
 def main():
     log.init(__file__, debug=True, to_screen=True)
 
-    from src import stooq as engine
-
     exchange_update()
+
+    import src.stooq as engine
     security_range(engine)
     security_update(engine)
     security_verify(engine)
