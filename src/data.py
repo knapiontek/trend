@@ -53,17 +53,26 @@ def exchange_update():
         with exante.Session() as session:
             for exchange_name in config.ACTIVE_EXCHANGES:
                 exchange_index = indices[exchange_name]
-                exchange_symbols = [s.symbol for s in exchange_series[exchange_name]]
-                exante_securities = session.securities(exchange_name)
-                documents = [
-                    tool.Clazz(security,
-                               **HEALTH_DEFAULT,
-                               shortable=security.symbol in shortables)
-                    for security in exante_securities
-                    if security.short_symbol in exchange_index and security.symbol not in exchange_symbols
-                ]
-                exchange_series += documents
-                LOG.info(f'Securities: {len(documents)} imported to the exchange: {exchange_name}')
+                exchange_securities = {s.symbol: s for s in exchange_series[exchange_name]}
+                new_documents = []
+                old_documents = []
+                for security in session.securities(exchange_name):
+                    shortable = security.symbol in shortables
+                    if security.short_symbol in exchange_index:
+                        if security.symbol in exchange_securities:
+                            document = exchange_securities[security.symbol]
+                            document.update(HEALTH_DEFAULT)
+                            document.shortable = shortable
+                            old_documents += [document]
+                        else:
+                            document = security
+                            document.update(HEALTH_DEFAULT)
+                            document.shortable = shortable
+                            new_documents += [document]
+                exchange_series |= old_documents
+                LOG.info(f'Securities: {len(old_documents)} updated in the exchange: {exchange_name}')
+                exchange_series += new_documents
+                LOG.info(f'Securities: {len(new_documents)} imported to the exchange: {exchange_name}')
 
 
 def security_range(engine: Any):
