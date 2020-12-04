@@ -38,6 +38,7 @@ DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
+LINE_STYLE = dict(width=1.5)
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
@@ -175,19 +176,23 @@ def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            time_series = analyse.reduce(time_series, limit)
-            trans = tool.transpose(time_series, ('timestamp', 'close', 'vma-100', 'volume'))
-            dates = [tool.from_timestamp(ts) for ts in trans['timestamp']]
-            custom = [s.to_dict() for s in time_series]
+            daily_trans = tool.transpose(time_series, ('timestamp', 'vma-100', 'volume'))
+            daily_dates = [tool.from_timestamp(ts) for ts in daily_trans['timestamp']]
+
+            reduced_series = analyse.reduce(time_series, limit)
+            reduced_trans = tool.transpose(reduced_series, ('timestamp', 'close'))
+            reduced_dates = [tool.from_timestamp(ts) for ts in reduced_trans['timestamp']]
+            reduced_custom = [s.to_dict() for s in reduced_series]
 
             # create traces
-            close_trace = go.Scatter(x=dates, y=trans['close'], name='Close', customdata=custom, line=dict(width=1.5))
-            vma_100_trace = go.Scatter(x=dates, y=trans['vma-100'], name='VMA-100', line=dict(width=1.5))
-            volume_trace = go.Bar(x=dates, y=trans['volume'], name='Volume')
+            reduced_trace = go.Scatter(x=reduced_dates, y=reduced_trans['close'],
+                                       name='Close', customdata=reduced_custom, line=LINE_STYLE)
+            vma_100_trace = go.Scatter(x=daily_dates, y=daily_trans['vma-100'], name='VMA-100', line=LINE_STYLE)
+            volume_trace = go.Bar(x=daily_dates, y=daily_trans['volume'], name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
-            figure.add_trace(close_trace, row=1, col=1)
+            figure.add_trace(reduced_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
