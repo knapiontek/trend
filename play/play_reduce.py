@@ -18,48 +18,54 @@ def read_data(begin: int, end: int) -> List[tool.Clazz]:
     return abc_series
 
 
-def plot_series(series: Iterable[tool.Clazz], grade: float, label: str, color: str, style='-'):
-    series = [s for s in series if s.grade >= grade]
+def plot_series(series: Iterable[tool.Clazz], label: str, limit: int = 0):
+    colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
+    color = colors[limit]
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
-    plt.plot(timestamps, closes, style, label=label, color=color, linewidth=1, markersize=2)
+    style = 'o' if limit else '-'
+    plt.plot(timestamps, closes, style, label=f'{label}-{limit}', color=color, linewidth=1, markersize=1 + limit)
 
 
-def reduce(series: List[tool.Clazz], limit: float) -> Iterable[tool.Clazz]:
-    if series and limit > 0:
-        limit *= series[-1].close / 100
-    else:
-        return series
-
+def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     queue = deque()  # reversed to series
+
     for s in reversed(series):
         if len(queue) >= 2:
             close1, close2, close3 = queue[1].close, queue[0].close, s.close
 
             delta12 = close1 - close2
             delta23 = close2 - close3
+            scope = (2 ** score) / 100 * close2
 
             if delta12 > 0:
                 if delta23 > 0:
                     queue[0] = s
-                elif delta23 < -limit:
+                elif delta23 < -scope:
                     queue.appendleft(s)
             if delta12 < 0:
                 if delta23 < 0:
                     queue[0] = s
-                elif delta23 > limit:
+                elif delta23 > scope:
                     queue.appendleft(s)
         else:
             queue.appendleft(s)
-    return queue
+
+    result = list(queue)
+    if len(result) > 2:
+        for s in result:
+            s.score = score
+    return result
 
 
-def show(begin: int, end: int, limit: float):
+def show(begin: int, end: int):
     abc_series = read_data(begin, end)
-    plot_series(abc_series, 0.0, 'ABC', 'grey')
+    plot_series(abc_series, 'ABC')
 
-    reduced = reduce(abc_series, limit)
-    plot_series(reduced, 0.0, 'reduced', 'blue', 'o')
+    for score in range(1, 8):
+        abc_series = reduce(abc_series, score)
+        if len(abc_series) > 2:
+            plot_series(abc_series, 'score', score)
 
     plt.legend(loc='upper left')
     plt.grid()
@@ -68,7 +74,7 @@ def show(begin: int, end: int, limit: float):
 
 
 def execute():
-    show(1514851200, 1606953600, 4)
+    show(1514851200, 1606953600)
 
 
 if __name__ == '__main__':

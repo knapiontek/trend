@@ -1,13 +1,9 @@
 from collections import deque
-from typing import List, Sized, Iterable
+from typing import List, Iterable
 
 from more_itertools import windowed
 
 from src import tool, schema
-
-
-def i_windowed(sized: Sized, size: int):
-    return windowed(range(len(sized)), size)
 
 
 def clean(series: List[tool.Clazz]):
