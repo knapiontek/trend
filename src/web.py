@@ -55,7 +55,7 @@ datetime_from = config.datetime_from() + timedelta(days=100)
 date_choice = dcc.DatePickerSingle(id='date-from', date=datetime_from.date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-limit_choice = dcc.Input(id='limit-choice', type='number', min=0, max=20, step=1, value=1.0, className='choice')
+limit_choice = dcc.Input(id='limit-choice', type='number', min=0, max=99, step=1, value=1.0, className='choice')
 
 
 def table_style(**kwargs):
@@ -163,7 +163,7 @@ def cb_relayout_data(relayout_data):
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
               State('relayout-data', 'data'))
 def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_data):
-    if engine_name and d_from and data and selected_rows and selected_rows[0] < len(data):
+    if engine_name and limit is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
         symbol, info = row['symbol'], row['info']
