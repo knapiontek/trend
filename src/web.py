@@ -55,7 +55,7 @@ datetime_from = config.datetime_from() + timedelta(days=100)
 date_choice = dcc.DatePickerSingle(id='date-from', date=datetime_from.date(),
                                    display_format=DATE_PICKER_FORMAT, className='choice')
 
-limit_choice = dcc.Input(id='limit-choice', type='number', min=0, max=99, step=1, value=1.0, className='choice')
+score_choice = dcc.Input(id='score-choice', type='number', min=0, max=6, step=1, value=1.0, className='choice')
 
 
 def table_style(**kwargs):
@@ -94,7 +94,7 @@ app.layout = dbc.Row(
         dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
-            dbc.Row([dbc.Col(date_choice), dbc.Col(limit_choice)], className='frame'),
+            dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
             dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
@@ -159,11 +159,11 @@ def cb_relayout_data(relayout_data):
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
-               Input('limit-choice', 'value'),
+               Input('score-choice', 'value'),
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
               State('relayout-data', 'data'))
-def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_data):
-    if engine_name and limit is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
+def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_data):
+    if engine_name and score is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
         symbol, info = row['symbol'], row['info']
@@ -179,7 +179,7 @@ def cb_series_graph(d_from, engine_name, limit, data, selected_rows, relayout_da
             daily_trans = tool.transpose(time_series, ('timestamp', 'vma-100', 'volume'))
             daily_dates = [tool.from_timestamp(ts) for ts in daily_trans['timestamp']]
 
-            reduced_series = analyse.reduce(time_series, limit)
+            reduced_series = analyse.reduce(time_series, score)
             reduced_trans = tool.transpose(reduced_series, ('timestamp', 'close'))
             reduced_dates = [tool.from_timestamp(ts) for ts in reduced_trans['timestamp']]
             reduced_custom = [s.to_dict() for s in reduced_series]

@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List, Iterable
+from typing import List
 
 from more_itertools import windowed
 
@@ -12,33 +12,35 @@ def clean(series: List[tool.Clazz]):
         series[i] = tool.Clazz({k: v for k, v in s.items() if k in required})
 
 
-def reduce(series: List[tool.Clazz], limit: float) -> Iterable[tool.Clazz]:
-    if series and limit > 0:
-        limit *= series[-1].close / 100
-    else:
-        return series
-
+def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     queue = deque()  # reversed to series
+
     for s in reversed(series):
         if len(queue) >= 2:
             close1, close2, close3 = queue[1].close, queue[0].close, s.close
 
             delta12 = close1 - close2
             delta23 = close2 - close3
+            scope = (2 ** score) / 100 * close2
 
             if delta12 > 0:
                 if delta23 > 0:
                     queue[0] = s
-                elif delta23 < -limit:
+                elif delta23 < -scope:
                     queue.appendleft(s)
             if delta12 < 0:
                 if delta23 < 0:
                     queue[0] = s
-                elif delta23 > limit:
+                elif delta23 > scope:
                     queue.appendleft(s)
         else:
             queue.appendleft(s)
-    return queue
+
+    result = list(queue)
+    if len(result) > 2:
+        for s in result:
+            s.score = score
+    return result
 
 
 def sma(series: List[tool.Clazz], w_size: int):

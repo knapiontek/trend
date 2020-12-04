@@ -18,13 +18,13 @@ def read_data(begin: int, end: int) -> List[tool.Clazz]:
     return abc_series
 
 
-def plot_series(series: Iterable[tool.Clazz], label: str, limit: int = 0):
+def plot_series(series: Iterable[tool.Clazz], label: str, score: int = 0):
     colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
-    color = colors[limit]
+    color = colors[score]
     timestamps = [s.timestamp for s in series]
     closes = [s.close for s in series]
-    style = 'o' if limit else '-'
-    plt.plot(timestamps, closes, style, label=f'{label}-{limit}', color=color, linewidth=1, markersize=1 + limit)
+    style = 'o' if score else '-'
+    plt.plot(timestamps, closes, style, label=f'{label}-{score}', color=color, linewidth=1, markersize=1 + score)
 
 
 def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
