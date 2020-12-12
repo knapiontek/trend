@@ -6,35 +6,39 @@ import matplotlib.pyplot as plt
 from src import tool, yahoo
 
 
-def read_data(begin: int, end: int) -> List[tool.Clazz]:
+def read_series(begin: int, end: int) -> List[tool.Clazz]:
     interval = tool.INTERVAL_1D
     with yahoo.SecuritySeries(interval) as security_series:
         abc_series = security_series['ABC.NYSE']
-        print(abc_series[-1].timestamp)
-        abc_series = [s for s in abc_series if begin <= s.timestamp <= end]
-    for s in abc_series:
-        s.timestamp /= 1e6
-    return abc_series
+        return [tool.Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
+                for s in abc_series if begin <= s.timestamp <= end]
 
 
-def plot_series(series: Iterable[tool.Clazz], label: str, score: int = 0):
+def avg_series(series: Iterable[tool.Clazz]):
+    return [tool.Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
+
+
+def flatten_series(series: Iterable[tool.Clazz]):
+    series = [[tool.Clazz(x=s.x, y=s.y1), tool.Clazz(x=s.x, y=s.y2)] for s in series]
+    return sum(series, [])
+
+
+def plot_series(xs: List[float], ys: List[float], label: str, score: int = 0):
     colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
     color = colors[score]
-    timestamps = [s.timestamp for s in series]
-    closes = [s.close for s in series]
     style = 'o' if score else '-'
-    plt.plot(timestamps, closes, style, label=f'{label}-{score}', color=color, linewidth=1, markersize=1 + score)
+    plt.plot(xs, ys, style, label=f'{label}-{score}', color=color, linewidth=1, markersize=1 + score)
 
 
-def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
+def reduce_series(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     queue = deque(series[:2])
 
     for s in series[2:]:
-        val1, val2, val3 = queue[-2].close, queue[-1].close, s.close
+        y1, y2, y3 = queue[-2].y, queue[-1].y, s.y
 
-        delta12 = val1 - val2
-        delta23 = val2 - val3
-        scope = (2 ** score) / 100 * val2
+        delta12 = y1 - y2
+        delta23 = y2 - y3
+        scope = (2 ** score) / 100 * y2
 
         if delta12 > 0:
             if delta23 > 0:
@@ -56,13 +60,17 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
 
 
 def show(begin: int, end: int):
-    abc_series = read_data(begin, end)
-    plot_series(abc_series, 'ABC')
+    series = read_series(begin, end)
+    avg = avg_series(series)
+    plot_series([s.x for s in avg], [s.y for s in avg], 'ABC')
 
+    flatten = flatten_series(series)
+
+    reduced = avg
     for score in range(1, 8):
-        abc_series = reduce(abc_series, score)
-        if len(abc_series) > 2:
-            plot_series(abc_series, 'score', score)
+        reduced = reduce_series(reduced, score)
+        if len(reduced) > 2:
+            plot_series([s.x for s in reduced], [s.y for s in reduced], 'score', score)
 
     plt.legend(loc='upper left')
     plt.grid()
