@@ -27,34 +27,32 @@ def plot_series(series: Iterable[tool.Clazz], label: str, score: int = 0):
 
 
 def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
-    queue = deque()  # reversed to series
+    queue = deque(series[:2])
 
-    for s in series:
-        if len(queue) >= 2:
-            close1, close2, close3 = queue[-2].close, queue[-1].close, s.close
+    for s in series[2:]:
+        val1, val2, val3 = queue[-2].close, queue[-1].close, s.close
 
-            delta12 = close1 - close2
-            delta23 = close2 - close3
-            scope = (2 ** score) / 100 * close2
+        delta12 = val1 - val2
+        delta23 = val2 - val3
+        scope = (2 ** score) / 100 * val2
 
-            if delta12 > 0:
-                if delta23 > 0:
-                    queue[-1] = s
-                elif delta23 < -scope:
-                    queue.append(s)
-            if delta12 < 0:
-                if delta23 < 0:
-                    queue[-1] = s
-                elif delta23 > scope:
-                    queue.append(s)
-        else:
-            queue.append(s)
+        if delta12 > 0:
+            if delta23 > 0:
+                queue[-1] = s
+            elif delta23 < -scope:
+                queue.append(s)
 
-    result = list(queue)
-    if len(result) > 2:
-        for s in result:
+        if delta12 < 0:
+            if delta23 < 0:
+                queue[-1] = s
+            elif delta23 > scope:
+                queue.append(s)
+
+    output = list(queue)
+    if len(output) > 2:
+        for s in output:
             s.score = score
-    return result
+    return output
 
 
 def show(begin: int, end: int):
