@@ -13,7 +13,6 @@ def read_data(begin: int, end: int) -> List[tool.Clazz]:
         print(abc_series[-1].timestamp)
         abc_series = [s for s in abc_series if begin <= s.timestamp <= end]
     for s in abc_series:
-        s.grade = 0.0
         s.timestamp /= 1e6
     return abc_series
 
@@ -30,9 +29,9 @@ def plot_series(series: Iterable[tool.Clazz], label: str, score: int = 0):
 def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     queue = deque()  # reversed to series
 
-    for s in reversed(series):
+    for s in series:
         if len(queue) >= 2:
-            close1, close2, close3 = queue[1].close, queue[0].close, s.close
+            close1, close2, close3 = queue[-2].close, queue[-1].close, s.close
 
             delta12 = close1 - close2
             delta23 = close2 - close3
@@ -40,16 +39,16 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
 
             if delta12 > 0:
                 if delta23 > 0:
-                    queue[0] = s
+                    queue[-1] = s
                 elif delta23 < -scope:
-                    queue.appendleft(s)
+                    queue.append(s)
             if delta12 < 0:
                 if delta23 < 0:
-                    queue[0] = s
+                    queue[-1] = s
                 elif delta23 > scope:
-                    queue.appendleft(s)
+                    queue.append(s)
         else:
-            queue.appendleft(s)
+            queue.append(s)
 
     result = list(queue)
     if len(result) > 2:
