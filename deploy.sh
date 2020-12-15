@@ -34,7 +34,8 @@ conda activate trend-py37
 
 # run the app
 ## note: deploy ~/.trend (see ./src/schema.py)
-./run.py --reload-exchanges --update-series --log-to-screen
+./manage.py --exchange clean update --log-to-screen
+./manage.py --engine yahoo exante stooq --security clean update verify analyse --log-to-screen
 ./web.sh
 pkill --echo gunicorn
 

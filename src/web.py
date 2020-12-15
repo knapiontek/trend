@@ -43,19 +43,23 @@ LINE_STYLE = dict(width=1.5)
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
                                value=config.ACTIVE_EXCHANGES[0],
-                               placeholder='exchange', className='choice')
+                               placeholder='exchange', className='choice',
+                               persistence=True)
 
 engine_choice = dcc.Dropdown(id='engine-choice',
                              options=[{'label': s, 'value': s} for s in ENGINES],
                              value=list(ENGINES.keys())[0],
-                             placeholder='engine', className='choice')
+                             placeholder='engine', className='choice',
+                             persistence=True)
 
 datetime_from = config.datetime_from() + timedelta(days=100)
 
 date_choice = dcc.DatePickerSingle(id='date-from', date=datetime_from.date(),
-                                   display_format=DATE_PICKER_FORMAT, className='choice')
+                                   display_format=DATE_PICKER_FORMAT, className='choice',
+                                   persistence=True)
 
-score_choice = dcc.Input(id='score-choice', type='number', min=0, max=6, step=1, value=1.0, className='choice')
+score_choice = dcc.Input(id='score-choice', type='number',
+                         min=0, max=6, step=1, value=1.0, className='choice', persistence=True)
 
 
 def table_style(**kwargs):
