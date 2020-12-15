@@ -31,6 +31,15 @@ body {
     width: 120px;
 }
 
+.score {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    height: 35px;
+    width: 120px;
+    border: solid thin lightgrey;
+    border-radius: 3px;
+}
+
 .scroll {
     margin: 6px;
     padding: 2px;
