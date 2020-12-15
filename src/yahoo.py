@@ -65,7 +65,7 @@ class Session(session.Session):
         params = dict(period1=yahoo_from, period2=yahoo_to, interval=yahoo_interval, events='history', crumb=self.crumb)
         response = self.get(url, params=params)
         if response.status_code in (400, 404):
-            LOG.warning(response.text)
+            LOG.warning(f'{response.text} {symbol}')
             return []
         assert response.status_code == 200, f'url: {url} params: {params} reply: {response.text}'
         data = [datum_from_yahoo(item, symbol) for item in csv.DictReader(StringIO(response.text))]

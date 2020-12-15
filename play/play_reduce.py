@@ -59,12 +59,28 @@ def reduce_series(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     return output
 
 
-def show(begin: int, end: int):
+def show_flatten(begin: int, end: int):
+    min_score = 2
+    series = read_series(begin, end)
+    flatten = flatten_series(series)
+    reduced = reduce_series(flatten, min_score)
+    plot_series([s.x for s in reduced], [s.y for s in reduced], 'ABC')
+
+    for score in range(min_score + 1, 8):
+        reduced = reduce_series(reduced, score)
+        if len(reduced) > 2:
+            plot_series([s.x for s in reduced], [s.y for s in reduced], 'score', score)
+
+    plt.legend(loc='upper left')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+
+def show_avg(begin: int, end: int):
     series = read_series(begin, end)
     avg = avg_series(series)
     plot_series([s.x for s in avg], [s.y for s in avg], 'ABC')
-
-    flatten = flatten_series(series)
 
     reduced = avg
     for score in range(1, 8):
@@ -79,7 +95,7 @@ def show(begin: int, end: int):
 
 
 def execute():
-    show(1514851200, 1607644800)
+    show_avg(1514851200, 1607644800)
 
 
 if __name__ == '__main__':
