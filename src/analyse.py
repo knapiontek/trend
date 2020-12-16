@@ -13,34 +13,32 @@ def clean(series: List[tool.Clazz]):
 
 
 def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
-    queue = deque()  # reversed to series
+    queue = deque(series[:2])
 
-    for s in reversed(series):
-        if len(queue) >= 2:
-            close1, close2, close3 = queue[1].close, queue[0].close, s.close
+    for s in series[2:]:
+        y1, y2, y3 = queue[-2].close, queue[-1].close, s.close
 
-            delta12 = close1 - close2
-            delta23 = close2 - close3
-            scope = (2 ** score) / 100 * close2
+        delta12 = y1 - y2
+        delta23 = y2 - y3
 
-            if delta12 > 0:
-                if delta23 > 0:
-                    queue[0] = s
-                elif delta23 < -scope:
-                    queue.appendleft(s)
-            if delta12 < 0:
-                if delta23 < 0:
-                    queue[0] = s
-                elif delta23 > scope:
-                    queue.appendleft(s)
-        else:
-            queue.appendleft(s)
+        scope = (2 ** score) / 100 * y2
 
-    result = list(queue)
-    if len(result) > 2:
-        for s in result:
-            s.score = score
-    return result
+        if delta12 > 0:
+            if delta23 > 0:
+                queue[-1] = s
+            elif delta23 < -scope:
+                queue.append(s)
+
+        if delta12 < 0:
+            if delta23 < 0:
+                queue[-1] = s
+            elif delta23 > scope:
+                queue.append(s)
+
+    output = list(queue)
+    for s in output[1:]:
+        s.score = score
+    return output
 
 
 def sma(series: List[tool.Clazz], w_size: int):
