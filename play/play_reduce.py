@@ -97,7 +97,7 @@ def show_avg(begin: int, end: int):
     plt.show()
 
 
-def take_position(series: List[tool.Clazz], score: int) -> Iterable[Tuple[tool.Clazz, tool.Clazz, tool.Clazz]]:
+def detect_swing(series: List[tool.Clazz], score: int) -> Iterable[Tuple[tool.Clazz, tool.Clazz, tool.Clazz]]:
     avg = average(series)
     scope = (2 ** score) / 100 * avg
     queue = deque(series[:2])
@@ -132,18 +132,21 @@ def show_take_position(begin: int, end: int):
     mids = mid_series(series)
     plot_series([s.x for s in mids], [s.y for s in mids], 'ABC')
 
-    score = 4
-    reduced = reduce_series(mids, score)
-    plot_series([s.x for s in reduced], [s.y for s in reduced], 'score', score)
-
     avg = average(mids)
-    for s1, s2, s3 in take_position(mids, score):
-        y1, y2, y3 = s1.y, s2.y, s3.y
-        if abs(y1 - y3) / avg < 0.05:
-            s3.position = True
+    for s11, s12, s13 in detect_swing(mids, score=4):
+        y11, y12, y13 = s11.y, s12.y, s13.y
+        if abs(y11 - y13) / avg < 0.01 and y12 > y11 and y12 > y13:
+            s13.position = 'open'
+            i = mids.index(s13)
+            for s21, s22, s23 in detect_swing(mids[i:], score=2):
+                s23.position = 'close'
+                break
 
-    positions = [r for r in reduced if 'position' in r]
-    plot_series([p.x for p in positions], [p.y for p in positions], 'position', 7)
+    opens = [r for r in mids if r.get('position') == 'open']
+    plot_series([o.x for o in opens], [p.y for p in opens], 'open', 4)
+
+    closes = [r for r in mids if r.get('position') == 'close']
+    plot_series([c.x for c in closes], [p.y for p in closes], 'close', 1)
 
     plt.legend(loc='upper left')
     plt.grid()
@@ -152,8 +155,6 @@ def show_take_position(begin: int, end: int):
 
 
 def execute():
-    show_avg(1514851200, 1607644800)
-    show_flatten(1514851200, 1607644800)
     show_take_position(1514851200, 1607644800)
 
 

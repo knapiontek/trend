@@ -1,11 +1,7 @@
 
 # TODO
 
-- Create scheduler/flask/gunicorn
-- exchanges/symbols to arangodb
-- improve log for ./run.py
 - Make strategies and present them
-- "pass" or "yes" should be replaced with checkbox in boolean columns
 
 # Road Map
 
@@ -15,20 +11,9 @@
 1. Enter on higher low and sell 50% on first reversal, verify multi-frame
 2. Choppiness Index + Price Action + Support/Resistance + Volume
 
-### Run the engine on all instruments passing criteria (volume, short-allowance, etc)
-
-## JSONStorage
- - based on arango-db
-
 ## Engine Web Viewer (nodejs based)
  - Accept the proposed instrument
  - instrument proposal based on volume, PE, EBIDA etc (criteria can be fully automated)
-
-## Deployment
- - Traefik
- - Register Domain
- - Deploy Trading Engine
- - Deploy Web Viewer
 
 # Trend
 
@@ -76,7 +61,7 @@ MMTH - how many stocks are above SMA-200
 - when in the down-trend
 - strong green bar
 - strong red bar
-- quite, no price change makes contra-trend players to loose confidence
+- quit, no price change makes contra-trend players to loose confidence
 - time to sell
 
 ### Market Sentiment
@@ -109,6 +94,7 @@ MMTH - how many stocks are above SMA-200
 # CLI
 
 ```bash
+./manage.py --engine exante yahoo stooq --security update verify analyse --log-to-screen
 cat ~/.ssh/config
 Host lightsail
   HostName 54.216.1.84
