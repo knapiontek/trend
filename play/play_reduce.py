@@ -6,6 +6,26 @@ import matplotlib.pyplot as plt
 from src import tool, yahoo
 
 
+def show_widget():
+    plt.title('Swings')
+    plt.legend(loc='upper left')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_series(series: List[tool.Clazz]):
+    plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
+
+
+def plot_swings(series: List[tool.Clazz], score: int = 0):
+    colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
+    color = colors[score]
+    plt.plot([s.x for s in series],
+             [s.y for s in series],
+             'o', label=f'score-{score}', color=color, linewidth=1, markersize=1 + score)
+
+
 def read_series(begin: int, end: int) -> List[tool.Clazz]:
     interval = tool.INTERVAL_1D
     with yahoo.SecuritySeries(interval) as security_series:
@@ -50,37 +70,38 @@ def reduce_series(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     return output
 
 
-def plot_series(series: List[tool.Clazz]):
-    plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
-
-
-def plot_swings(series: List[tool.Clazz], score: int = 0):
-    colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
-    color = colors[score]
-    plt.plot([s.x for s in series],
-             [s.y for s in series],
-             'o', label=f'score-{score}', color=color, linewidth=1, markersize=1 + score)
-
-
 def show_swings(begin: int, end: int):
     series = read_series(begin, end)
     avg = avg_series(series)
     plot_series(avg)
 
     reduced = avg
-    for score in range(1, 8):
+    for score in range(0, 8):
         reduced = reduce_series(reduced, score)
         if len(reduced) > 2:
             plot_swings(reduced, score)
 
-    plt.legend(loc='upper left')
-    plt.grid()
-    plt.tight_layout()
-    plt.show()
+    show_widget()
+
+
+def show_deals(begin: int, end: int):
+    series = read_series(begin, end)
+    avg = avg_series(series)
+    plot_series(avg)
+
+    reduced = avg
+    for score in range(0, 8):
+        reduced = reduce_series(reduced, score)
+
+    score = 3
+    swings = [s for s in avg if s.get('score', 0) >= score]
+    plot_swings(swings, score)
+
+    show_widget()
 
 
 def execute():
-    show_swings(1514851200, 1607644800)
+    show_deals(1514851200, 1607644800)
 
 
 if __name__ == '__main__':
