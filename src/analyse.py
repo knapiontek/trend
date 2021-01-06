@@ -35,10 +35,9 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
             elif delta23 > scope:
                 queue.append(s)
 
-    output = list(queue)
-    for s in output[1:]:
-        s.score = score
-    return output
+    if queue[-1] != series[-1]:
+        queue.append(series[-1])  # first and last element are always in
+    return list(queue)
 
 
 def sma(series: List[tool.Clazz], w_size: int):

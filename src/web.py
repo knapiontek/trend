@@ -187,19 +187,18 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            daily_trans = tool.transpose(time_series, ('timestamp', 'vma-100', 'volume'))
-            daily_dates = [tool.from_timestamp(ts) for ts in daily_trans['timestamp']]
+            ts, vma_100, volume = tool.transpose(time_series, ('timestamp', 'vma-100', 'volume'))
+            daily_dates = [tool.from_timestamp(t) for t in ts]
 
             reduced_series = analyse.reduce(time_series, score)
-            reduced_trans = tool.transpose(reduced_series, ('timestamp', 'close'))
-            reduced_dates = [tool.from_timestamp(ts) for ts in reduced_trans['timestamp']]
-            reduced_custom = [s.to_dict() for s in reduced_series]
+            ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
+            reduced_dates = [tool.from_timestamp(t) for t in ts]
+            custom = [s.to_dict() for s in reduced_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=reduced_trans['close'],
-                                       name='Close', customdata=reduced_custom, line=LINE_STYLE)
-            vma_100_trace = go.Scatter(x=daily_dates, y=daily_trans['vma-100'], name='VMA-100', line=LINE_STYLE)
-            volume_trace = go.Bar(x=daily_dates, y=daily_trans['volume'], name='Volume')
+            reduced_trace = go.Scatter(x=reduced_dates, y=close, name='Close', customdata=custom, line=LINE_STYLE)
+            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', line=LINE_STYLE)
+            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume')
 
             # create a graph
             figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])

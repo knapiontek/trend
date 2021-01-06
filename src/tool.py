@@ -139,12 +139,12 @@ def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: i
         start += delta
 
 
-def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Dict[str, List]:
+def transpose(items: Iterable[Clazz], keys: Iterable[str]) -> Tuple[List, ...]:
     dt = defaultdict(list)
     for i in items:
         for k in keys:
             dt[k].append(i.get(k))
-    return dt
+    return tuple(dt[k] for k in keys)
 
 
 def catch_exception(logger: logging.Logger):

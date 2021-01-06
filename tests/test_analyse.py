@@ -24,11 +24,11 @@ def test_clean():
 
 def test_reduce_1():
     series_close = [s.close for s in SERIES]
-    assert series_close == [1, 2, 3, 4, 5, 4, 3, 4, 5, 6]
+    assert series_close == [1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 4.0, 5.0, 6.0]
 
     reduced = analyse.reduce(SERIES, 1)
     reduced_close = [s.close for s in reduced]
-    assert reduced_close == [1, 5, 3, 6]
+    assert reduced_close == [1.0, 5.0, 3.0, 6.0]
 
 
 def test_reduce_3():
