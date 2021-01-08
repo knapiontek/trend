@@ -73,8 +73,12 @@ class Series:
         result = self.tnx_collection.insert_many(series, sync=True)
         return self.verify_result(result)
 
-    def __ior__(self, series: List[tool.Clazz]) -> 'Series':
+    def __imul__(self, series: List[tool.Clazz]) -> 'Series':
         result = self.tnx_collection.replace_many(series, sync=True)
+        return self.verify_result(result)
+
+    def __ior__(self, series: List[tool.Clazz]) -> 'Series':
+        result = self.tnx_collection.update_many(series, sync=True)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'Series':

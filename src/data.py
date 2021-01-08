@@ -71,7 +71,7 @@ def exchange_update():
                             document.update(ANALYSE_DEFAULT)
                             document.shortable = shortable
                             new_documents += [document]
-                exchange_series |= old_documents
+                exchange_series *= old_documents
                 LOG.info(f'Securities: {len(old_documents)} updated in the exchange: {exchange_name}')
                 exchange_series += new_documents
                 LOG.info(f'Securities: {len(new_documents)} imported to the exchange: {exchange_name}')
@@ -181,7 +181,7 @@ def security_verify(engine: Any):
                 securities = exchange_series[name]
                 for security in securities:
                     security[f'health-{engine_name}'] = security.symbol not in health
-                exchange_series |= securities
+                exchange_series *= securities
 
 
 def security_clean(engine: Any):
@@ -200,7 +200,7 @@ def security_clean(engine: Any):
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
                     analyse.clean(time_series)
-                    security_series |= time_series
+                    security_series *= time_series
 
         LOG.info(f'Securities: {len(securities)} cleaned in the exchange: {exchange_name}')
 
@@ -216,6 +216,7 @@ def security_analyse(engine: Any):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
+        profits = []
         with flow.Progress(f'security-analyse {exchange_name}', securities) as progress:
             for security in securities:
                 progress(security.symbol)
@@ -224,8 +225,12 @@ def security_analyse(engine: Any):
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                        security[f'profit-{engine_name}'] = analyse.action(time_series)
-                    security_series |= time_series
+                        profit = analyse.action(time_series)
+                        profits += [{'_id': security['_id'], f'profit-{engine_name}': profit}]
+                    security_series *= time_series
+
+        with store.ExchangeSeries(editable=True) as exchange_series:
+            exchange_series |= profits
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')
 
