@@ -12,5 +12,5 @@ end = datetime.today()
 stocks = ['AAPL', 'AMZN']
 data = get_historical_data(stocks, start, end, token=TOKEN)
 
-with store.FileStore('iex_test', editable=True) as series:
+with store.File('iex_test', editable=True) as series:
     series.update(data)

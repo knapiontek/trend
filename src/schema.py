@@ -88,20 +88,26 @@ EXCHANGE_SCHEMA = {
             'health-exante': {'type': 'boolean'},
             'health-yahoo': {'type': 'boolean'},
             'health-stooq': {'type': 'boolean'},
-            'total': {'type': 'number', 'format': 'float'}
+            'total-exante': {'type': 'number', 'format': 'float'},
+            'total-yahoo': {'type': 'number', 'format': 'float'},
+            'total-stooq': {'type': 'number', 'format': 'float'}
         },
-        'required': ['symbol',
-                     'type',
-                     'exchange',
-                     'currency',
-                     'name',
-                     'description',
-                     'short_symbol',
-                     'shortable',
-                     'health-exante',
-                     'health-yahoo',
-                     'health-stooq',
-                     'total']
+        'required': [
+            'symbol',
+            'type',
+            'exchange',
+            'currency',
+            'name',
+            'description',
+            'short_symbol',
+            'shortable',
+            'health-exante',
+            'health-yahoo',
+            'health-stooq',
+            'total-exante',
+            'total-yahoo',
+            'total-stooq'
+        ]
     }
 }
 

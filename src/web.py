@@ -144,10 +144,11 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
         boolean = ['[-]', '[+]']
-        securities = [dict(security,
+        securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
                            health=boolean[security[f'health-{engine_name}']],
-                           info=security.description)
+                           total=boolean[security[f'total-{engine_name}']],
+                           description=security.description)
                       for security in securities]
         return select_securities(securities, query)
     return []
@@ -177,7 +178,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
     if engine_name and score is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
-        symbol, info = row['symbol'], row['info']
+        symbol, description = row['symbol'], row['description']
 
         # engine series
         engine = ENGINES[engine_name]
@@ -206,7 +207,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
             figure.add_trace(vma_100_trace, row=1, col=1)
             figure.add_trace(volume_trace, row=2, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
-            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=info, hovermode='x',
+            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE)
 
             # clip data

@@ -34,11 +34,13 @@ def read_major_indices() -> Dict[str, List]:
     return exchanges
 
 
-HEALTH_DEFAULT = {
+ANALYSE_DEFAULT = {
     'health-exante': False,
     'health-yahoo': False,
     'health-stooq': False,
-    'total': 0.0
+    'total-exante': 0.0,
+    'total-yahoo': 0.0,
+    'total-stooq': 0.0
 }
 
 
@@ -61,12 +63,12 @@ def exchange_update():
                     if security.short_symbol in exchange_index:
                         if security.symbol in exchange_securities:
                             document = exchange_securities[security.symbol]
-                            document.update(HEALTH_DEFAULT)
+                            document.update(ANALYSE_DEFAULT)
                             document.shortable = shortable
                             old_documents += [document]
                         else:
                             document = security
-                            document.update(HEALTH_DEFAULT)
+                            document.update(ANALYSE_DEFAULT)
                             document.shortable = shortable
                             new_documents += [document]
                 exchange_series |= old_documents
@@ -154,7 +156,7 @@ def security_verify(engine: Any):
         time_range = security_series.time_range()
         LOG.info(f'Time range entries: {len(time_range)}')
 
-    with store.FileStore(health_name, editable=True) as health:
+    with store.File(health_name, editable=True) as health:
         health.update({e: {} for e in config.ACTIVE_EXCHANGES})
         with flow.Progress(health_name, time_range) as progress:
             for t in time_range:
@@ -173,7 +175,7 @@ def security_verify(engine: Any):
                 if security_health:
                     health[exchange][short_symbol] = security_health
 
-    with store.FileStore(health_name) as health:
+    with store.File(health_name) as health:
         with store.ExchangeSeries(editable=True) as exchange_series:
             for name in config.ACTIVE_EXCHANGES:
                 securities = exchange_series[name]
@@ -222,6 +224,7 @@ def security_analyse(engine: Any):
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
+                        analyse.action(time_series)
                     security_series |= time_series
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')

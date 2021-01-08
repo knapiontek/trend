@@ -42,24 +42,37 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
 
 def sma(series: List[tool.Clazz], w_size: int):
     if len(series) >= w_size:
-        name = f'sma-{w_size}'
+        sma_name = f'sma-{w_size}'
         for window in windowed(series, w_size):
             last = window[-1]
-            if name not in last:
+            if sma_name not in last:
                 closes = [s.close for s in window]
-                last[name] = sum(closes) / w_size
+                last[sma_name] = sum(closes) / w_size
     return series
 
 
 def vma(series: List[tool.Clazz], w_size: int):
     if len(series) >= w_size:
-        name = f'vma-{w_size}'
+        vma_name = f'vma-{w_size}'
         for window in windowed(series, w_size):
             last = window[-1]
-            if name not in last:
+            if vma_name not in last:
                 weighted_closes = [s.close * s.volume for s in window]
                 volumes = [s.volume for s in window]
                 sum_volumes = sum(volumes)
                 if sum_volumes:
-                    last[name] = sum(weighted_closes) / sum_volumes
+                    last[vma_name] = sum(weighted_closes) / sum_volumes
+    return series
+
+
+def action(series: List[tool.Clazz]):
+    w_size = 100
+    vma_name = f'vma-{w_size}'
+    total = 0
+    for s1, s2 in windowed(series[w_size:], 2):
+        vma_value = s2[vma_name]
+        if s1.close < vma_value < s2.close:
+            s2.action = s2.close
+        if s2.close < vma_value < s1.close:
+            s2.action = -s2.close
     return series

@@ -11,13 +11,13 @@ from src import config, tool, schema
 LOG = logging.getLogger(__name__)
 
 
-class FileStore(dict):
+class File(dict):
     def __init__(self, name: str, editable=False):
         super().__init__()
         self.editable = editable
         self.filename = config.STORE_PATH.joinpath(f'{name}.json')
 
-    def __enter__(self) -> 'FileStore':
+    def __enter__(self) -> 'File':
         if self.filename.exists():
             with self.filename.open() as read_io:
                 self.update(json.loads(read_io.read()))
