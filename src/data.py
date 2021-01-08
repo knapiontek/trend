@@ -38,9 +38,9 @@ ANALYSE_DEFAULT = {
     'health-exante': False,
     'health-yahoo': False,
     'health-stooq': False,
-    'total-exante': 0.0,
-    'total-yahoo': 0.0,
-    'total-stooq': 0.0
+    'profit-exante': 0.0,
+    'profit-yahoo': 0.0,
+    'profit-stooq': 0.0
 }
 
 
@@ -224,7 +224,7 @@ def security_analyse(engine: Any):
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                        analyse.action(time_series)
+                        security[f'profit-{engine_name}'] = analyse.action(time_series)
                     security_series |= time_series
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')

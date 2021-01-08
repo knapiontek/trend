@@ -68,11 +68,11 @@ def vma(series: List[tool.Clazz], w_size: int):
 def action(series: List[tool.Clazz]):
     w_size = 100
     vma_name = f'vma-{w_size}'
-    total = 0
+    profit = 0.0
     for s1, s2 in windowed(series[w_size:], 2):
         vma_value = s2[vma_name]
         if s1.close < vma_value < s2.close:
             s2.action = s2.close
         if s2.close < vma_value < s1.close:
             s2.action = -s2.close
-    return series
+    return profit

@@ -33,7 +33,7 @@ if 'gunicorn' in sys.modules:
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', total='Total')
+SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profit='Profit')
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
@@ -147,7 +147,7 @@ def cb_symbol_table(exchange_name, engine_name, query):
         securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
                            health=boolean[security[f'health-{engine_name}']],
-                           total=boolean[security[f'total-{engine_name}']],
+                           profit=boolean[security[f'profit-{engine_name}']],
                            description=security.description)
                       for security in securities]
         return select_securities(securities, query)

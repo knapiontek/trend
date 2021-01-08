@@ -51,10 +51,11 @@ class Session(session.Session):
         return self
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
-        flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []
+
+        flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
 
         yahoo_symbol = short_symbol.replace('.', '-')
         yahoo_from = tool.to_timestamp(dt_from)

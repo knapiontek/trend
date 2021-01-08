@@ -88,9 +88,9 @@ EXCHANGE_SCHEMA = {
             'health-exante': {'type': 'boolean'},
             'health-yahoo': {'type': 'boolean'},
             'health-stooq': {'type': 'boolean'},
-            'total-exante': {'type': 'number', 'format': 'float'},
-            'total-yahoo': {'type': 'number', 'format': 'float'},
-            'total-stooq': {'type': 'number', 'format': 'float'}
+            'profit-exante': {'type': 'number', 'format': 'float'},
+            'profit-yahoo': {'type': 'number', 'format': 'float'},
+            'profit-stooq': {'type': 'number', 'format': 'float'}
         },
         'required': [
             'symbol',
@@ -104,9 +104,9 @@ EXCHANGE_SCHEMA = {
             'health-exante',
             'health-yahoo',
             'health-stooq',
-            'total-exante',
-            'total-yahoo',
-            'total-stooq'
+            'profit-exante',
+            'profit-yahoo',
+            'profit-stooq'
         ]
     }
 }
