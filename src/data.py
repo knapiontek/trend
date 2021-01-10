@@ -220,13 +220,14 @@ def security_analyse(engine: Any):
         with flow.Progress(f'security-analyse {exchange_name}', securities) as progress:
             for security in securities:
                 progress(security.symbol)
+
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                        profit = analyse.action(time_series)
-                        profits += [{'_id': security['_id'], f'profit-{engine_name}': profit}]
+                    profit = analyse.action(time_series)
+                    profits += [{'_id': security['_id'], f'profit-{engine_name}': profit}]
                     security_series *= time_series
 
         with store.ExchangeSeries(editable=True) as exchange_series:
