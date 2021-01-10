@@ -1,6 +1,6 @@
 import jsonschema
 
-from src import data, store, config, schema
+from src import data, store, config, schema, tool
 
 
 def test_exchanges():

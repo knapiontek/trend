@@ -1,6 +1,6 @@
 import orjson as json
 
-from src import analyse, tool, config
+from src import analyse, tool, config, yahoo
 
 SERIES = [
     tool.Clazz(symbol='XOM.NYSE', timestamp=1514851200, open=1.0, close=1.0, low=1.0, high=1.0, volume=3),
@@ -66,3 +66,14 @@ def test_vma():
                    (1515542400, 3.9069767441860463),
                    (1515628800, 4.204081632653061),
                    (1515715200, 4.733333333333333)]
+
+
+def test_action():
+    symbol = 'VTR.NYSE'
+    interval = tool.INTERVAL_1D
+    with yahoo.SecuritySeries(interval) as security_series:
+        time_series = security_series[symbol]
+
+    w_size = 100
+    analyse.vma(time_series, w_size)
+    analyse.action(time_series)

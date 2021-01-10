@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from src import tool, exante
 
 
-def test_time_series():
+def test_session():
     symbol = 'XOM.NYSE'
     interval = tool.INTERVAL_1H
     dt_from = datetime(2020, 2, 2, 23, tzinfo=timezone.utc)
@@ -53,3 +53,11 @@ def test_time_series():
         ('2020-02-04 18:00:00 +0000', 60.13, 2743043),
         ('2020-02-04 19:00:00 +0000', 60.06, 2958939)
     ]
+
+
+def test_securities():
+    symbol = 'XOM.NYSE'
+    interval = tool.INTERVAL_1D
+    with exante.SecuritySeries(interval) as security_series:
+        time_series = security_series[symbol]
+    assert len(time_series) >= 1000

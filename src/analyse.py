@@ -48,7 +48,6 @@ def sma(series: List[tool.Clazz], w_size: int):
             if sma_name not in last:
                 closes = [s.close for s in window]
                 last[sma_name] = sum(closes) / w_size
-    return series
 
 
 def vma(series: List[tool.Clazz], w_size: int):
@@ -62,12 +61,13 @@ def vma(series: List[tool.Clazz], w_size: int):
                 sum_volumes = sum(volumes)
                 if sum_volumes:
                     last[vma_name] = sum(weighted_closes) / sum_volumes
-    return series
 
 
-def action(series: List[tool.Clazz]):
+def action(series: List[tool.Clazz]) -> float:
+    assert len(series) >= 2, f'problem: {series[0].symbol}'
     w_size = 100
     vma_name = f'vma-{w_size}'
+    position = 0
     profit = 0.0
     for s1, s2 in windowed(series[w_size:], 2):
         vma_value = s2[vma_name]
@@ -75,4 +75,5 @@ def action(series: List[tool.Clazz]):
             s2.action = s2.close
         if s2.close < vma_value < s1.close:
             s2.action = -s2.close
+        s2.position = position
     return profit

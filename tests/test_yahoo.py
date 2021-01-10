@@ -16,3 +16,11 @@ def test_series():
         ('2020-02-03 00:00:00 +0000', 60.73, 27397300),
         ('2020-02-04 00:00:00 +0000', 59.970001, 31922100)
     ]
+
+
+def test_securities():
+    symbol = 'XOM.NYSE'
+    interval = tool.INTERVAL_1D
+    with yahoo.SecuritySeries(interval) as security_series:
+        time_series = security_series[symbol]
+    assert len(time_series) >= 1000
