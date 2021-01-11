@@ -69,7 +69,7 @@ def test_vma():
 
 
 def test_action():
-    symbol = 'VTR.NYSE'
+    symbol = 'XOM.NYSE'
     interval = tool.INTERVAL_1D
     with yahoo.SecuritySeries(interval) as security_series:
         time_series = security_series[symbol]

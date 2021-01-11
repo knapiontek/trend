@@ -30,15 +30,12 @@ def execute(function):
     thread.start()
 
 
-SPACES = ' ' * 43
-
-
 class Progress:
     def __init__(self, title: str, size: Union[int, Sized]):
         self.count = 0
         self.title = title
         self.length = len(size) if isinstance(size, Sized) else size
-        self.last_message = None
+        self.last_message = ''
 
     def __enter__(self) -> 'Progress':
         return self
@@ -49,17 +46,23 @@ class Progress:
                 LOG.warning(self.last_message)
         else:
             if self.length:
-                self.print(f'{self.title}: {100 * self.count / self.length:.1f}% done{SPACES}\n')
+                self.print(f'{self.title}: {100 * self.count / self.length:.1f}% done')
                 assert self.count == self.length
             else:
-                self.print(f'{self.title}: done{SPACES}\n')
+                self.print(f'{self.title}: done')
 
     def __call__(self, message: str):
-        self.print(f'{self.title}: {100 * self.count / self.length:.1f}% {message}{SPACES}\r')
+        self.print(f'{self.title}: {100 * self.count / self.length:.1f}% {message}', False)
         self.count += 1
         wait(config.loop_delay())
 
-    def print(self, message: str):
-        sys.stdout.write(message)
+    def print(self, message: str, new_line=True):
+        spaces = ''
+        trail = ['\r', '\n'][new_line]
+        len_message = len(message)
+        len_last_message = len(self.last_message)
+        if len_message > len_last_message:
+            spaces = ' ' * (len_message - len_last_message)  # erase last message
+        sys.stdout.write(f'{message}{spaces}{trail}')
         sys.stdout.flush()
         self.last_message = message
