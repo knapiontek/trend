@@ -19,6 +19,9 @@ def clean(series: List[tool.Clazz]):
 
 
 def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
+    if score is None:
+        return series
+
     queue = deque(series[:2])
 
     for s in series[2:]:
@@ -74,6 +77,8 @@ def action(series: List[tool.Clazz]) -> float:
     profit = position = 0.0
     for s1, s2 in windowed(series[w_size - 1:], 2):
         vma_value = s2[vma_name]
+
+        s2.action = s2.profit = None
 
         # long
         if s1.close < vma_value < s2.close:

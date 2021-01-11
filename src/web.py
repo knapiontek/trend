@@ -38,7 +38,6 @@ DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
-LINE_STYLE = dict(width=1.5)
 PLOT_BGCOLOR = 'rgb(240,240,240)'
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
@@ -65,7 +64,7 @@ date_choice = dcc.DatePickerSingle(id='date-from',
 
 score_choice = dcc.Input(id='score-choice',
                          type='number',
-                         min=0, max=6, step=1, value=1.0,
+                         min=0, max=6, step=1, value=3.0,
                          className='score',
                          persistence=True)
 
@@ -178,7 +177,7 @@ def cb_relayout_data(relayout_data):
                Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
               State('relayout-data', 'data'))
 def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_data):
-    if engine_name and score is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
+    if engine_name is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
         symbol, description = row['symbol'], row['description']
@@ -200,10 +199,10 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
             custom = [s.to_dict() for s in reduced_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=close, name='Close', customdata=custom, line=LINE_STYLE)
-            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', line=LINE_STYLE)
-            profit_trace = go.Bar(x=daily_dates, y=profit, name='Profit')
-            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume')
+            reduced_trace = go.Scatter(x=reduced_dates, y=close, name='Close', customdata=custom, line=dict(width=1.5))
+            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', line=dict(width=1.5))
+            profit_trace = go.Bar(x=daily_dates, y=profit, name='Profit', marker=dict(color='blue'))
+            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
             # create a graph
             figure = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03,
