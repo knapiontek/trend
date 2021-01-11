@@ -39,6 +39,7 @@ XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
 LINE_STYLE = dict(width=1.5)
+PLOT_BGCOLOR = 'rgb(240,240,240)'
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
@@ -144,10 +145,12 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
         boolean = ['[-]', '[+]']
+        health = f'health-{engine_name}'
+        profit = f'profit-{engine_name}'
         securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
-                           health=boolean[security[f'health-{engine_name}']],
-                           profit=boolean[security[f'profit-{engine_name}']],
+                           health=boolean[security[health]],
+                           profit=round(security[profit], 2),
                            description=security.description)
                       for security in securities]
         return select_securities(securities, query)
@@ -188,7 +191,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            ts, vma_100, volume = tool.transpose(time_series, ('timestamp', 'vma-100', 'volume'))
+            ts, vma_100, profit, volume = tool.transpose(time_series, ('timestamp', 'vma-100', 'profit', 'volume'))
             daily_dates = [tool.from_timestamp(t) for t in ts]
 
             reduced_series = analyse.reduce(time_series, score)
@@ -199,16 +202,19 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
             # create traces
             reduced_trace = go.Scatter(x=reduced_dates, y=close, name='Close', customdata=custom, line=LINE_STYLE)
             vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', line=LINE_STYLE)
+            profit_trace = go.Bar(x=daily_dates, y=profit, name='Profit')
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume')
 
             # create a graph
-            figure = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.7, 0.3])
+            figure = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03,
+                                   row_heights=[0.6, 0.2, 0.2])
             figure.add_trace(reduced_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
-            figure.add_trace(volume_trace, row=2, col=1)
+            figure.add_trace(profit_trace, row=2, col=1)
+            figure.add_trace(volume_trace, row=3, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='x',
-                                 xaxis=SPIKE, yaxis=SPIKE)
+                                 xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
 
             # clip data
             if 'xaxis' in relayout_data:
@@ -220,7 +226,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
 
             return figure
 
-    return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN))
+    return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN, plot_bgcolor=PLOT_BGCOLOR))
 
 
 @app.callback(
