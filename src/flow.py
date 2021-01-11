@@ -61,8 +61,8 @@ class Progress:
         trail = ['\r', '\n'][new_line]
         len_message = len(message)
         len_last_message = len(self.last_message)
-        if len_message > len_last_message:
-            spaces = ' ' * (len_message - len_last_message)  # erase last message
+        if len_message < len_last_message:
+            spaces = ' ' * (len_last_message - len_message)  # erase last message
         sys.stdout.write(f'{message}{spaces}{trail}')
         sys.stdout.flush()
         self.last_message = message
