@@ -16,6 +16,13 @@ SERIES = [
 ]
 
 
+def test_windowed():
+    series = [1, 2, 3, 4, 5]
+    assert list(analyse.windowed(series, 6)) == []
+    assert list(analyse.windowed(series, 5)) == [(1, 2, 3, 4, 5)]
+    assert list(analyse.windowed(series, 4)) == [(1, 2, 3, 4), (2, 3, 4, 5)]
+
+
 def test_clean():
     extra = [tool.Clazz(s, extra=1) for s in SERIES]
     analyse.clean(extra)

@@ -1,15 +1,17 @@
 from collections import deque
 from typing import List
 
-import more_itertools
-
 from src import tool, schema
 
 
-def windowed(series: List[tool.Clazz], w_size: int):
-    for window in more_itertools.windowed(series, w_size):
-        if None not in window:
-            yield window
+def windowed(series: List, w_size: int):
+    if len(series) >= w_size:
+        q = deque(series[:w_size])
+        yield tuple(q)
+        for s in series[w_size:]:
+            q.rotate(-1)
+            q[-1] = s
+            yield tuple(q)
 
 
 def clean(series: List[tool.Clazz]):
@@ -50,24 +52,27 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
 
 
 def sma(series: List[tool.Clazz], w_size: int):
-    sma_name = f'sma-{w_size}'
-    for window in windowed(series, w_size):
-        last = window[-1]
-        if sma_name not in last:
-            closes = [s.close for s in window]
-            last[sma_name] = sum(closes) / w_size
+    if len(series) >= w_size:
+        sma_name = f'sma-{w_size}'
+        sum_value = sum([s.close for s in series[:w_size]])
+        series[w_size - 1][sma_name] = sum_value / w_size
+        for s1, s2 in zip(series[w_size:], series):
+            sum_value += s1.close - s2.close
+            s1[sma_name] = sum_value / w_size
 
 
 def vma(series: List[tool.Clazz], w_size: int):
-    vma_name = f'vma-{w_size}'
-    for window in windowed(series, w_size):
-        last = window[-1]
-        if vma_name not in last:
-            weighted_closes = [s.close * s.volume for s in window]
-            volumes = [s.volume for s in window]
-            sum_volumes = sum(volumes)
-            if sum_volumes:
-                last[vma_name] = sum(weighted_closes) / sum_volumes
+    if len(series) >= w_size:
+        vma_name = f'vma-{w_size}'
+        sum_value = sum([s.close * s.volume for s in series[:w_size]])
+        sum_volume = sum([s.volume for s in series[:w_size]])
+        if sum_volume:
+            series[w_size - 1][vma_name] = sum_value / sum_volume
+        for s1, s2 in zip(series[w_size:], series):
+            sum_value += (s1.close * s1.volume) - (s2.close * s2.volume)
+            sum_volume += s1.volume - s2.volume
+            if sum_volume:
+                s1[vma_name] = sum_value / sum_volume
 
 
 def action(series: List[tool.Clazz]) -> float:
@@ -75,29 +80,26 @@ def action(series: List[tool.Clazz]) -> float:
     vma_name = f'vma-{w_size}'
 
     profit = position = 0.0
-    for s1, s2 in windowed(series[w_size - 1:], 2):
-        vma_value = s2[vma_name]
-
-        s2.action = s2.profit = None
-
-        # long
-        if s1.close < vma_value < s2.close:
-            if position < 0:  # close short
-                s2.action = s2.close
-                s2.profit = s2.close + position
-                profit += s2.profit
-                position = 0.0
-            elif position == 0:
-                position = s2.action = s2.close
-
-        # short
-        if s2.close < vma_value < s1.close:
-            if position > 0:  # close long
-                s2.action = s2.close
-                s2.profit = s2.close - position
-                profit += s2.profit
-                position = 0.0
-            elif position == 0:
-                position = s2.action = -s2.close
+    for s1, s2 in windowed(series, 2):
+        vma_value = s2.get(vma_name)
+        if vma_value:
+            # long
+            if s1.close < vma_value < s2.close:
+                if position < 0:  # close short
+                    s2.action = s2.close
+                    s2.profit = s2.close + position
+                    profit += s2.profit
+                    position = 0.0
+                elif position == 0:
+                    position = s2.action = s2.close
+            # short
+            if s2.close < vma_value < s1.close:
+                if position > 0:  # close long
+                    s2.action = s2.close
+                    s2.profit = s2.close - position
+                    profit += s2.profit
+                    position = 0.0
+                elif position == 0:
+                    position = s2.action = -s2.close
 
     return profit

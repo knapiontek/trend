@@ -199,9 +199,12 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
             custom = [s.to_dict() for s in reduced_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=close, name='Close', customdata=custom, line=dict(width=1.5))
-            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', line=dict(width=1.5))
-            profit_trace = go.Bar(x=daily_dates, y=profit, name='Profit', marker=dict(color='blue'))
+            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=custom, name='Close',
+                                       mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
+            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100',
+                                       mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
+            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit',
+                                      mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
             # create a graph

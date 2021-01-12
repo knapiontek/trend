@@ -154,6 +154,17 @@ def show_take_position(begin: int, end: int):
     plt.show()
 
 
+def sma1(series: List[tool.Clazz], w_size: int):
+    sma_name = f'sma-{w_size}'
+    sum_val = 0.0
+    for i, s in enumerate(series):
+        sum_val += s.close
+        if i >= w_size - 1:
+            if i >= w_size:
+                sum_val -= series[i - w_size].close
+            s[sma_name] = sum_val / w_size
+
+
 def execute():
     show_take_position(1514851200, 1607644800)
 
