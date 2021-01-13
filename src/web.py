@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 from datetime import timedelta
+from math import fabs, nan
 from typing import Dict, List
 
 import dash
@@ -9,7 +10,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_table
 import plotly.graph_objects as go
-from dash.dependencies import Output, Input, State
+from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
 from src import config, log, tool, store, yahoo, exante, stooq, analyse
@@ -102,7 +103,6 @@ series_graph = dcc.Graph(id='series-graph', config={'scrollZoom': True}, classNa
 
 app.layout = dbc.Row(
     [
-        dcc.Store(id='relayout-data', storage_type='session'),
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
@@ -156,27 +156,12 @@ def cb_symbol_table(exchange_name, engine_name, query):
     return []
 
 
-@app.callback(Output('relayout-data', 'data'),
-              [Input('series-graph', 'relayoutData')])
-def cb_relayout_data(relayout_data):
-    relayout_data = relayout_data or {}
-    data = {}
-    if {'xaxis.range[0]', 'xaxis.range[1]'} <= relayout_data.keys():
-        data['xaxis'] = [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
-    if {'yaxis.range[0]', 'yaxis.range[1]'} <= relayout_data.keys():
-        data['yaxis'] = [relayout_data['yaxis.range[0]'], relayout_data['yaxis.range[1]']]
-    if {'yaxis2.range[0]', 'yaxis2.range[1]'} <= relayout_data.keys():
-        data['yaxis2'] = [relayout_data['yaxis2.range[0]'], relayout_data['yaxis2.range[1]']]
-    return data
-
-
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
                Input('score-choice', 'value'),
-               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')],
-              State('relayout-data', 'data'))
-def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_data):
+               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
+def cb_series_graph(d_from, engine_name, score, data, selected_rows):
     if engine_name is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
         interval = tool.INTERVAL_1D
         row = data[selected_rows[0]]
@@ -190,21 +175,24 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
 
         if time_series:
             # customize data
-            ts, vma_100, profit, volume = tool.transpose(time_series, ('timestamp', 'vma-100', 'profit', 'volume'))
+            fields = ('timestamp', 'vma-100', 'profit', 'action', 'volume')
+            ts, vma_100, profit, action, volume = tool.transpose(time_series, fields)
             daily_dates = [tool.from_timestamp(t) for t in ts]
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
             reduced_dates = [tool.from_timestamp(t) for t in ts]
-            custom = [s.to_dict() for s in reduced_series]
+            custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low')} for s in reduced_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=custom, name='Close',
-                                       mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
-            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100',
-                                       mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
-            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit',
-                                      mode='lines', line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
+            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=custom, name='Close', mode='lines',
+                                       line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
+            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
+                                       connectgaps=True, marker=dict(color='red'))
+            action_trace = go.Scatter(x=daily_dates, y=[fabs(a or nan) for a in action], name='Action', mode='markers',
+                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
+            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit', mode='lines', line=dict(width=1.5),
+                                      connectgaps=True, marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
             # create a graph
@@ -212,6 +200,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
                                    row_heights=[0.6, 0.2, 0.2])
             figure.add_trace(reduced_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
+            figure.add_trace(action_trace, row=1, col=1)
             figure.add_trace(profit_trace, row=2, col=1)
             figure.add_trace(volume_trace, row=3, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
@@ -219,12 +208,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows, relayout_da
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
 
             # clip data
-            if 'xaxis' in relayout_data:
-                figure.update_xaxes(range=relayout_data['xaxis'])
-            if 'yaxis' in relayout_data:
-                figure.update_yaxes(range=relayout_data['yaxis'], row=1, col=1)
-            if 'yaxis2' in relayout_data:
-                figure.update_yaxes(range=relayout_data['yaxis2'], row=2, col=1)
+            figure.update_xaxes(range=[daily_dates[0], daily_dates[-1]])
 
             return figure
 
