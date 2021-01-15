@@ -2,7 +2,6 @@ import logging
 import re
 import sys
 from datetime import timedelta
-from math import fabs, nan
 from typing import Dict, List
 
 import dash
@@ -94,7 +93,8 @@ symbol_table = dash_table.DataTable(
 
 details_table = dash_table.DataTable(
     id='details-table',
-    columns=[{'name': name, 'id': _id} for _id, name in (('key', 'Key'), ('value', 'Value'))],
+    columns=[{'name': name, 'id': _id}
+             for _id, name in (('x', 'X'), ('y', 'Y'), ('key', 'Key'), ('value', 'Value'))],
     page_action='none',
     **table_style(key='left', value='right')
 )
@@ -106,7 +106,7 @@ app.layout = dbc.Row(
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
-            dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '60%'}),
+            dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '50%'}),
             dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
         dbc.Col(dbc.Spinner(series_graph))
@@ -149,7 +149,7 @@ def cb_symbol_table(exchange_name, engine_name, query):
         securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
                            health=boolean[security[health]],
-                           profit=round(security[profit], 2),
+                           profit=round(security[profit], 4),
                            description=security.description)
                       for security in securities]
         return select_securities(securities, query)
@@ -178,19 +178,30 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             fields = ('timestamp', 'vma-100', 'profit', 'action', 'volume')
             ts, vma_100, profit, action, volume = tool.transpose(time_series, fields)
             daily_dates = [tool.from_timestamp(t) for t in ts]
+            long = [a if a and a > 0 else None for a in action]
+            short = [-a if a and a < 0 else None for a in action]
+            action_custom = [{k: tool.from_timestamp(v) if k.endswith('timestamp') else round(v, 4)
+                              for k, v in s.items()
+                              if k in ('action', 'profit', 'timestamp', 'open_timestamp')}
+                             for s in time_series]
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
             reduced_dates = [tool.from_timestamp(t) for t in ts]
-            custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low')} for s in reduced_series]
+            reduced_custom = [{k: tool.from_timestamp(v) if k.endswith('timestamp') else round(v, 4)
+                               for k, v in s.items()
+                               if k in ('open', 'close', 'high', 'low', 'timestamp')}
+                              for s in reduced_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=custom, name='Close', mode='lines',
+            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=reduced_custom, name='Close', mode='lines',
                                        line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
-                                       connectgaps=True, marker=dict(color='red'))
-            action_trace = go.Scatter(x=daily_dates, y=[fabs(a or nan) for a in action], name='Action', mode='markers',
-                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
+                                       connectgaps=True, marker=dict(color='orange'))
+            long_trace = go.Scatter(x=daily_dates, y=long, customdata=action_custom, name='Long', mode='markers',
+                                    line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
+            short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers',
+                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
             profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit', mode='lines', line=dict(width=1.5),
                                       connectgaps=True, marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
@@ -200,16 +211,14 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
                                    row_heights=[0.6, 0.2, 0.2])
             figure.add_trace(reduced_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
-            figure.add_trace(action_trace, row=1, col=1)
+            figure.add_trace(long_trace, row=1, col=1)
+            figure.add_trace(short_trace, row=1, col=1)
             figure.add_trace(profit_trace, row=2, col=1)
             figure.add_trace(volume_trace, row=3, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='x',
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
-
-            # clip data
             figure.update_xaxes(range=[daily_dates[0], daily_dates[-1]])
-
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN, plot_bgcolor=PLOT_BGCOLOR))
@@ -221,7 +230,10 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 def cb_details_table(data):
     if data:
         points = data.get('points') or []
-        return [{'key': k, 'value': v} for p in points for k, v in p.get('customdata', {}).items()]
+        result = [{'x': p['x'], 'y': p['y'], 'key': k, 'value': v}
+                  for p in points if 'customdata' in p
+                  for k, v in p['customdata'].items()]
+        return sorted(result, key=lambda d: (d['x'], d['key']))
     return []
 
 
