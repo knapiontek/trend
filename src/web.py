@@ -94,7 +94,7 @@ symbol_table = dash_table.DataTable(
 details_table = dash_table.DataTable(
     id='details-table',
     columns=[{'name': name, 'id': _id}
-             for _id, name in (('x', 'X'), ('y', 'Y'), ('key', 'Key'), ('value', 'Value'))],
+             for _id, name in (('date', 'Date'), ('key', 'Key'), ('value', 'Value'))],
     page_action='none',
     **table_style(key='left', value='right')
 )
@@ -180,17 +180,13 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             daily_dates = [tool.from_timestamp(t) for t in ts]
             long = [a if a and a > 0 else None for a in action]
             short = [-a if a and a < 0 else None for a in action]
-            action_custom = [{k: tool.from_timestamp(v) if k.endswith('timestamp') else round(v, 4)
-                              for k, v in s.items()
-                              if k in ('action', 'profit', 'timestamp', 'open_timestamp')}
+            action_custom = [{k: v for k, v in s.items() if k in ('action', 'profit', 'timestamp', 'open_timestamp')}
                              for s in time_series]
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
             reduced_dates = [tool.from_timestamp(t) for t in ts]
-            reduced_custom = [{k: tool.from_timestamp(v) if k.endswith('timestamp') else round(v, 4)
-                               for k, v in s.items()
-                               if k in ('open', 'close', 'high', 'low', 'timestamp')}
+            reduced_custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low', 'timestamp')}
                               for s in reduced_series]
 
             # create traces
@@ -202,8 +198,8 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
             short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers',
                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
-            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit', mode='lines', line=dict(width=1.5),
-                                      connectgaps=True, marker=dict(color='blue'))
+            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit', mode='lines+markers',
+                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
             # create a graph
@@ -229,11 +225,16 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
     [Input('series-graph', 'clickData')])
 def cb_details_table(data):
     if data:
-        points = data.get('points') or []
-        result = [{'x': p['x'], 'y': p['y'], 'key': k, 'value': v}
-                  for p in points if 'customdata' in p
-                  for k, v in p['customdata'].items()]
-        return sorted(result, key=lambda d: (d['x'], d['key']))
+        result = []
+        for p in data.get('points', []):
+            cd = p.get('customdata')
+            if cd:
+                ts = cd['timestamp']
+                result += [dict(date=tool.from_timestamp(ts),
+                                key=k,
+                                value=tool.from_timestamp(v) if k.endswith('timestamp') else round(v, 4))
+                           for k, v in cd.items() if k != 'timestamp']
+        return sorted(result, key=lambda d: (d['date'], d['key']))
     return []
 
 
