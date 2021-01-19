@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from src import tool, exante
-from src.calendar import Calendar
+from src.tool import DateTime
 
 
 def test_session():
@@ -16,8 +16,8 @@ def test_session():
     with exante.Session() as session:
         for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 15):
             series = session.series(symbol, slice_from, slice_to, interval)
-            time_ranges += [(Calendar.format(slice_from), Calendar.format(slice_to))]
-            closing_prices += [(Calendar.format(s.timestamp), s.close, s.volume) for s in series]
+            time_ranges += [(DateTime.format(slice_from), DateTime.format(slice_to))]
+            closing_prices += [(DateTime.format(s.timestamp), s.close, s.volume) for s in series]
 
     assert time_ranges == [
         ('2020-02-03 00:00:00 +0000', '2020-02-03 14:00:00 +0000'),

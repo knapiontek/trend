@@ -7,8 +7,8 @@ import orjson as json
 from flask import Flask, request
 
 from src import data, log, yahoo, exante, stooq, config, tool, flow
-from src.calendar import Calendar
 from src.clazz import Clazz
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -42,14 +42,14 @@ TASKS = [
 
 def run_scheduled_tasks():
     for task in TASKS:
-        utc_now = Calendar.utc_now()
+        utc_now = DateTime.utc_now()
         task.next_run = utc_now.replace(hour=task.hour, minute=task.minute, second=0, microsecond=0)
         if task.next_run < utc_now:
             task.next_run += task.interval
 
     while flow.wait(60.0):
         for task in TASKS:
-            if task.next_run < Calendar.utc_now():
+            if task.next_run < DateTime.utc_now():
                 try:
                     LOG.info(f'Task: {task.function.__name__} has started')
                     task.running = True
@@ -60,7 +60,7 @@ def run_scheduled_tasks():
                     LOG.info(f'Task: {task.function.__name__} has finished')
                     if 'interval' in task:
                         task.next_run += task.interval
-                        task.last_run = Calendar.utc_now()
+                        task.last_run = DateTime.utc_now()
                         task.running = False
                     else:
                         TASKS.remove(task)
@@ -77,7 +77,7 @@ if 'gunicorn' in sys.modules:
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
-        task = Clazz(next_run=Calendar.utc_now().replace(microsecond=0), running=False, function=maintain_task)
+        task = Clazz(next_run=DateTime.utc_now().replace(microsecond=0), running=False, function=maintain_task)
         TASKS.append(task)
 
     LOG.info('Listing threads and tasks')

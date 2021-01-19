@@ -7,7 +7,7 @@ import jsonschema
 import orjson as json
 
 from src import schema
-from src.calendar import Calendar
+from src.tool import DateTime
 
 TREND_PATH = pathlib.Path(__file__).parent.parent
 SRC_PATH = TREND_PATH.joinpath('src')
@@ -37,7 +37,7 @@ def loop_delay() -> float:
 
 def datetime_from() -> datetime:
     config = load_file()
-    return Calendar.parse_datetime(config['system']['date-time-from'])
+    return DateTime.parse_datetime(config['system']['date-time-from'])
 
 
 def exante_auth() -> Tuple[str, str]:

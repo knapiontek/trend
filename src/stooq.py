@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 import requests
 
 from src import tool, config, session, store, flow
-from src.calendar import Calendar
 from src.clazz import Clazz
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name
 
 def timestamp_from_stooq(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return Calendar.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return DateTime.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
 def datum_from_stooq(dt: Dict, symbol: str) -> Optional[Clazz]:
@@ -125,8 +125,8 @@ class Session(session.Session):
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
-        ts_from = Calendar.to_timestamp(dt_from)
-        ts_to = Calendar.to_timestamp(dt_to)
+        ts_from = DateTime.to_timestamp(dt_from)
+        ts_to = DateTime.to_timestamp(dt_to)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())

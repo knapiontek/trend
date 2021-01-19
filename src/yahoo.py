@@ -6,8 +6,8 @@ from io import StringIO
 from typing import List, Dict, Optional
 
 from src import tool, store, session, config, flow
-from src.calendar import Calendar
 from src.clazz import Clazz
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def interval_to_yahoo(interval: timedelta):
 
 def timestamp_from_yahoo(date: str) -> int:
     dt = datetime.strptime(date, DT_FORMAT)
-    return Calendar.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return DateTime.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
 def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[Clazz]:
@@ -60,8 +60,8 @@ class Session(session.Session):
         flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
 
         yahoo_symbol = short_symbol.replace('.', '-')
-        yahoo_from = Calendar.to_timestamp(dt_from)
-        yahoo_to = Calendar.to_timestamp(dt_to + interval)
+        yahoo_from = DateTime.to_timestamp(dt_from)
+        yahoo_to = DateTime.to_timestamp(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)

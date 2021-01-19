@@ -13,6 +13,7 @@ from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
 from src import config, log, tool, store, yahoo, exante, stooq, analyse
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 
         # engine series
         engine = ENGINES[engine_name]
-        dt_from = tool.d_parse(d_from)
+        dt_from = DateTime.parse_date(d_from)
         with engine.SecuritySeries(interval, dt_from=dt_from) as security_series:
             time_series = security_series[symbol]
 
@@ -177,7 +178,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             # customize data
             fields = ('timestamp', 'vma-100', 'profit', 'action', 'volume')
             ts, vma_100, profit, action, volume = tool.transpose(time_series, fields)
-            daily_dates = [tool.ts_to_dt(t) for t in ts]
+            daily_dates = [DateTime.from_timestamp(t) for t in ts]
             long = [a if a and a > 0 else None for a in action]
             short = [-a if a and a < 0 else None for a in action]
             action_custom = [{k: v for k, v in s.items() if k in ('action', 'profit', 'timestamp', 'open_timestamp')}
@@ -185,7 +186,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
-            reduced_dates = [tool.ts_to_dt(t) for t in ts]
+            reduced_dates = [DateTime.from_timestamp(t) for t in ts]
             reduced_custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low', 'timestamp')}
                               for s in reduced_series]
 
@@ -230,9 +231,9 @@ def cb_details_table(data):
             cd = p.get('customdata')
             if cd:
                 ts = cd['timestamp']
-                result += [dict(date=tool.ts_format(ts),
+                result += [dict(date=DateTime.format(ts),
                                 key=k if not k.endswith('timestamp') else k.replace('timestamp', 'date'),
-                                value=tool.ts_format(v) if k.endswith('timestamp') else round(v, 4))
+                                value=DateTime.format(v) if k.endswith('timestamp') else round(v, 4))
                            for k, v in cd.items() if k != 'timestamp']
         return sorted(result, key=lambda d: (d['date'], d['key']))
     return []

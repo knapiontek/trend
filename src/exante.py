@@ -5,8 +5,8 @@ from typing import List, Dict, Optional
 import requests
 
 from src import config, tool, store, session
-from src.calendar import Calendar
 from src.clazz import Clazz
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
 def datetime_to_exante(dt: datetime) -> int:
-    return Calendar.to_timestamp(dt) * 1000
+    return DateTime.to_timestamp(dt) * 1000
 
 
 def interval_to_exante(interval: timedelta):

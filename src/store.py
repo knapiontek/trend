@@ -7,8 +7,8 @@ from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
 
 from src import config, tool, schema
-from src.calendar import Calendar
 from src.clazz import Clazz
+from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class ExchangeSeries(Series):
 class SecuritySeries(Series):
     def __init__(self, name: str, editable: bool, dt_from: datetime):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
-        self.ts_from = Calendar.to_timestamp(dt_from or config.datetime_from())
+        self.ts_from = DateTime.to_timestamp(dt_from or config.datetime_from())
 
     def __getitem__(self, symbol: str) -> List[Clazz]:
         query = '''
