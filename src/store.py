@@ -107,7 +107,7 @@ class ExchangeSeries(Series):
 class SecuritySeries(Series):
     def __init__(self, name: str, editable: bool, dt_from: datetime):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
-        self.ts_from = tool.to_timestamp(dt_from or config.datetime_from())
+        self.ts_from = tool.dt_to_ts(dt_from or config.datetime_from())
 
     def __getitem__(self, symbol: str) -> List[tool.Clazz]:
         query = '''

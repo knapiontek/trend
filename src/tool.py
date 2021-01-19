@@ -41,11 +41,11 @@ def module_name(name: str) -> str:
     return name.split('.')[-1]
 
 
-def from_timestamp(ts: int) -> datetime:
+def ts_to_dt(ts: int) -> datetime:
     return datetime.fromtimestamp(ts, tz=timezone.utc)
 
 
-def to_timestamp(dt: datetime) -> int:
+def dt_to_ts(dt: datetime) -> int:
     assert dt.tzinfo
     return int(dt.timestamp())
 
@@ -62,8 +62,8 @@ def dt_parse(dt: str) -> datetime:
     return datetime.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
 
 
-def d_parse(dt: str) -> datetime:
-    return datetime.strptime(dt, D_FORMAT).replace(tzinfo=timezone.utc)
+def d_parse(d: str) -> datetime:
+    return datetime.strptime(d, D_FORMAT).replace(tzinfo=timezone.utc)
 
 
 def dt_format(dt: datetime) -> str:
@@ -71,7 +71,7 @@ def dt_format(dt: datetime) -> str:
 
 
 def ts_format(ts: int) -> str:
-    dt = from_timestamp(ts)
+    dt = ts_to_dt(ts)
     return dt_format(dt)
 
 
@@ -124,7 +124,7 @@ def dt_last(exchange: str, interval: timedelta, dt: datetime) -> datetime:
 
 def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
     if path.exists():
-        dt = from_timestamp(path.stat().st_mtime)
+        dt = ts_to_dt(int(path.stat().st_mtime))
         path_dt_last = dt_last(exchange, interval, dt)
         now_dt_last = dt_last(exchange, interval, utc_now())
         return path_dt_last >= now_dt_last

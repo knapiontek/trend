@@ -99,7 +99,7 @@ def security_update(engine: Any):
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
         LOG.debug(f'Time range entries: {len(time_range)}')
-        series_latest = {t.symbol: tool.from_timestamp(t.max_ts) for t in time_range}
+        series_latest = {t.symbol: tool.ts_to_dt(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.ExchangeSeries() as exchange_series:
@@ -129,7 +129,7 @@ def time_series_verify(engine: Any,
         time_series = security_series[symbol]
 
     _, exchange = tool.symbol_split(symbol)
-    dates = [tool.from_timestamp(s.timestamp) for s in time_series]
+    dates = [tool.ts_to_dt(s.timestamp) for s in time_series]
     holidays = tool.exchange_holidays(exchange)
 
     overlap = [tool.dt_format(d) for d in dates if d in holidays]
@@ -164,8 +164,8 @@ def security_verify(engine: Any):
                 short_symbol, exchange = tool.symbol_split(t.symbol)
                 overlap, missing = time_series_verify(engine,
                                                       t.symbol,
-                                                      tool.from_timestamp(t.min_ts),
-                                                      tool.from_timestamp(t.max_ts),
+                                                      tool.ts_to_dt(t.min_ts),
+                                                      tool.ts_to_dt(t.max_ts),
                                                       interval)
                 security_health = tool.Clazz()
                 if overlap:

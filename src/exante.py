@@ -13,7 +13,7 @@ TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
 def dt_to_exante(dt: datetime):
-    return tool.to_timestamp(dt) * 1000
+    return tool.dt_to_ts(dt) * 1000
 
 
 def interval_to_exante(interval: timedelta):

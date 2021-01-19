@@ -24,7 +24,7 @@ def interval_to_yahoo(interval: timedelta):
 
 def timestamp_from_yahoo(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return tool.dt_to_ts(dt.replace(tzinfo=timezone.utc))
 
 
 def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
@@ -58,8 +58,8 @@ class Session(session.Session):
         flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
 
         yahoo_symbol = short_symbol.replace('.', '-')
-        yahoo_from = tool.to_timestamp(dt_from)
-        yahoo_to = tool.to_timestamp(dt_to + interval)
+        yahoo_from = tool.dt_to_ts(dt_from)
+        yahoo_to = tool.dt_to_ts(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)

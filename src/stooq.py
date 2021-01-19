@@ -72,7 +72,7 @@ def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name
 
 def timestamp_from_stooq(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tool.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    return tool.dt_to_ts(dt.replace(tzinfo=timezone.utc))
 
 
 def datum_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
@@ -123,8 +123,8 @@ class Session(session.Session):
 
     def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
-        ts_from = tool.to_timestamp(dt_from)
-        ts_to = tool.to_timestamp(dt_to)
+        ts_from = tool.dt_to_ts(dt_from)
+        ts_to = tool.dt_to_ts(dt_to)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())
