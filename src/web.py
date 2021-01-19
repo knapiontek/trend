@@ -199,8 +199,9 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
             short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers',
                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
-            profit_trace = go.Scatter(x=daily_dates, y=profit, name='Profit', mode='lines+markers',
-                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
+            profit_trace = go.Scatter(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
+                                      mode='lines+markers', line=dict(width=1.5), connectgaps=True,
+                                      marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
             # create a graph
