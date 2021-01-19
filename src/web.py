@@ -181,8 +181,8 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             daily_dates = [DateTime.from_timestamp(t) for t in ts]
             long = [a if a and a > 0 else None for a in action]
             short = [-a if a and a < 0 else None for a in action]
-            action_custom = [{k: v for k, v in s.items() if k in ('action', 'profit', 'timestamp', 'open_timestamp')}
-                             for s in time_series]
+            fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
+            action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
@@ -213,7 +213,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             figure.add_trace(profit_trace, row=2, col=1)
             figure.add_trace(volume_trace, row=3, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
-            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='x',
+            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='closest',
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
             figure.update_xaxes(range=[daily_dates[0], daily_dates[-1]])
             return figure
@@ -225,17 +225,28 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
     Output('details-table', 'data'),
     [Input('series-graph', 'clickData')])
 def cb_details_table(data):
-    if data:
+    def convert(datum: Dict) -> List[Dict]:
+        precision = 4
+        date = DateTime.format(datum['timestamp'])
         result = []
+        for k, v in datum.items():
+            if k == 'open_timestamp':
+                result += [{'date': date, 'key': 'open-date', 'value': DateTime.format(v)}]
+            elif k == 'open_position':
+                result += [{'date': date, 'key': 'open-position', 'value': round(v, precision)}]
+            elif k == 'timestamp':
+                pass
+            else:
+                result += [{'date': date, 'key': k, 'value': round(v, precision)}]
+        return result
+
+    if data:
+        results = []
         for p in data.get('points', []):
             cd = p.get('customdata')
             if cd:
-                ts = cd['timestamp']
-                result += [dict(date=DateTime.format(ts),
-                                key=k if not k.endswith('timestamp') else k.replace('timestamp', 'date'),
-                                value=DateTime.format(v) if k.endswith('timestamp') else round(v, 4))
-                           for k, v in cd.items() if k != 'timestamp']
-        return sorted(result, key=lambda d: (d['date'], d['key']))
+                results += convert(cd)
+        return sorted(results, key=lambda d: (d['date'], d['key']))
     return []
 
 

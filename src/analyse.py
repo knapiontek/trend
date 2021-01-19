@@ -91,6 +91,7 @@ def action(series: List[Clazz]) -> float:
                 if position < 0.0:  # close short
                     s2.action = s2.close
                     s2.open_timestamp = open_timestamp
+                    s2.open_position = position
                     s2.profit = -position - s2.close
                     profit += s2.profit
                     position = 0.0
@@ -102,6 +103,7 @@ def action(series: List[Clazz]) -> float:
                 if position > 0.0:  # close long
                     s2.action = -s2.close
                     s2.open_timestamp = open_timestamp
+                    s2.open_position = position
                     s2.profit = s2.close - position
                     profit += s2.profit
                     position = 0.0  # open short
