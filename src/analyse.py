@@ -1,7 +1,8 @@
 from collections import deque
 from typing import List
 
-from src import tool, schema
+from src import schema
+from src.clazz import Clazz
 
 
 def windowed(series: List, w_size: int):
@@ -14,13 +15,13 @@ def windowed(series: List, w_size: int):
             yield tuple(q)
 
 
-def clean(series: List[tool.Clazz]):
+def clean(series: List[Clazz]):
     required = ['_id', '_rev', '_key'] + schema.SECURITY_SCHEMA['rule']['required']
     for i, s in enumerate(series):
-        series[i] = tool.Clazz({k: v for k, v in s.items() if k in required})
+        series[i] = Clazz({k: v for k, v in s.items() if k in required})
 
 
-def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
+def reduce(series: List[Clazz], score: int) -> List[Clazz]:
     if score is None:
         return series
 
@@ -51,7 +52,7 @@ def reduce(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
     return list(queue)
 
 
-def sma(series: List[tool.Clazz], w_size: int):
+def sma(series: List[Clazz], w_size: int):
     if len(series) >= w_size:
         sma_name = f'sma-{w_size}'
         sum_value = sum([s.close for s in series[:w_size]])
@@ -61,7 +62,7 @@ def sma(series: List[tool.Clazz], w_size: int):
             s1[sma_name] = sum_value / w_size
 
 
-def vma(series: List[tool.Clazz], w_size: int):
+def vma(series: List[Clazz], w_size: int):
     if len(series) >= w_size:
         vma_name = f'vma-{w_size}'
         sum_value = sum([s.close * s.volume for s in series[:w_size]])
@@ -75,7 +76,7 @@ def vma(series: List[tool.Clazz], w_size: int):
                 s1[vma_name] = sum_value / sum_volume
 
 
-def action(series: List[tool.Clazz]) -> float:
+def action(series: List[Clazz]) -> float:
     w_size = 100
     vma_name = f'vma-{w_size}'
 

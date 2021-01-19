@@ -9,6 +9,8 @@ from typing import Dict, List, Optional
 import requests
 
 from src import tool, config, session, store, flow
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 LOG = logging.getLogger(__name__)
 
@@ -72,18 +74,18 @@ def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name
 
 def timestamp_from_stooq(date: str):
     dt = datetime.strptime(date, DT_FORMAT)
-    return tool.dt_to_ts(dt.replace(tzinfo=timezone.utc))
+    return Calendar.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def datum_from_stooq(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def datum_from_stooq(dt: Dict, symbol: str) -> Optional[Clazz]:
     try:
-        return tool.Clazz(symbol=symbol,
-                          timestamp=timestamp_from_stooq(dt['<DATE>']),
-                          open=float(dt['<OPEN>']),
-                          close=float(dt['<CLOSE>']),
-                          low=float(dt['<LOW>']),
-                          high=float(dt['<HIGH>']),
-                          volume=int(dt['<VOL>']))
+        return Clazz(symbol=symbol,
+                     timestamp=timestamp_from_stooq(dt['<DATE>']),
+                     open=float(dt['<OPEN>']),
+                     close=float(dt['<CLOSE>']),
+                     low=float(dt['<LOW>']),
+                     high=float(dt['<HIGH>']),
+                     volume=int(dt['<VOL>']))
     except:
         return None
 
@@ -121,10 +123,10 @@ class Session(session.Session):
                 zip_path = stooq_zip_path(interval, exchange)
                 LOG.debug(f'zip_path: {zip_path.as_posix()} size: {zip_path.stat().st_size / 1024 / 1024:.2f}M')
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
-        ts_from = tool.dt_to_ts(dt_from)
-        ts_to = tool.dt_to_ts(dt_to)
+        ts_from = Calendar.to_timestamp(dt_from)
+        ts_to = Calendar.to_timestamp(dt_to)
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())

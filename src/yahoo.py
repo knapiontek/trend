@@ -6,6 +6,8 @@ from io import StringIO
 from typing import List, Dict, Optional
 
 from src import tool, store, session, config, flow
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 LOG = logging.getLogger(__name__)
 
@@ -22,20 +24,20 @@ def interval_to_yahoo(interval: timedelta):
     }[interval]
 
 
-def timestamp_from_yahoo(date: str):
+def timestamp_from_yahoo(date: str) -> int:
     dt = datetime.strptime(date, DT_FORMAT)
-    return tool.dt_to_ts(dt.replace(tzinfo=timezone.utc))
+    return Calendar.to_timestamp(dt.replace(tzinfo=timezone.utc))
 
 
-def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[Clazz]:
     try:
-        return tool.Clazz(symbol=symbol,
-                          timestamp=timestamp_from_yahoo(dt['Date']),
-                          open=float(dt['Open']),
-                          close=float(dt['Close']),
-                          low=float(dt['Low']),
-                          high=float(dt['High']),
-                          volume=int(dt['Volume']))
+        return Clazz(symbol=symbol,
+                     timestamp=timestamp_from_yahoo(dt['Date']),
+                     open=float(dt['Open']),
+                     close=float(dt['Close']),
+                     low=float(dt['Low']),
+                     high=float(dt['High']),
+                     volume=int(dt['Volume']))
     except:
         return None
 
@@ -50,7 +52,7 @@ class Session(session.Session):
         self.crumb = found.group(1)
         return self
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []
@@ -58,8 +60,8 @@ class Session(session.Session):
         flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
 
         yahoo_symbol = short_symbol.replace('.', '-')
-        yahoo_from = tool.dt_to_ts(dt_from)
-        yahoo_to = tool.dt_to_ts(dt_to + interval)
+        yahoo_from = Calendar.to_timestamp(dt_from)
+        yahoo_to = Calendar.to_timestamp(dt_to + interval)
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)

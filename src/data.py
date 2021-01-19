@@ -7,6 +7,8 @@ import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from src import log, config, tool, flow, store, exante, analyse
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 LOG = logging.getLogger(__name__)
 
@@ -83,7 +85,7 @@ def security_range(engine: Any):
 
     with engine.SecuritySeries(tool.INTERVAL_1D) as security_series:
         time_range = {
-            t.symbol: [tool.ts_format(t.min_ts), tool.ts_format(t.max_ts)]
+            t.symbol: [Calendar.format(t.min_ts), Calendar.format(t.max_ts)]
             for t in security_series.time_range()
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
@@ -99,7 +101,7 @@ def security_update(engine: Any):
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
         LOG.debug(f'Time range entries: {len(time_range)}')
-        series_latest = {t.symbol: tool.ts_to_dt(t.max_ts) for t in time_range}
+        series_latest = {t.symbol: Calendar.from_timestamp(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.ExchangeSeries() as exchange_series:
@@ -111,7 +113,7 @@ def security_update(engine: Any):
             with flow.Progress(f'security-update: {exchange_name}', security_latest) as progress:
                 for symbol, dt_from in security_latest.items():
                     progress(symbol)
-                    dt_to = tool.dt_last(exchange_name, interval, tool.utc_now())
+                    dt_to = tool.last_session(exchange_name, interval, Calendar.utc_now())
                     for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 1024):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
@@ -129,17 +131,17 @@ def time_series_verify(engine: Any,
         time_series = security_series[symbol]
 
     _, exchange = tool.symbol_split(symbol)
-    dates = [tool.ts_to_dt(s.timestamp) for s in time_series]
+    dates = [Calendar.from_timestamp(s.timestamp) for s in time_series]
     holidays = tool.exchange_holidays(exchange)
 
-    overlap = [tool.dt_format(d) for d in dates if d in holidays]
+    overlap = [Calendar.format(d) for d in dates if d in holidays]
 
     missing = []
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
             if start not in dates and start not in holidays:
-                missing.append(tool.dt_format(start))
+                missing.append(Calendar.format(start))
         start += interval
 
     return overlap, missing
@@ -164,10 +166,10 @@ def security_verify(engine: Any):
                 short_symbol, exchange = tool.symbol_split(t.symbol)
                 overlap, missing = time_series_verify(engine,
                                                       t.symbol,
-                                                      tool.ts_to_dt(t.min_ts),
-                                                      tool.ts_to_dt(t.max_ts),
+                                                      Calendar.from_timestamp(t.min_ts),
+                                                      Calendar.from_timestamp(t.max_ts),
                                                       interval)
-                security_health = tool.Clazz()
+                security_health = Clazz()
                 if overlap:
                     security_health.overlap = overlap
                 if missing:

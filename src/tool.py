@@ -4,28 +4,11 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Dict, Iterable, Tuple, Set, Any
+from typing import List, Iterable, Tuple, Set
 
 from src import holidays
-
-
-class Clazz(dict):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __getattr__(self, key):
-        return super().__getitem__(key)
-
-    def __setattr__(self, key, value):
-        return super().__setitem__(key, value)
-
-    def from_dict(self, dt: Dict) -> 'Clazz':
-        self.__dict__.update(dt)
-        return self
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self)
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 
 def url_encode(name: str) -> str:
@@ -39,40 +22,6 @@ def symbol_split(symbol: str) -> Tuple[str, str]:
 
 def module_name(name: str) -> str:
     return name.split('.')[-1]
-
-
-def ts_to_dt(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts, tz=timezone.utc)
-
-
-def dt_to_ts(dt: datetime) -> int:
-    assert dt.tzinfo
-    return int(dt.timestamp())
-
-
-def utc_now() -> datetime:
-    return datetime.now(tz=timezone.utc)
-
-
-DT_FORMAT = '%Y-%m-%d %H:%M:%S %z'
-D_FORMAT = '%Y-%m-%d'
-
-
-def dt_parse(dt: str) -> datetime:
-    return datetime.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
-
-
-def d_parse(d: str) -> datetime:
-    return datetime.strptime(d, D_FORMAT).replace(tzinfo=timezone.utc)
-
-
-def dt_format(dt: datetime) -> str:
-    return dt.strftime(DT_FORMAT)
-
-
-def ts_format(ts: int) -> str:
-    dt = ts_to_dt(ts)
-    return dt_format(dt)
 
 
 INTERVAL_1H = timedelta(hours=1)
@@ -90,7 +39,7 @@ def interval_name(interval: timedelta) -> str:
 
 @lru_cache(maxsize=16)
 def exchange_holidays(exchange: str) -> Set[str]:
-    return {dt_parse(d) for d in holidays.EXCHANGE_HOLIDAYS[exchange]}
+    return {Calendar.parse_datetime(d) for d in holidays.EXCHANGE_HOLIDAYS[exchange]}
 
 
 def last_workday(exchange: str, dt: datetime) -> datetime:
@@ -109,7 +58,7 @@ def last_sunday(dt: datetime) -> datetime:
     return datetime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
 
 
-def dt_last(exchange: str, interval: timedelta, dt: datetime) -> datetime:
+def last_session(exchange: str, interval: timedelta, dt: datetime) -> datetime:
     """
     It returns datetime where all fields smaller than interval are set to zero.
     It is up to a data driver to modify it to meet a provider requirements.
@@ -124,9 +73,8 @@ def dt_last(exchange: str, interval: timedelta, dt: datetime) -> datetime:
 
 def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
     if path.exists():
-        dt = ts_to_dt(int(path.stat().st_mtime))
-        path_dt_last = dt_last(exchange, interval, dt)
-        now_dt_last = dt_last(exchange, interval, utc_now())
+        path_dt_last = last_session(exchange, interval, Calendar.from_timestamp(path.stat().st_mtime))
+        now_dt_last = last_session(exchange, interval, Calendar.utc_now())
         return path_dt_last >= now_dt_last
     return False
 

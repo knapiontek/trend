@@ -7,6 +7,8 @@ from arango import ArangoClient, ArangoServerError
 from arango.database import StandardDatabase
 
 from src import config, tool, schema
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 LOG = logging.getLogger(__name__)
 
@@ -69,15 +71,15 @@ class Series:
             else:
                 self.tnx_db.commit_transaction()
 
-    def __iadd__(self, series: List[tool.Clazz]) -> 'Series':
+    def __iadd__(self, series: List[Clazz]) -> 'Series':
         result = self.tnx_collection.insert_many(series, sync=True)
         return self.verify_result(result)
 
-    def __imul__(self, series: List[tool.Clazz]) -> 'Series':
+    def __imul__(self, series: List[Clazz]) -> 'Series':
         result = self.tnx_collection.replace_many(series, sync=True)
         return self.verify_result(result)
 
-    def __ior__(self, series: List[tool.Clazz]) -> 'Series':
+    def __ior__(self, series: List[Clazz]) -> 'Series':
         result = self.tnx_collection.update_many(series, sync=True)
         return self.verify_result(result)
 
@@ -94,22 +96,22 @@ class ExchangeSeries(Series):
     def __init__(self, editable=False):
         super().__init__('exchange', editable, ('exchange', 'short_symbol'), schema.EXCHANGE_SCHEMA)
 
-    def __getitem__(self, exchange: str) -> List[tool.Clazz]:
+    def __getitem__(self, exchange: str) -> List[Clazz]:
         query = '''
             FOR datum IN @@collection
                 FILTER datum.exchange == @exchange
                 RETURN datum
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'exchange': exchange, '@collection': self.name})
-        return [tool.Clazz(**r) for r in records]
+        return [Clazz(**r) for r in records]
 
 
 class SecuritySeries(Series):
     def __init__(self, name: str, editable: bool, dt_from: datetime):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
-        self.ts_from = tool.dt_to_ts(dt_from or config.datetime_from())
+        self.ts_from = Calendar.to_timestamp(dt_from or config.datetime_from())
 
-    def __getitem__(self, symbol: str) -> List[tool.Clazz]:
+    def __getitem__(self, symbol: str) -> List[Clazz]:
         query = '''
             FOR datum IN @@collection
                 SORT datum.timestamp
@@ -119,9 +121,9 @@ class SecuritySeries(Series):
         '''
         bind_vars = {'symbol': symbol, '@collection': self.name, 'timestamp': self.ts_from}
         records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
-        return [tool.Clazz(**r) for r in records]
+        return [Clazz(**r) for r in records]
 
-    def time_range(self) -> List[tool.Clazz]:
+    def time_range(self) -> List[Clazz]:
         query = '''
             FOR datum IN @@collection
                 COLLECT symbol = datum.symbol
@@ -129,7 +131,7 @@ class SecuritySeries(Series):
                 RETURN {symbol, min_ts, max_ts}
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
-        return [tool.Clazz(**r) for r in records]
+        return [Clazz(**r) for r in records]
 
 
 def exchange_erase():

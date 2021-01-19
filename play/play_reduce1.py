@@ -4,26 +4,27 @@ from typing import List, Iterable, Tuple
 import matplotlib.pyplot as plt
 
 from src import tool, yahoo
+from src.clazz import Clazz
 
 
-def read_series(begin: int, end: int) -> List[tool.Clazz]:
+def read_series(begin: int, end: int) -> List[Clazz]:
     interval = tool.INTERVAL_1D
     with yahoo.SecuritySeries(interval) as security_series:
         abc_series = security_series['ABC.NYSE']
-        return [tool.Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
+        return [Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
                 for s in abc_series if begin <= s.timestamp <= end]
 
 
-def average(series: List[tool.Clazz]):
+def average(series: List[Clazz]):
     return sum([s.y for s in series]) / len(series)
 
 
-def mid_series(series: Iterable[tool.Clazz]):
-    return [tool.Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
+def mid_series(series: Iterable[Clazz]):
+    return [Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
 
 
-def flatten_series(series: Iterable[tool.Clazz]):
-    series = [[tool.Clazz(x=s.x, y=s.y1), tool.Clazz(x=s.x, y=s.y2)] for s in series]
+def flatten_series(series: Iterable[Clazz]):
+    series = [[Clazz(x=s.x, y=s.y1), Clazz(x=s.x, y=s.y2)] for s in series]
     return sum(series, [])
 
 
@@ -34,7 +35,7 @@ def plot_series(xs: List[float], ys: List[float], label: str, score: int = 0):
     plt.plot(xs, ys, style, label=f'{label}-{score}', color=color, linewidth=1, markersize=1 + score)
 
 
-def reduce_series(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
+def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
     scope = (2 ** score) / 100 * average(series)
     queue = deque(series[:2])
 
@@ -97,7 +98,7 @@ def show_avg(begin: int, end: int):
     plt.show()
 
 
-def detect_swing(series: List[tool.Clazz], score: int) -> Iterable[Tuple[tool.Clazz, tool.Clazz, tool.Clazz]]:
+def detect_swing(series: List[Clazz], score: int) -> Iterable[Tuple[Clazz, Clazz, Clazz]]:
     avg = average(series)
     scope = (2 ** score) / 100 * avg
     queue = deque(series[:2])
@@ -154,7 +155,7 @@ def show_take_position(begin: int, end: int):
     plt.show()
 
 
-def sma1(series: List[tool.Clazz], w_size: int):
+def sma1(series: List[Clazz], w_size: int):
     sma_name = f'sma-{w_size}'
     sum_val = 0.0
     for i, s in enumerate(series):

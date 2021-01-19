@@ -4,6 +4,7 @@ from typing import List, Iterable
 import matplotlib.pyplot as plt
 
 from src import tool, yahoo
+from src.clazz import Clazz
 
 
 def show_widget():
@@ -14,11 +15,11 @@ def show_widget():
     plt.show()
 
 
-def plot_series(series: List[tool.Clazz]):
+def plot_series(series: List[Clazz]):
     plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
 
 
-def plot_swings(series: List[tool.Clazz], score: int = 0):
+def plot_swings(series: List[Clazz], score: int = 0):
     colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
     color = colors[score]
     plt.plot([s.x for s in series],
@@ -26,23 +27,23 @@ def plot_swings(series: List[tool.Clazz], score: int = 0):
              'o', label=f'score-{score}', color=color, linewidth=1, markersize=1 + score)
 
 
-def read_series(begin: int, end: int) -> List[tool.Clazz]:
+def read_series(begin: int, end: int) -> List[Clazz]:
     interval = tool.INTERVAL_1D
     with yahoo.SecuritySeries(interval) as security_series:
         abc_series = security_series['ABC.NYSE']
-        return [tool.Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
+        return [Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
                 for s in abc_series if begin <= s.timestamp <= end]
 
 
-def avg_val(series: List[tool.Clazz]):
+def avg_val(series: List[Clazz]):
     return sum([s.y for s in series]) / len(series)
 
 
-def avg_series(series: Iterable[tool.Clazz]):
-    return [tool.Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
+def avg_series(series: Iterable[Clazz]):
+    return [Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
 
 
-def reduce_series(series: List[tool.Clazz], score: int) -> List[tool.Clazz]:
+def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
     scope = (2 ** score) / 100 * avg_val(series)
     queue = deque(series[:2])
 

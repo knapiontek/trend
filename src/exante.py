@@ -5,6 +5,8 @@ from typing import List, Dict, Optional
 import requests
 
 from src import config, tool, store, session
+from src.calendar import Calendar
+from src.clazz import Clazz
 
 LOG = logging.getLogger(__name__)
 
@@ -12,8 +14,8 @@ DATA_URL = 'https://api-live.exante.eu/md/3.0'
 TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
-def dt_to_exante(dt: datetime):
-    return tool.dt_to_ts(dt) * 1000
+def datetime_to_exante(dt: datetime) -> int:
+    return Calendar.to_timestamp(dt) * 1000
 
 
 def interval_to_exante(interval: timedelta):
@@ -23,19 +25,19 @@ def interval_to_exante(interval: timedelta):
     }[interval]
 
 
-def ts_from_exante(timestamp: int):
+def timestamp_from_exante(timestamp: int):
     return timestamp // 1000
 
 
-def datum_from_exante(dt: Dict, symbol: str) -> Optional[tool.Clazz]:
+def datum_from_exante(dt: Dict, symbol: str) -> Optional[Clazz]:
     try:
-        return tool.Clazz(symbol=symbol,
-                          timestamp=ts_from_exante(dt['timestamp']),
-                          open=float(dt['open']),
-                          close=float(dt['close']),
-                          low=float(dt['low']),
-                          high=float(dt['high']),
-                          volume=int(dt['volume']))
+        return Clazz(symbol=symbol,
+                     timestamp=timestamp_from_exante(dt['timestamp']),
+                     open=float(dt['open']),
+                     close=float(dt['close']),
+                     low=float(dt['low']),
+                     high=float(dt['high']),
+                     volume=int(dt['volume']))
     except:
         return None
 
@@ -45,7 +47,7 @@ class Session(session.Session):
         requests.Session.__init__(self)
         self.auth = config.exante_auth()
 
-    def securities(self, exchange: str) -> List[tool.Clazz]:
+    def securities(self, exchange: str) -> List[Clazz]:
         url = f'{DATA_URL}/exchanges/{exchange}'
         response = self.get(url)
         assert response.status_code == 200, f'url: {url} reply: {response.text}'
@@ -56,11 +58,11 @@ class Session(session.Session):
                     name='name',
                     description='description',
                     short_symbol='ticker')
-        return [tool.Clazz({k: item[v] for k, v in keys.items()}) for item in response.json()]
+        return [Clazz({k: item[v] for k, v in keys.items()}) for item in response.json()]
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[tool.Clazz]:
-        exante_from = dt_to_exante(dt_from)
-        exante_to = dt_to_exante(dt_to)
+    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
+        exante_from = datetime_to_exante(dt_from)
+        exante_to = datetime_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)
 
         url = f'{DATA_URL}/ohlc/{tool.url_encode(symbol)}/{exante_interval}'

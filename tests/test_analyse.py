@@ -1,18 +1,19 @@
 import orjson as json
 
 from src import analyse, tool, config, yahoo
+from src.clazz import Clazz
 
 SERIES = [
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1514851200, open=1.0, close=1.0, low=1.0, high=1.0, volume=3),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1514937600, open=1.0, close=2.0, low=1.0, high=1.0, volume=8),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515024000, open=1.0, close=3.0, low=1.0, high=1.0, volume=1),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515110400, open=1.0, close=4.0, low=1.0, high=1.0, volume=13),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515196800, open=1.0, close=5.0, low=1.0, high=1.0, volume=23),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515369600, open=1.0, close=4.0, low=1.0, high=1.0, volume=8),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515456000, open=1.0, close=3.0, low=1.0, high=1.0, volume=4),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515542400, open=1.0, close=4.0, low=1.0, high=1.0, volume=31),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515628800, open=1.0, close=5.0, low=1.0, high=1.0, volume=14),
-    tool.Clazz(symbol='XOM.NYSE', timestamp=1515715200, open=1.0, close=6.0, low=1.0, high=1.0, volume=15)
+    Clazz(symbol='XOM.NYSE', timestamp=1514851200, open=1.0, close=1.0, low=1.0, high=1.0, volume=3),
+    Clazz(symbol='XOM.NYSE', timestamp=1514937600, open=1.0, close=2.0, low=1.0, high=1.0, volume=8),
+    Clazz(symbol='XOM.NYSE', timestamp=1515024000, open=1.0, close=3.0, low=1.0, high=1.0, volume=1),
+    Clazz(symbol='XOM.NYSE', timestamp=1515110400, open=1.0, close=4.0, low=1.0, high=1.0, volume=13),
+    Clazz(symbol='XOM.NYSE', timestamp=1515196800, open=1.0, close=5.0, low=1.0, high=1.0, volume=23),
+    Clazz(symbol='XOM.NYSE', timestamp=1515369600, open=1.0, close=4.0, low=1.0, high=1.0, volume=8),
+    Clazz(symbol='XOM.NYSE', timestamp=1515456000, open=1.0, close=3.0, low=1.0, high=1.0, volume=4),
+    Clazz(symbol='XOM.NYSE', timestamp=1515542400, open=1.0, close=4.0, low=1.0, high=1.0, volume=31),
+    Clazz(symbol='XOM.NYSE', timestamp=1515628800, open=1.0, close=5.0, low=1.0, high=1.0, volume=14),
+    Clazz(symbol='XOM.NYSE', timestamp=1515715200, open=1.0, close=6.0, low=1.0, high=1.0, volume=15)
 ]
 
 
@@ -24,7 +25,7 @@ def test_windowed():
 
 
 def test_clean():
-    extra = [tool.Clazz(s, extra=1) for s in SERIES]
+    extra = [Clazz(s, extra=1) for s in SERIES]
     analyse.clean(extra)
     assert extra == SERIES
 
@@ -41,7 +42,7 @@ def test_reduce_1():
 def test_reduce_3():
     with config.TESTS_PATH.joinpath('sample.json').open() as sample_io:
         sample = json.loads(sample_io.read())
-        security = [tool.Clazz(s) for s in sample['KGH.WSE']]
+        security = [Clazz(s) for s in sample['KGH.WSE']]
 
     reduced = analyse.reduce(security, 3)
     assert len(list(reduced)) == 43
