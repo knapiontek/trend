@@ -1,7 +1,9 @@
 from collections import deque
+from datetime import datetime, timezone
 from typing import List
 
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 from src import tool, yahoo
 from src.clazz import Clazz
@@ -24,10 +26,15 @@ def plot_swings(series: List[Clazz], score: int = 0):
 
 
 def show_widget():
+    def format_date(timestamp, step):
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc).strftime('%Y-%m-%d')
+
     plt.title('Swings')
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
+    plt.gca().set_facecolor('silver')
+    plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     plt.show()
 
 
@@ -38,7 +45,7 @@ def read_series(begin: int, end: int) -> List[Clazz]:
     with yahoo.SecuritySeries(interval) as security_series:
         for s in security_series[symbol]:
             if begin <= s.timestamp <= end:
-                x = s.timestamp / 1e6
+                x = s.timestamp
                 y1, y2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
                 series += [Clazz(x=x, y=s.open), Clazz(x=x, y=y1), Clazz(x=x, y=y2), Clazz(x=x, y=s.close)]
     return series
