@@ -91,12 +91,17 @@ def security_range(engine: Any):
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
 
 
-@remote_retry
 def security_update(engine: Any):
-    engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_update.__name__} engine: {engine_name}')
+    security_update_by_interval(engine, tool.INTERVAL_1H)
+    security_update_by_interval(engine, tool.INTERVAL_1D)
 
-    interval = tool.INTERVAL_1D
+
+@remote_retry
+def security_update_by_interval(engine: Any, interval: timedelta):
+    engine_name = tool.module_name(engine.__name__)
+    if interval == tool.INTERVAL_1H and engine_name != 'exante':
+        return
+    LOG.info(f'>> {security_update.__name__} engine: {engine_name} interval: {tool.interval_name(interval)}')
 
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
@@ -114,7 +119,7 @@ def security_update(engine: Any):
                 for symbol, dt_from in security_latest.items():
                     progress(symbol)
                     dt_to = tool.last_session(exchange_name, interval, DateTime.utc_now())
-                    for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 1024):
+                    for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 4096):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
                         with engine.SecuritySeries(interval, editable=True) as security_series:
