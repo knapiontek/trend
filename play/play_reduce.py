@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List, Iterable
+from typing import List
 
 import matplotlib.pyplot as plt
 
@@ -7,12 +7,8 @@ from src import tool, yahoo
 from src.clazz import Clazz
 
 
-def show_widget():
-    plt.title('Swings')
-    plt.legend(loc='upper left')
-    plt.grid()
-    plt.tight_layout()
-    plt.show()
+def avg_val(series: List[Clazz]):
+    return sum([s.y for s in series]) / len(series)
 
 
 def plot_series(series: List[Clazz]):
@@ -27,20 +23,25 @@ def plot_swings(series: List[Clazz], score: int = 0):
              'o', label=f'score-{score}', color=color, linewidth=1, markersize=1 + score)
 
 
+def show_widget():
+    plt.title('Swings')
+    plt.legend(loc='upper left')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+
 def read_series(begin: int, end: int) -> List[Clazz]:
+    symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
+    series = []
     with yahoo.SecuritySeries(interval) as security_series:
-        abc_series = security_series['ABC.NYSE']
-        return [Clazz(x=s.timestamp / 1e6, y1=s.low, y2=s.high)
-                for s in abc_series if begin <= s.timestamp <= end]
-
-
-def avg_val(series: List[Clazz]):
-    return sum([s.y for s in series]) / len(series)
-
-
-def avg_series(series: Iterable[Clazz]):
-    return [Clazz(x=s.x, y=(s.y1 + s.y2) / 2) for s in series]
+        for s in security_series[symbol]:
+            if begin <= s.timestamp <= end:
+                x = s.timestamp / 1e6
+                y1, y2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
+                series += [Clazz(x=x, y=s.open), Clazz(x=x, y=y1), Clazz(x=x, y=y2), Clazz(x=x, y=s.close)]
+    return series
 
 
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
@@ -73,10 +74,9 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
 
 def show_swings(begin: int, end: int):
     series = read_series(begin, end)
-    avg = avg_series(series)
-    plot_series(avg)
+    plot_series(series)
 
-    reduced = avg
+    reduced = series
     for score in range(0, 8):
         reduced = reduce_series(reduced, score)
         if len(reduced) > 2:
@@ -87,15 +87,14 @@ def show_swings(begin: int, end: int):
 
 def show_deals(begin: int, end: int):
     series = read_series(begin, end)
-    avg = avg_series(series)
-    plot_series(avg)
+    plot_series(series)
 
-    reduced = avg
+    reduced = series
     for score in range(0, 8):
         reduced = reduce_series(reduced, score)
 
     score = 3
-    swings = [s for s in avg if s.get('score', 0) >= score]
+    swings = [s for s in series if s.get('score', 0) >= score]
     plot_swings(swings, score)
 
     show_widget()

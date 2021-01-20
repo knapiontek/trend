@@ -229,7 +229,7 @@ def security_analyse(engine: Any):
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
                     profit = analyse.action(time_series)
-                    profits += [{'_id': security['_id'], f'profit-{engine_name}': profit}]
+                    profits += [security.entry({f'profit-{engine_name}': profit})]
                     security_series *= time_series
 
         with store.ExchangeSeries(editable=True) as exchange_series:
