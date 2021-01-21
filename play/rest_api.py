@@ -1,11 +1,13 @@
-import orjson as json
 import operator
 import time
 from datetime import timezone, timedelta, datetime
 from pprint import pprint
 from typing import Dict, Optional
 
+import orjson as json
 import requests
+
+from src.tool import DateTime
 
 AUTH = ('?', '?')
 URL = 'https://api-demo.exante.eu/md/2.0'
@@ -112,8 +114,8 @@ def query_stock_by_time(session: requests.Session, symbol, dt: datetime) -> Opti
 
 
 def find_gaps():
-    dt_close = datetime(2020, 7, 10, 21, 0, 0, tzinfo=DUBLIN_TZ)
-    dt_open = datetime(2020, 7, 13, 14, 31, 0, tzinfo=DUBLIN_TZ)
+    dt_close = DateTime(2020, 7, 10, 21, 0, 0)
+    dt_open = DateTime(2020, 7, 13, 14, 31, 0)
     pprint(f'datetime: {dt_open.isoformat()}')
 
     with requests.Session() as session:

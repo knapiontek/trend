@@ -13,13 +13,13 @@ def test_exchange_holidays():
 
 
 def test_last_workday():
-    dt = datetime(2020, 1, 21, tzinfo=timezone.utc)
-    assert tool.last_workday('NYSE', dt) == datetime(2020, 1, 17, tzinfo=timezone.utc)
+    dt = DateTime(2020, 1, 21)
+    assert tool.last_workday('NYSE', dt) == DateTime(2020, 1, 17)
 
 
 def test_last_sunday():
-    dt = datetime(2020, 9, 1, tzinfo=timezone.utc)
-    assert tool.last_sunday(dt) == datetime(2020, 8, 30, tzinfo=timezone.utc)
+    dt = DateTime(2020, 9, 1)
+    assert tool.last_sunday(dt) == DateTime(2020, 8, 30)
 
 
 def test_interval_name():
@@ -27,24 +27,24 @@ def test_interval_name():
 
 
 def test_time_slices_0():
-    dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
-    dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
+    dt_from = DateTime(2020, 8, 28)
+    dt_to = DateTime(2020, 8, 28, 10, 12, 10)
     slices = [(DateTime.format(slice_from), DateTime.format(slice_to))
               for slice_from, slice_to in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1D, 14)]
     assert slices == []
 
 
 def test_time_slices_1():
-    dt_from = datetime(2020, 8, 28, tzinfo=timezone.utc)
-    dt_to = datetime(2020, 8, 28, 10, 12, 10, tzinfo=timezone.utc)
+    dt_from = DateTime(2020, 8, 28)
+    dt_to = DateTime(2020, 8, 28, 10, 12, 10)
     slices = [(DateTime.format(slice_from), DateTime.format(slice_to))
               for slice_from, slice_to in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1H, 14)]
     assert slices == [('2020-08-28 01:00:00 +0000', '2020-08-28 10:12:10 +0000')]
 
 
 def test_time_slices():
-    dt_from = datetime(2020, 2, 1, tzinfo=timezone.utc)
-    dt_to = datetime(2020, 2, 4, tzinfo=timezone.utc)
+    dt_from = DateTime(2020, 2, 1)
+    dt_to = DateTime(2020, 2, 4)
     slices = [(DateTime.format(start), DateTime.format(stop))
               for start, stop in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1H, 21)]
     assert slices == [

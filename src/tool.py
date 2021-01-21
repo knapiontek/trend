@@ -1,7 +1,9 @@
 import logging
+import math as _math
+import time as _time
 import urllib.parse
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date, time
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Iterable, Tuple, Set, Union
@@ -13,37 +15,63 @@ DT_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 D_FORMAT = '%Y-%m-%d'
 
 
-class DateTime:
-    @staticmethod
-    def from_timestamp(ts: Union[int, float]) -> datetime:
-        return datetime.fromtimestamp(ts, tz=timezone.utc)
+class DateTime(datetime):
 
-    @staticmethod
-    def to_timestamp(dt: datetime) -> int:
-        assert dt.tzinfo
-        return int(dt.timestamp())
+    def __new__(cls, year, month=None, day=None, hour=0, minute=0, second=0, microsecond=0, tzinfo=None, *, fold=0):
+        return super().__new__(cls, year, month, day, hour, minute, second, microsecond, tzinfo=timezone.utc)
 
-    @staticmethod
-    def utc_now() -> datetime:
-        return datetime.now(tz=timezone.utc)
+    def __add__(self, other):
+        """Override buggy original function"""
+        if not isinstance(other, timedelta):
+            return NotImplemented
+        delta = timedelta(self.toordinal(),
+                          hours=self.hour,
+                          minutes=self.minute,
+                          seconds=self.second,
+                          microseconds=self.microsecond)
+        delta += other
+        hour, rem = divmod(delta.seconds, 3600)
+        minute, second = divmod(rem, 60)
+        if 0 < delta.days <= date.max.toordinal():
+            return self.combine(date.fromordinal(delta.days),
+                                time(hour, minute, second, delta.microseconds, tzinfo=self.tzinfo))
+        raise OverflowError("result out of range")
 
-    @staticmethod
-    def parse_datetime(dt: str) -> datetime:
-        return datetime.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
+    __radd__ = __add__
 
-    @staticmethod
-    def parse_date(d: str) -> datetime:
-        return datetime.strptime(d, D_FORMAT).replace(tzinfo=timezone.utc)
+    def to_timestamp(self) -> int:
+        assert self.tzinfo
+        return int(self.timestamp())
 
-    @staticmethod
-    def format(value: Union[int, float, datetime]) -> str:
-        if isinstance(value, datetime):
-            return value.strftime(DT_FORMAT)
-        elif isinstance(value, (int, float)):
-            dt = DateTime.from_timestamp(value)
-            return dt.strftime(DT_FORMAT)
-        else:
-            raise Exception(f'Cannot format {value}')
+    @classmethod
+    def from_timestamp(cls, ts: Union[int, float]) -> 'DateTime':
+        """Override buggy original function"""
+        fraction, t = _math.modf(ts)
+        us = round(fraction * 1e6)
+        if us >= 1000000:
+            t += 1
+            us -= 1000000
+        elif us < 0:
+            t -= 1
+            us += 1000000
+        year, month, day, hour, minute, second, _, _, _ = _time.gmtime(t)
+        second = min(second, 59)
+        return cls(year, month, day, hour, minute, second, us, timezone.utc)
+
+    @classmethod
+    def utc_now(cls) -> 'DateTime':
+        return cls.now(tz=timezone.utc)
+
+    @classmethod
+    def parse_datetime(cls, dt: str) -> 'DateTime':
+        return cls.strptime(dt, DT_FORMAT).replace(tzinfo=timezone.utc)
+
+    @classmethod
+    def parse_date(cls, d: str) -> 'DateTime':
+        return cls.strptime(d, D_FORMAT).replace(tzinfo=timezone.utc)
+
+    def format(self) -> str:
+        return self.strftime(DT_FORMAT)
 
 
 def url_encode(name: str) -> str:
@@ -77,23 +105,23 @@ def exchange_holidays(exchange: str) -> Set[str]:
     return {DateTime.parse_datetime(d) for d in holidays.EXCHANGE_HOLIDAYS[exchange]}
 
 
-def last_workday(exchange: str, dt: datetime) -> datetime:
+def last_workday(exchange: str, dt: DateTime) -> DateTime:
     _holidays = exchange_holidays(exchange)
     d = dt.toordinal()
     while True:
         d -= 1
-        day = datetime.fromordinal(d)
+        day = DateTime.fromordinal(d)
         day = day.replace(tzinfo=timezone.utc)
         if day.weekday() in (0, 1, 2, 3, 4) and day not in _holidays:
             return day
 
 
-def last_sunday(dt: datetime) -> datetime:
+def last_sunday(dt: DateTime) -> DateTime:
     d = dt.toordinal()
-    return datetime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
+    return DateTime.fromordinal(d - (d % 7)).replace(tzinfo=timezone.utc)
 
 
-def last_session(exchange: str, interval: timedelta, dt: datetime) -> datetime:
+def last_session(exchange: str, interval: timedelta, dt: DateTime) -> DateTime:
     """
     It returns datetime where all fields smaller than interval are set to zero.
     It is up to a data driver to modify it to meet a provider requirements.
@@ -114,7 +142,7 @@ def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
     return False
 
 
-def time_slices(dt_from: datetime, dt_to: datetime, interval: timedelta, size: int):
+def time_slices(dt_from: DateTime, dt_to: DateTime, interval: timedelta, size: int):
     start = dt_from
     delta = interval * size
     while start + interval <= dt_to:

@@ -2,13 +2,14 @@ from datetime import datetime, timezone
 from typing import List, Any
 
 from src import tool, exante, yahoo, stooq
+from src.tool import DateTime
 
 
 def read_data_source(engine: Any) -> List:
     symbol = 'SIE.XETRA'
     interval = tool.INTERVAL_1D
-    dt_from = datetime(2020, 8, 3, tzinfo=timezone.utc)
-    dt_to = datetime(2020, 8, 11, tzinfo=timezone.utc)
+    dt_from = DateTime(2020, 8, 3)
+    dt_to = DateTime(2020, 8, 11)
 
     with engine.Session() as session:
         return session.series(symbol, dt_from, dt_to, interval)

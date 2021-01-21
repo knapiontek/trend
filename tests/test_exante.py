@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from src import tool, exante
 from src.tool import DateTime
 
@@ -7,8 +5,8 @@ from src.tool import DateTime
 def test_session():
     symbol = 'XOM.NYSE'
     interval = tool.INTERVAL_1H
-    dt_from = datetime(2020, 2, 2, 23, tzinfo=timezone.utc)
-    dt_to = datetime(2020, 2, 4, 19, tzinfo=timezone.utc)
+    dt_from = DateTime(2020, 2, 2, 23)
+    dt_to = DateTime(2020, 2, 4, 19)
 
     time_ranges = []
     closing_prices = []
@@ -16,8 +14,8 @@ def test_session():
     with exante.Session() as session:
         for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 15):
             series = session.series(symbol, slice_from, slice_to, interval)
-            time_ranges += [(DateTime.format(slice_from), DateTime.format(slice_to))]
-            closing_prices += [(DateTime.format(s.timestamp), s.close, s.volume) for s in series]
+            time_ranges += [(slice_from.format(), slice_to.format())]
+            closing_prices += [(DateTime.from_timestamp(s.timestamp).format(), s.close, s.volume) for s in series]
 
     assert time_ranges == [
         ('2020-02-03 00:00:00 +0000', '2020-02-03 14:00:00 +0000'),

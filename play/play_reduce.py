@@ -1,5 +1,4 @@
 from collections import deque
-from datetime import datetime, timezone
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -28,7 +27,7 @@ def plot_swings(series: List[Clazz], score: int = 0):
 
 def show_widget():
     def format_date(timestamp, step):
-        return datetime.fromtimestamp(timestamp, tz=timezone.utc).strftime('%Y-%m-%d')
+        return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
     plt.title('Swings')
     plt.legend(loc='upper left')
@@ -109,8 +108,8 @@ def show_deals(symbol: str, begin: int, end: int):
 
 def execute():
     symbol = 'ABC.NYSE'
-    begin = DateTime.to_timestamp(datetime(2017, 11, 1, tzinfo=timezone.utc))
-    end = DateTime.to_timestamp(datetime.now(tz=timezone.utc))
+    begin = DateTime(2017, 11, 1).to_timestamp()
+    end = DateTime.utc_now().to_timestamp()
     show_deals(symbol, begin, end)
 
 

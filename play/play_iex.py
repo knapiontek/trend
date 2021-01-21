@@ -1,12 +1,13 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from iexfinance.stocks import get_historical_data
 
 from src import config, store
+from src.tool import DateTime
 
 TOKEN = config.iex_auth()
 
-start = datetime(2019, 1, 1, tzinfo=timezone.utc)
+start = DateTime(2019, 1, 1)
 end = datetime.today()
 
 stocks = ['AAPL', 'AMZN']
