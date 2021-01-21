@@ -7,6 +7,7 @@ from matplotlib import ticker
 
 from src import tool, yahoo
 from src.clazz import Clazz
+from src.tool import DateTime
 
 
 def avg_val(series: List[Clazz]):
@@ -38,8 +39,7 @@ def show_widget():
     plt.show()
 
 
-def read_series(begin: int, end: int) -> List[Clazz]:
-    symbol = 'ABC.NYSE'
+def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     interval = tool.INTERVAL_1D
     series = []
     with yahoo.SecuritySeries(interval) as security_series:
@@ -79,8 +79,8 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
     return output
 
 
-def show_swings(begin: int, end: int):
-    series = read_series(begin, end)
+def show_swings(symbol: str, begin: int, end: int):
+    series = read_series(symbol, begin, end)
     plot_series(series)
 
     reduced = series
@@ -92,8 +92,8 @@ def show_swings(begin: int, end: int):
     show_widget()
 
 
-def show_deals(begin: int, end: int):
-    series = read_series(begin, end)
+def show_deals(symbol: str, begin: int, end: int):
+    series = read_series(symbol, begin, end)
     plot_series(series)
 
     reduced = series
@@ -108,7 +108,10 @@ def show_deals(begin: int, end: int):
 
 
 def execute():
-    show_deals(1514851200, 1607644800)
+    symbol = 'ABC.NYSE'
+    begin = DateTime.to_timestamp(datetime(2017, 11, 1, tzinfo=timezone.utc))
+    end = DateTime.to_timestamp(datetime.now(tz=timezone.utc))
+    show_deals(symbol, begin, end)
 
 
 if __name__ == '__main__':

@@ -119,3 +119,8 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
                 FILTER series.timestamp == 1600214400
                 REMOVE series IN series_yahoo_1d
 ```
+
+```python
+from tool import DateTime
+from src.tool import DateTime
+```
