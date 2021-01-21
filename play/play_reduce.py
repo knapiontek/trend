@@ -109,7 +109,7 @@ def show_deals(symbol: str, begin: int, end: int):
 def execute():
     symbol = 'ABC.NYSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
-    end = DateTime.utc_now().to_timestamp()
+    end = DateTime.now().to_timestamp()
     show_deals(symbol, begin, end)
 
 

@@ -5,5 +5,5 @@ from src.tool import DateTime
 
 if __name__ == '__main__':
     channel = config.notify_channel()
-    response = requests.post(channel, data=f'notify: {DateTime.format(DateTime.utc_now())}')
+    response = requests.post(channel, data=f'notify: {DateTime.format(DateTime.now())}')
     assert response.status_code == 200, f'channel: {channel} reply: {response.text}'

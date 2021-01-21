@@ -59,8 +59,9 @@ class DateTime(datetime):
         return cls(year, month, day, hour, minute, second, us, timezone.utc)
 
     @classmethod
-    def utc_now(cls) -> 'DateTime':
-        return cls.now(tz=timezone.utc)
+    def now(cls) -> 'DateTime':
+        ts = _time.time()
+        return cls.from_timestamp(ts)
 
     @classmethod
     def parse_datetime(cls, dt: str) -> 'DateTime':
@@ -137,7 +138,7 @@ def last_session(exchange: str, interval: timedelta, dt: DateTime) -> DateTime:
 def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
     if path.exists():
         path_dt_last = last_session(exchange, interval, DateTime.from_timestamp(path.stat().st_mtime))
-        now_dt_last = last_session(exchange, interval, DateTime.utc_now())
+        now_dt_last = last_session(exchange, interval, DateTime.now())
         return path_dt_last >= now_dt_last
     return False
 

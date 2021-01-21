@@ -42,14 +42,14 @@ TASKS = [
 
 def run_scheduled_tasks():
     for task in TASKS:
-        utc_now = DateTime.utc_now()
+        utc_now = DateTime.now()
         task.next_run = utc_now.replace(hour=task.hour, minute=task.minute, second=0, microsecond=0)
         if task.next_run < utc_now:
             task.next_run += task.interval
 
     while flow.wait(60.0):
         for task in TASKS:
-            if task.next_run < DateTime.utc_now():
+            if task.next_run < DateTime.now():
                 try:
                     LOG.info(f'Task: {task.function.__name__} has started')
                     task.running = True
@@ -60,7 +60,7 @@ def run_scheduled_tasks():
                     LOG.info(f'Task: {task.function.__name__} has finished')
                     if 'interval' in task:
                         task.next_run += task.interval
-                        task.last_run = DateTime.utc_now()
+                        task.last_run = DateTime.now()
                         task.running = False
                     else:
                         TASKS.remove(task)
@@ -77,7 +77,7 @@ if 'gunicorn' in sys.modules:
 def schedule_endpoint():
     if request.method == 'POST':
         LOG.info(f'Scheduling function {maintain_task.__name__}')
-        task = Clazz(next_run=DateTime.utc_now().replace(microsecond=0), running=False, function=maintain_task)
+        task = Clazz(next_run=DateTime.now().replace(microsecond=0), running=False, function=maintain_task)
         TASKS.append(task)
 
     LOG.info('Listing threads and tasks')

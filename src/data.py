@@ -118,7 +118,7 @@ def security_update_by_interval(engine: Any, interval: timedelta):
             with flow.Progress(f'security-update: {exchange_name}', security_latest) as progress:
                 for symbol, dt_from in security_latest.items():
                     progress(symbol)
-                    dt_to = tool.last_session(exchange_name, interval, DateTime.utc_now())
+                    dt_to = tool.last_session(exchange_name, interval, DateTime.now())
                     for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 4096):
                         time_series = session.series(symbol, slice_from, slice_to, interval)
 
