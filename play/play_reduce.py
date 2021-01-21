@@ -17,8 +17,9 @@ def plot_series(series: List[Clazz]):
     plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
 
 
-def plot_swings(series: List[Clazz], score: int = 0):
-    colors = ['grey', 'olive', 'green', 'blue', 'orange', 'red', 'brown', 'black']
+def plot_swings(series: List[Clazz], score: int):
+    assert 1 <= score <= 8
+    colors = [None, 'yellow', 'orange', 'red', 'brown', 'olive', 'green', 'blue', 'black']
     color = colors[score]
     plt.plot([s.x for s in series],
              [s.y for s in series],
@@ -51,7 +52,8 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
 
 
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
-    scope = (2 ** score) / 100 * avg_val(series)
+    assert 1 <= score <= 8
+    scope = (2 ** (score - 1)) / 100 * avg_val(series)
     queue = deque(series[:2])
 
     for s in series[2:]:
@@ -83,7 +85,7 @@ def show_swings(symbol: str, begin: int, end: int):
     plot_series(series)
 
     reduced = series
-    for score in range(0, 8):
+    for score in range(1, 8):
         reduced = reduce_series(reduced, score)
         if len(reduced) > 2:
             plot_swings(reduced, score)
@@ -96,7 +98,7 @@ def show_deals(symbol: str, begin: int, end: int):
     plot_series(series)
 
     reduced = series
-    for score in range(0, 8):
+    for score in range(1, 8):
         reduced = reduce_series(reduced, score)
 
     score = 3
@@ -110,8 +112,10 @@ def execute():
     symbol = 'ABC.NYSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_deals(symbol, begin, end)
+    show_swings(symbol, begin, end)
 
 
 if __name__ == '__main__':
+    rule = (-5, 2, -2, 2, -1)
+    print(rule)
     execute()
