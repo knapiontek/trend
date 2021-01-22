@@ -1,7 +1,7 @@
 import csv
 import logging
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from io import StringIO
 from typing import List, Dict, Optional
 
@@ -25,8 +25,8 @@ def interval_to_yahoo(interval: timedelta):
 
 
 def timestamp_from_yahoo(date: str) -> int:
-    dt = datetime.strptime(date, DT_FORMAT)
-    return DateTime.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    dt = DateTime.strptime(date, DT_FORMAT)
+    return dt.replace(tzinfo=timezone.utc).to_timestamp()
 
 
 def datum_from_yahoo(dt: Dict, symbol: str) -> Optional[Clazz]:
@@ -52,7 +52,7 @@ class Session(session.Session):
         self.crumb = found.group(1)
         return self
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
+    def series(self, symbol: str, dt_from: DateTime, dt_to: DateTime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
         if exchange not in ('NYSE', 'NASDAQ'):
             return []
@@ -82,6 +82,6 @@ class Session(session.Session):
 
 
 class SecuritySeries(store.SecuritySeries):
-    def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None):
+    def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable, dt_from)

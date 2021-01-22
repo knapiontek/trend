@@ -123,7 +123,7 @@ class Session(session.Session):
                 zip_path = stooq_zip_path(interval, exchange)
                 LOG.debug(f'zip_path: {zip_path.as_posix()} size: {zip_path.stat().st_size / 1024 / 1024:.2f}M')
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
+    def series(self, symbol: str, dt_from: DateTime, dt_to: DateTime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
         ts_from = DateTime.to_timestamp(dt_from)
         ts_to = DateTime.to_timestamp(dt_to)
@@ -142,6 +142,6 @@ class Session(session.Session):
 
 
 class SecuritySeries(store.SecuritySeries):
-    def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None):
+    def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable, dt_from)

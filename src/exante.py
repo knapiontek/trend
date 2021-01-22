@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Dict, Optional
 
 import requests
@@ -14,8 +14,12 @@ DATA_URL = 'https://api-live.exante.eu/md/3.0'
 TRADE_URL = 'https://api-live.exante.eu/trade/3.0'
 
 
-def datetime_to_exante(dt: datetime) -> int:
-    return DateTime.to_timestamp(dt) * 1000
+def datetime_to_exante(dt: DateTime) -> int:
+    return dt.to_timestamp() * 1000
+
+
+def timestamp_from_exante(timestamp: int):
+    return timestamp // 1000
 
 
 def interval_to_exante(interval: timedelta):
@@ -23,10 +27,6 @@ def interval_to_exante(interval: timedelta):
         tool.INTERVAL_1H: 60 * 60,
         tool.INTERVAL_1D: 24 * 60 * 60
     }[interval]
-
-
-def timestamp_from_exante(timestamp: int):
-    return timestamp // 1000
 
 
 def datum_from_exante(dt: Dict, symbol: str) -> Optional[Clazz]:
@@ -60,7 +60,7 @@ class Session(session.Session):
                     short_symbol='ticker')
         return [Clazz({k: item[v] for k, v in keys.items()}) for item in response.json()]
 
-    def series(self, symbol: str, dt_from: datetime, dt_to: datetime, interval: timedelta) -> List[Clazz]:
+    def series(self, symbol: str, dt_from: DateTime, dt_to: DateTime, interval: timedelta) -> List[Clazz]:
         exante_from = datetime_to_exante(dt_from)
         exante_to = datetime_to_exante(dt_to)
         exante_interval = interval_to_exante(interval)
@@ -78,7 +78,7 @@ class Session(session.Session):
 
 
 class SecuritySeries(store.SecuritySeries):
-    def __init__(self, interval: timedelta, editable=False, dt_from: datetime = None):
+    def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable, dt_from)
 

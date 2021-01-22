@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import List, Tuple, Dict, Any
 
 import orjson as json
@@ -107,7 +106,7 @@ class ExchangeSeries(Series):
 
 
 class SecuritySeries(Series):
-    def __init__(self, name: str, editable: bool, dt_from: datetime):
+    def __init__(self, name: str, editable: bool, dt_from: DateTime):
         super().__init__(name, editable, ('symbol', 'timestamp'), schema.SECURITY_SCHEMA)
         self.ts_from = DateTime.to_timestamp(dt_from or config.datetime_from())
 

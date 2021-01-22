@@ -61,7 +61,7 @@ MMTH - how many stocks are above SMA-200
 - when in the down-trend
 - strong green bar
 - strong red bar
-- quit, no price change makes contra-trend players to loose confidence
+- quit, no price change makes contra-trend players to lose confidence
 - time to sell
 
 ### Market Sentiment
@@ -73,6 +73,7 @@ MMTH - how many stocks are above SMA-200
 - Truck Tonnage vs S&P500
 - Fear & Greed Index
 - Dollar Index (reverse correlation to the stock)
+- Margin Debt
 
 ### Global Financial Indices
 
@@ -118,9 +119,4 @@ curl -k 'https://cloud.iexapis.com/stable/ref-data/exchanges?token=???'|jq .
             FOR series IN series_yahoo_1d
                 FILTER series.timestamp == 1600214400
                 REMOVE series IN series_yahoo_1d
-```
-
-```python
-from tool import DateTime
-from src.tool import DateTime
 ```

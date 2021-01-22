@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Tuple, Any, Dict
 
 import orjson as json
@@ -85,7 +85,7 @@ def security_range(engine: Any):
 
     with engine.SecuritySeries(tool.INTERVAL_1D) as security_series:
         time_range = {
-            t.symbol: [DateTime.format(t.min_ts), DateTime.format(t.max_ts)]
+            t.symbol: [DateTime.from_timestamp(t.min_ts).format(), DateTime.from_timestamp(t.max_ts).format()]
             for t in security_series.time_range()
         }
         print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
@@ -130,7 +130,7 @@ def security_update_by_interval(engine: Any, interval: timedelta):
 
 def time_series_verify(engine: Any,
                        symbol: str,
-                       dt_from: datetime, dt_to: datetime,
+                       dt_from: DateTime, dt_to: DateTime,
                        interval: timedelta) -> Tuple[List, List]:
     with engine.SecuritySeries(interval) as security_series:
         time_series = security_series[symbol]
@@ -139,14 +139,14 @@ def time_series_verify(engine: Any,
     dates = [DateTime.from_timestamp(s.timestamp) for s in time_series]
     holidays = tool.exchange_holidays(exchange)
 
-    overlap = [DateTime.format(d) for d in dates if d in holidays]
+    overlap = [d.format() for d in dates if d in holidays]
 
     missing = []
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
             if start not in dates and start not in holidays:
-                missing.append(DateTime.format(start))
+                missing.append(start.format())
         start += interval
 
     return overlap, missing

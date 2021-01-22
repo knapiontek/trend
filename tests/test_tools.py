@@ -1,9 +1,8 @@
 import logging
-from datetime import datetime, timezone
 
 from src import tool, config
-from src.tool import DateTime
 from src.clazz import Clazz
+from src.tool import DateTime
 
 
 def test_exchange_holidays():
@@ -29,7 +28,7 @@ def test_interval_name():
 def test_time_slices_0():
     dt_from = DateTime(2020, 8, 28)
     dt_to = DateTime(2020, 8, 28, 10, 12, 10)
-    slices = [(DateTime.format(slice_from), DateTime.format(slice_to))
+    slices = [(slice_from.format(), slice_to.format())
               for slice_from, slice_to in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1D, 14)]
     assert slices == []
 
@@ -37,7 +36,7 @@ def test_time_slices_0():
 def test_time_slices_1():
     dt_from = DateTime(2020, 8, 28)
     dt_to = DateTime(2020, 8, 28, 10, 12, 10)
-    slices = [(DateTime.format(slice_from), DateTime.format(slice_to))
+    slices = [(slice_from.format(), slice_to.format())
               for slice_from, slice_to in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1H, 14)]
     assert slices == [('2020-08-28 01:00:00 +0000', '2020-08-28 10:12:10 +0000')]
 
@@ -45,7 +44,7 @@ def test_time_slices_1():
 def test_time_slices():
     dt_from = DateTime(2020, 2, 1)
     dt_to = DateTime(2020, 2, 4)
-    slices = [(DateTime.format(start), DateTime.format(stop))
+    slices = [(start.format(), stop.format())
               for start, stop in tool.time_slices(dt_from, dt_to, tool.INTERVAL_1H, 21)]
     assert slices == [
         ('2020-02-01 01:00:00 +0000', '2020-02-01 21:00:00 +0000'),

@@ -228,11 +228,11 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 def cb_details_table(data):
     def convert(datum: Dict) -> List[Dict]:
         precision = 4
-        date = DateTime.format(datum['timestamp'])
+        date = DateTime.from_timestamp(datum['timestamp']).format()
         result = []
         for k, v in datum.items():
             if k == 'open_timestamp':
-                result += [{'date': date, 'key': 'open-date', 'value': DateTime.format(v)}]
+                result += [{'date': date, 'key': 'open-date', 'value': DateTime.from_timestamp(v).format()}]
             elif k == 'open_position':
                 result += [{'date': date, 'key': 'open-position', 'value': round(v, precision)}]
             elif k == 'timestamp':
