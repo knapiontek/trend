@@ -39,6 +39,12 @@ class DateTime(datetime):
 
     __radd__ = __add__
 
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}({self.format()})'
+
+    def __str__(self):
+        return self.format()
+
     def to_timestamp(self) -> int:
         assert self.tzinfo
         return int(self.timestamp())

@@ -122,15 +122,17 @@ class SecuritySeries(Series):
         records = self.tnx_db.aql.execute(query, bind_vars=bind_vars)
         return [Clazz(**r) for r in records]
 
-    def time_range(self) -> List[Clazz]:
+    def time_range(self) -> Dict[str, Clazz]:
         query = '''
             FOR datum IN @@collection
                 COLLECT symbol = datum.symbol
-                AGGREGATE min_ts = MIN(datum.timestamp), max_ts = MAX(datum.timestamp)
-                RETURN {symbol, min_ts, max_ts}
+                AGGREGATE ts_from = MIN(datum.timestamp), ts_to = MAX(datum.timestamp)
+                RETURN {symbol, ts_from, ts_to}
         '''
         records = self.tnx_db.aql.execute(query, bind_vars={'@collection': self.name})
-        return [Clazz(**r) for r in records]
+        return {r['symbol']: Clazz(dt_from=DateTime.from_timestamp(r['ts_from']),
+                                   dt_to=DateTime.from_timestamp(r['ts_to']))
+                for r in records}
 
 
 def exchange_erase():

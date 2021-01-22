@@ -83,17 +83,17 @@ def security_range(engine: Any):
     engine_name = tool.module_name(engine.__name__)
     LOG.info(f'>> {security_range.__name__} engine: {engine_name}')
 
+    def default(obj):
+        if isinstance(obj, DateTime):
+            return obj.format()
+
     with engine.SecuritySeries(tool.INTERVAL_1D) as security_series:
-        time_range = {
-            t.symbol: [DateTime.from_timestamp(t.min_ts).format(), DateTime.from_timestamp(t.max_ts).format()]
-            for t in security_series.time_range()
-        }
-        print(json.dumps(time_range, option=json.OPT_INDENT_2).decode('utf-8'))
+        print(json.dumps(security_series.time_range(), option=json.OPT_INDENT_2, default=default).decode('utf-8'))
 
 
 def security_update(engine: Any):
-    security_update_by_interval(engine, tool.INTERVAL_1H)
     security_update_by_interval(engine, tool.INTERVAL_1D)
+    security_update_by_interval(engine, tool.INTERVAL_1H)
 
 
 @remote_retry
@@ -103,24 +103,23 @@ def security_update_by_interval(engine: Any, interval: timedelta):
         return
     LOG.info(f'>> {security_update.__name__} engine: {engine_name} interval: {tool.interval_name(interval)}')
 
+    default_range = Clazz(dt_to=config.datetime_from())
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
         LOG.debug(f'Time range entries: {len(time_range)}')
-        series_latest = {t.symbol: DateTime.from_timestamp(t.max_ts) for t in time_range}
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
-        security_latest = {s.symbol: series_latest.get(s.symbol) or config.datetime_from() for s in securities}
-
         with engine.Session() as session:
-            with flow.Progress(f'security-update: {exchange_name}', security_latest) as progress:
-                for symbol, dt_from in security_latest.items():
-                    progress(symbol)
+            with flow.Progress(f'security-update: {exchange_name}', securities) as progress:
+                for security in securities:
+                    progress(security.symbol)
+                    dt_from = time_range.get(security.symbol, default_range).dt_to
                     dt_to = tool.last_session(exchange_name, interval, DateTime.now())
                     for slice_from, slice_to in tool.time_slices(dt_from, dt_to, interval, 4096):
-                        time_series = session.series(symbol, slice_from, slice_to, interval)
+                        time_series = session.series(security.symbol, slice_from, slice_to, interval)
 
                         with engine.SecuritySeries(interval, editable=True) as security_series:
                             security_series += time_series
@@ -166,13 +165,13 @@ def security_verify(engine: Any):
     with store.File(health_name, editable=True) as health:
         health.update({e: {} for e in config.ACTIVE_EXCHANGES})
         with flow.Progress(health_name, time_range) as progress:
-            for t in time_range:
-                progress(t.symbol)
-                short_symbol, exchange = tool.symbol_split(t.symbol)
+            for symbol, symbol_range in time_range.items():
+                progress(symbol)
+                short_symbol, exchange = tool.symbol_split(symbol)
                 overlap, missing = time_series_verify(engine,
-                                                      t.symbol,
-                                                      DateTime.from_timestamp(t.min_ts),
-                                                      DateTime.from_timestamp(t.max_ts),
+                                                      symbol,
+                                                      symbol_range.dt_from,
+                                                      symbol_range.dt_to,
                                                       interval)
                 security_health = Clazz()
                 if overlap:
