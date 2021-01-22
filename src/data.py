@@ -229,6 +229,7 @@ def security_analyse(engine: Any):
 
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
+                    analyse.clean(time_series)  # TODO: remove this line after or on 23 Jan 2021
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)

@@ -30,7 +30,7 @@ def show_widget():
     def format_date(timestamp, step):
         return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
-    plt.title('Swings')
+    plt.title('Swings 2^(n-1)')
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
