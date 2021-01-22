@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Dict, List
 
 import dash
@@ -178,7 +178,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
             # customize data
             fields = ('timestamp', 'vma-100', 'profit', 'action', 'volume')
             ts, vma_100, profit, action, volume = tool.transpose(time_series, fields)
-            daily_dates = [DateTime.from_timestamp(t) for t in ts]
+            daily_dates = [datetime.utcfromtimestamp(t) for t in ts]
             long = [a if a and a > 0 else None for a in action]
             short = [-a if a and a < 0 else None for a in action]
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
@@ -186,7 +186,7 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
-            reduced_dates = [DateTime.from_timestamp(t) for t in ts]
+            reduced_dates = [datetime.utcfromtimestamp(t) for t in ts]
             reduced_custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low', 'timestamp')}
                               for s in reduced_series]
 

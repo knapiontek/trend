@@ -116,6 +116,6 @@ def execute():
 
 
 if __name__ == '__main__':
-    rule = (-5, 2, -2, 2, -1)
+    rule = (-5, -2, -1)
     print(rule)
     execute()
