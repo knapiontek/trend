@@ -23,7 +23,7 @@ def plot_swings(series: List[Clazz], score: int):
     color = colors[score]
     plt.plot([s.x for s in series],
              [s.y for s in series],
-             'o', label=f'score-{score}', color=color, linewidth=1, markersize=1 + score)
+             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color, linewidth=1, markersize=1 + score)
 
 
 def show_widget():
