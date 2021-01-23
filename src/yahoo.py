@@ -60,8 +60,8 @@ class Session(session.Session):
         flow.wait(max(0.6 - config.loop_delay(), 0))  # sleep at least 0.6 including loop in the flow module
 
         yahoo_symbol = short_symbol.replace('.', '-')
-        yahoo_from = DateTime.to_timestamp(dt_from)
-        yahoo_to = DateTime.to_timestamp(dt_to + interval)
+        yahoo_from = dt_from.to_timestamp()
+        yahoo_to = (dt_to + interval).to_timestamp()
         yahoo_interval = interval_to_yahoo(interval)
 
         url = SYMBOL_URL.format(symbol=yahoo_symbol)

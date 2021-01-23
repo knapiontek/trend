@@ -4,7 +4,7 @@ from typing import List
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
-from src import tool, yahoo
+from src import tool, exante
 from src.clazz import Clazz
 from src.tool import DateTime
 
@@ -42,7 +42,7 @@ def show_widget():
 def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     interval = tool.INTERVAL_1D
     series = []
-    with yahoo.SecuritySeries(interval) as security_series:
+    with exante.SecuritySeries(interval) as security_series:
         for s in security_series[symbol]:
             if begin <= s.timestamp <= end:
                 x = s.timestamp

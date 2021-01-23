@@ -1,7 +1,7 @@
 import csv
 import logging
 import zipfile
-from datetime import datetime, timezone, timedelta
+from datetime import timezone, timedelta
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -73,8 +73,8 @@ def find_symbol_path(short_symbol: str, interval: timedelta, exchange: str, name
 
 
 def timestamp_from_stooq(date: str):
-    dt = datetime.strptime(date, DT_FORMAT)
-    return DateTime.to_timestamp(dt.replace(tzinfo=timezone.utc))
+    dt = DateTime.strptime(date, DT_FORMAT)
+    return dt.replace(tzinfo=timezone.utc).to_timestamp()
 
 
 def datum_from_stooq(dt: Dict, symbol: str) -> Optional[Clazz]:
@@ -125,8 +125,8 @@ class Session(session.Session):
 
     def series(self, symbol: str, dt_from: DateTime, dt_to: DateTime, interval: timedelta) -> List[Clazz]:
         short_symbol, exchange = tool.symbol_split(symbol)
-        ts_from = DateTime.to_timestamp(dt_from)
-        ts_to = DateTime.to_timestamp(dt_to)
+        ts_from = dt_from.to_timestamp()
+        ts_to = dt_to.to_timestamp()
         zip_path = stooq_zip_path(interval, exchange)
         with zipfile.ZipFile(zip_path) as zip_io:
             relative_path = find_symbol_path(short_symbol, interval, exchange, zip_io.namelist())

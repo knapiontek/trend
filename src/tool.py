@@ -109,7 +109,7 @@ def interval_name(interval: timedelta) -> str:
 
 @lru_cache(maxsize=16)
 def exchange_holidays(exchange: str) -> Set[str]:
-    return {DateTime.parse_datetime(d) for d in holidays.EXCHANGE_HOLIDAYS[exchange]}
+    return {DateTime.parse_datetime(dt) for dt in holidays.EXCHANGE_HOLIDAYS[exchange]}
 
 
 def last_workday(exchange: str, dt: DateTime) -> DateTime:
