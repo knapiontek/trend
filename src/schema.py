@@ -85,12 +85,30 @@ EXCHANGE_SCHEMA = {
             'description': {'type': 'string'},
             'short_symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
-            'health-exante': {'type': 'boolean'},
-            'health-yahoo': {'type': 'boolean'},
-            'health-stooq': {'type': 'boolean'},
-            'profit-exante': {'type': 'number', 'format': 'float'},
-            'profit-yahoo': {'type': 'number', 'format': 'float'},
-            'profit-stooq': {'type': 'number', 'format': 'float'}
+            'stooq': {
+                'type': 'object',
+                'properties': {
+                    'health': {'type': 'boolean'},
+                    'profit': {'type': 'number', 'format': 'float'}
+                },
+                'required': ['health', 'profit']
+            },
+            'yahoo': {
+                'type': 'object',
+                'properties': {
+                    'health': {'type': 'boolean'},
+                    'profit': {'type': 'number', 'format': 'float'}
+                },
+                'required': ['health', 'profit']
+            },
+            'exante': {
+                'type': 'object',
+                'properties': {
+                    'health': {'type': 'boolean'},
+                    'profit': {'type': 'number', 'format': 'float'}
+                },
+                'required': ['health', 'profit']
+            }
         },
         'required': [
             'symbol',
@@ -101,12 +119,9 @@ EXCHANGE_SCHEMA = {
             'description',
             'short_symbol',
             'shortable',
-            'health-exante',
-            'health-yahoo',
-            'health-stooq',
-            'profit-exante',
-            'profit-yahoo',
-            'profit-stooq'
+            'stooq',
+            'yahoo',
+            'exante'
         ]
     }
 }

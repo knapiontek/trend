@@ -145,12 +145,10 @@ def cb_symbol_table(exchange_name, engine_name, query):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
         boolean = ['[-]', '[+]']
-        health = f'health-{engine_name}'
-        profit = f'profit-{engine_name}'
         securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
-                           health=boolean[security[health]],
-                           profit=round(security[profit], 4),
+                           health=boolean[security[engine_name].health],
+                           profit=round(security[engine_name].profit, 4),
                            description=security.description)
                       for security in securities]
         return select_securities(securities, query)

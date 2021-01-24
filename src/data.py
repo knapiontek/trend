@@ -36,16 +36,6 @@ def read_major_indices() -> Dict[str, List]:
     return exchanges
 
 
-ANALYSE_DEFAULT = {
-    'health-exante': False,
-    'health-yahoo': False,
-    'health-stooq': False,
-    'profit-exante': 0.0,
-    'profit-yahoo': 0.0,
-    'profit-stooq': 0.0
-}
-
-
 @remote_retry
 def exchange_update():
     LOG.info(f'>> {exchange_update.__name__}')
@@ -59,22 +49,22 @@ def exchange_update():
                 exchange_index = indices[exchange_name]
                 exchange_securities = {s.symbol: s for s in exchange_series[exchange_name]}
                 new_documents = []
-                old_documents = []
+                existing_documents = []
                 for security in session.securities(exchange_name):
                     shortable = shortables.get(security.symbol, False)
                     if security.short_symbol in exchange_index:
                         if security.symbol in exchange_securities:
                             document = exchange_securities[security.symbol]
-                            document.update(ANALYSE_DEFAULT)
                             document.shortable = shortable
-                            old_documents += [document]
+                            existing_documents += [document]
                         else:
                             document = security
-                            document.update(ANALYSE_DEFAULT)
                             document.shortable = shortable
+                            document.update({engine: Clazz(health=False, profit=0.0)
+                                             for engine in ('stooq', 'yahoo', 'exante')})
                             new_documents += [document]
-                exchange_series *= old_documents
-                LOG.info(f'Securities: {len(old_documents)} updated in the exchange: {exchange_name}')
+                exchange_series *= existing_documents
+                LOG.info(f'Securities: {len(existing_documents)} updated in the exchange: {exchange_name}')
                 exchange_series += new_documents
                 LOG.info(f'Securities: {len(new_documents)} imported to the exchange: {exchange_name}')
 
@@ -186,7 +176,7 @@ def security_verify(engine: Any):
             for name in config.ACTIVE_EXCHANGES:
                 securities = exchange_series[name]
                 for security in securities:
-                    security[f'health-{engine_name}'] = security.symbol not in health
+                    security[engine_name].health = security.symbol not in health
                 exchange_series *= securities
 
 
@@ -222,23 +212,23 @@ def security_analyse(engine: Any):
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
-        profits = []
+        entries = []
         with flow.Progress(f'security-analyse {exchange_name}', securities) as progress:
             for security in securities:
                 progress(security.symbol)
 
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
-                    analyse.clean(time_series)  # TODO: remove this line after or on 23 Jan 2021
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                    profit = analyse.action(time_series)
-                    profits += [security.entry({f'profit-{engine_name}': profit})]
+                    entry = security.entry(engine_name)
+                    entry[engine_name].profit = analyse.action(time_series)
+                    entries += [entry]
                     security_series *= time_series
 
         with store.ExchangeSeries(editable=True) as exchange_series:
-            exchange_series |= profits
+            exchange_series |= entries
 
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')
 
