@@ -1,4 +1,5 @@
 from collections import deque
+from enum import Enum
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -17,13 +18,38 @@ def plot_series(series: List[Clazz]):
     plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
 
 
+class Color(Enum):
+    yellow = 'yellow'
+    orange = 'orange'
+    red = 'red'
+    brown = 'brown'
+    olive = 'olive'
+    green = 'green'
+    blue = 'blue'
+    black = 'black'
+
+
+def plot_dots(series: List[Clazz], color: Color):
+    plt.plot([s.x for s in series],
+             [s.y for s in series],
+             'o', label=f'dot-{color.name}', color=color.name, linewidth=1, markersize=3)
+
+
 def plot_swings(series: List[Clazz], score: int):
     assert 1 <= score <= 8
-    colors = [None, 'yellow', 'orange', 'red', 'brown', 'olive', 'green', 'blue', 'black']
+    colors = [None,
+              Color.yellow,
+              Color.orange,
+              Color.red,
+              Color.brown,
+              Color.olive,
+              Color.green,
+              Color.blue,
+              Color.black]
     color = colors[score]
     plt.plot([s.x for s in series],
              [s.y for s in series],
-             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color, linewidth=1, markersize=1 + score)
+             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color.name, linewidth=1, markersize=1 + score)
 
 
 def show_widget(symbol: str, begin: int, end: int):
@@ -74,6 +100,7 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
                 queue[-1] = s
             elif delta23 < -scope:
                 queue[-1].confirm |= {-score}
+                s.propose |= {-score}
                 queue.append(s)
 
         if delta12 < 0:
@@ -82,6 +109,7 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
                 queue[-1] = s
             elif delta23 > scope:
                 queue[-1].confirm |= {score}
+                s.propose |= {score}
                 queue.append(s)
 
     return list(queue)
@@ -111,8 +139,12 @@ def show_deals(symbol: str, begin: int, end: int):
         reduced = reduce_series(reduced, score)
 
     score = 3
-    swings = [s for s in series if score in s.propose or -score in s.propose]
-    plot_swings(swings, score)
+
+    swings = [s for s in series if any(v in s.propose for v in (-score, score))]
+    plot_dots(swings, Color.green)
+
+    swings = [s for s in series if any(v in s.confirm for v in (-score, score))]
+    plot_dots(swings, Color.red)
 
     show_widget(symbol, begin, end)
 
@@ -122,6 +154,7 @@ def execute():
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
     show_deals(symbol, begin, end)
+    show_swings(symbol, begin, end)
 
 
 if __name__ == '__main__':
