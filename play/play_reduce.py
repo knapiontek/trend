@@ -1,6 +1,6 @@
 from collections import deque
 from enum import Enum
-from typing import List
+from typing import List, Iterable
 
 import matplotlib.pyplot as plt
 from matplotlib import ticker
@@ -79,8 +79,8 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
 
 def reduce_init(series: List[Clazz]):
     for s in series:
-        s.propose = set()
-        s.confirm = set()
+        s.candidate = set()
+        s.score = set()
 
 
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
@@ -96,20 +96,20 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
 
         if delta12 > 0:
             if delta23 > 0:
-                s.propose |= {-score}
+                s.candidate |= {score}
                 queue[-1] = s
             elif delta23 < -scope:
-                queue[-1].confirm |= {-score}
-                s.propose |= {-score}
+                queue[-1].score |= {-score}
+                s.candidate |= {-score}
                 queue.append(s)
 
         if delta12 < 0:
             if delta23 < 0:
-                s.propose |= {score}
+                s.candidate |= {-score}
                 queue[-1] = s
             elif delta23 > scope:
-                queue[-1].confirm |= {score}
-                s.propose |= {score}
+                queue[-1].score |= {score}
+                s.candidate |= {score}
                 queue.append(s)
 
     return list(queue)
@@ -129,6 +129,14 @@ def show_swings(symbol: str, begin: int, end: int):
     show_widget(symbol, begin, end)
 
 
+def candidates(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.candidate for v in values)]
+
+
+def scores(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.score for v in values)]
+
+
 def show_deals(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
@@ -139,18 +147,14 @@ def show_deals(symbol: str, begin: int, end: int):
         reduced = reduce_series(reduced, score)
 
     score = 3
-
-    swings = [s for s in series if any(v in s.propose for v in (-score, score))]
-    plot_dots(swings, Color.green)
-
-    swings = [s for s in series if any(v in s.confirm for v in (-score, score))]
-    plot_dots(swings, Color.red)
+    plot_dots(candidates(series, (-score, score)), Color.green)
+    plot_dots(scores(series, (-score, score)), Color.red)
 
     show_widget(symbol, begin, end)
 
 
 def execute():
-    symbol = 'ABC.NYSE'
+    symbol = 'PKO.WSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
     show_deals(symbol, begin, end)
