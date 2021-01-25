@@ -26,11 +26,11 @@ def plot_swings(series: List[Clazz], score: int):
              'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color, linewidth=1, markersize=1 + score)
 
 
-def show_widget():
-    def format_date(timestamp, step):
+def show_widget(symbol: str, begin: int, end: int):
+    def format_date(timestamp, step=None):
         return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
-    plt.title('Swings 2^(n-1)')
+    plt.title(f'Swings 2^(n-1) {symbol} [{format_date(begin)} - {format_date(end)}]')
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
@@ -51,6 +51,12 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     return series
 
 
+def reduce_init(series: List[Clazz]):
+    for s in series:
+        s.propose = set()
+        s.confirm = set()
+
+
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
     assert 1 <= score <= 8
     scope = (2 ** (score - 1)) / 100 * avg_val(series)
@@ -64,20 +70,21 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
 
         if delta12 > 0:
             if delta23 > 0:
+                s.propose |= {-score}
                 queue[-1] = s
             elif delta23 < -scope:
+                queue[-1].confirm |= {-score}
                 queue.append(s)
 
         if delta12 < 0:
             if delta23 < 0:
+                s.propose |= {score}
                 queue[-1] = s
             elif delta23 > scope:
+                queue[-1].confirm |= {score}
                 queue.append(s)
 
-    output = list(queue)
-    for s in output[1:]:
-        s.score = score
-    return output
+    return list(queue)
 
 
 def show_swings(symbol: str, begin: int, end: int):
@@ -85,12 +92,13 @@ def show_swings(symbol: str, begin: int, end: int):
     plot_series(series)
 
     reduced = series
+    reduce_init(reduced)
     for score in range(1, 8):
         reduced = reduce_series(reduced, score)
         if len(reduced) > 2:
             plot_swings(reduced, score)
 
-    show_widget()
+    show_widget(symbol, begin, end)
 
 
 def show_deals(symbol: str, begin: int, end: int):
@@ -98,21 +106,22 @@ def show_deals(symbol: str, begin: int, end: int):
     plot_series(series)
 
     reduced = series
+    reduce_init(reduced)
     for score in range(1, 8):
         reduced = reduce_series(reduced, score)
 
     score = 3
-    swings = [s for s in series if s.get('score', 0) >= score]
+    swings = [s for s in series if score in s.propose or -score in s.propose]
     plot_swings(swings, score)
 
-    show_widget()
+    show_widget(symbol, begin, end)
 
 
 def execute():
     symbol = 'ABC.NYSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_swings(symbol, begin, end)
+    show_deals(symbol, begin, end)
 
 
 if __name__ == '__main__':
