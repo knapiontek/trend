@@ -76,7 +76,7 @@ def vma(series: List[Clazz], w_size: int):
                 s1[vma_name] = sum_value / sum_volume
 
 
-def action(series: List[Clazz]) -> float:
+def action_vma(series: List[Clazz]) -> float:
     w_size = 100
     vma_name = f'vma-{w_size}'
 
@@ -106,9 +106,32 @@ def action(series: List[Clazz]) -> float:
                     s2.open_position = position
                     s2.profit = s2.close - position
                     profit += s2.profit
-                    position = 0.0  # open short
-                elif position == 0.0:
+                    position = 0.0
+                elif position == 0.0:  # open short
                     position = s2.action = -s2.close
                     open_timestamp = s2.timestamp
+
+    return profit
+
+
+def action(series: List[Clazz]) -> float:
+    profit = position = 0.0
+    open_timestamp = 0
+
+    for s in series:
+
+        # open long
+        if position == 0.0 and s.candidate == -3:
+            position = s.action = s.close
+            open_timestamp = s.timestamp
+
+        # close long
+        if position > 0.0 and s.candidate == -1:
+            s.action = -s.close
+            s.open_timestamp = open_timestamp
+            s.open_position = position
+            s.profit = s.close - position
+            profit += s.profit
+            position = 0.0
 
     return profit

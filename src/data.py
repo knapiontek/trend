@@ -6,7 +6,7 @@ import orjson as json
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from src import log, config, tool, flow, store, exante, analyse
+from src import log, config, tool, flow, store, exante, analyse, swings
 from src.clazz import Clazz
 from src.tool import DateTime
 
@@ -223,6 +223,7 @@ def security_analyse(engine: Any):
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
                     entry = security.entry(engine_name)
+                    swings.mark(time_series)
                     entry[engine_name].profit = analyse.action(time_series)
                     entries += [entry]
                     security_series *= time_series

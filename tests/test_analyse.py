@@ -84,4 +84,4 @@ def test_action():
 
     w_size = 100
     analyse.vma(time_series, w_size)
-    analyse.action(time_series)
+    analyse.action_vma(time_series)
