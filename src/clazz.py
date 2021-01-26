@@ -9,10 +9,10 @@ class Clazz(dict):
         super().__init__(*args, **kwargs)
 
     def __getattr__(self, key):
-        return super().__getitem__(key)
+        return self.__getitem__(key)
 
     def __setattr__(self, key, value):
-        return super().__setitem__(key, value)
+        return self.__setitem__(key, value)
 
     def entry(self, *fields) -> 'Clazz':
         """Prepares dictionary for database update"""
@@ -20,8 +20,8 @@ class Clazz(dict):
 
     def clean(self, *args):
         for a in args:
-            if super().__contains__(a):
-                super().__delitem__(a)
+            if self.__contains__(a):
+                self.__delitem__(a)
 
     def from_dict(self, dt: Dict) -> 'Clazz':
         self.__dict__.update(dt)
