@@ -14,9 +14,7 @@ def avg_val(series: List[Clazz]):
     return sum([s.y for s in series]) / len(series)
 
 
-def plot_series(series: List[Clazz]):
-    plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
-
+# plot
 
 class Color(Enum):
     yellow = 'yellow'
@@ -29,13 +27,17 @@ class Color(Enum):
     black = 'black'
 
 
+def plot_series(series: List[Clazz]):
+    plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
+
+
 def plot_dots(series: List[Clazz], color: Color):
     plt.plot([s.x for s in series],
              [s.y for s in series],
              'o', label=f'dot-{color.name}', color=color.name, linewidth=1, markersize=3)
 
 
-def plot_swings(series: List[Clazz], score: int):
+def score_to_color(score: int) -> Color:
     assert 1 <= score <= 8
     colors = [None,
               Color.yellow,
@@ -46,15 +48,15 @@ def plot_swings(series: List[Clazz], score: int):
               Color.green,
               Color.blue,
               Color.black]
-    color = colors[score]
-    plt.plot([s.x for s in series],
-             [s.y for s in series],
-             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color.name, linewidth=1, markersize=1 + score)
+    return colors[score]
 
 
 def show_widget(symbol: str, begin: int, end: int):
     def format_date(timestamp, step=None):
-        return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
+        if step:
+            return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
+        else:
+            return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
     plt.title(f'Swings 2^(n-1) {symbol} [{format_date(begin)} - {format_date(end)}]')
     plt.legend(loc='upper left')
@@ -64,6 +66,8 @@ def show_widget(symbol: str, begin: int, end: int):
     plt.gca().xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     plt.show()
 
+
+# data
 
 def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     interval = tool.INTERVAL_1D
@@ -77,6 +81,8 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     return series
 
 
+# reduce
+
 def reduce_init(series: List[Clazz]):
     for s in series:
         s.candidate = set()
@@ -85,79 +91,77 @@ def reduce_init(series: List[Clazz]):
 
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
     assert 1 <= score <= 8
-    scope = (2 ** (score - 1)) / 100 * avg_val(series)
+    swing_limit = (2 ** (score - 1)) / 100 * avg_val(series)
     queue = deque(series[:2])
 
-    for s in series[2:]:
-        y1, y2, y3 = queue[-2].y, queue[-1].y, s.y
+    for s3 in series[2:]:
+        s1, s2 = queue[-2], queue[-1]
 
-        delta12 = y1 - y2
-        delta23 = y2 - y3
+        delta12 = s2.y - s1.y
+        delta23 = s3.y - s2.y
 
         if delta12 > 0:
             if delta23 > 0:
-                s.candidate |= {score}
-                queue[-1] = s
-            elif delta23 < -scope:
-                queue[-1].score |= {-score}
-                s.candidate |= {-score}
-                queue.append(s)
+                s3.candidate |= {score}
+                queue[-1] = s3
+            elif delta23 < -swing_limit:
+                s2.score |= {score}
+                s3.candidate |= {-score}
+                queue.append(s3)
 
         if delta12 < 0:
             if delta23 < 0:
-                s.candidate |= {-score}
-                queue[-1] = s
-            elif delta23 > scope:
-                queue[-1].score |= {score}
-                s.candidate |= {score}
-                queue.append(s)
+                s3.candidate |= {-score}
+                queue[-1] = s3
+            elif delta23 > swing_limit:
+                s2.score |= {-score}
+                s3.candidate |= {score}
+                queue.append(s3)
 
     return list(queue)
+
+
+def mark_swings(series: List[Clazz]):
+    reduced = series
+    reduce_init(reduced)
+    for score in range(1, 8):
+        reduced = reduce_series(reduced, score)
+
+
+def swing_candidates(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.candidate for v in values)]
+
+
+def swing_scores(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.score for v in values)]
+
+
+# presentation
 
 
 def show_swings(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
-    reduced = series
-    reduce_init(reduced)
-    for score in range(1, 8):
-        reduced = reduce_series(reduced, score)
-        if len(reduced) > 2:
-            plot_swings(reduced, score)
-
-    show_widget(symbol, begin, end)
-
-
-def candidates(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.candidate for v in values)]
-
-
-def scores(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.score for v in values)]
-
-
-def show_deals(symbol: str, begin: int, end: int):
-    series = read_series(symbol, begin, end)
-    plot_series(series)
-
-    reduced = series
-    reduce_init(reduced)
-    for score in range(1, 8):
-        reduced = reduce_series(reduced, score)
+    mark_swings(series)
 
     score = 3
-    plot_dots(candidates(series, (-score, score)), Color.green)
-    plot_dots(scores(series, (-score, score)), Color.red)
+
+    candidates = swing_candidates(series, (score,))
+    plot_dots(candidates, Color.green)
+
+    scores = swing_scores(series, (score,))
+    plot_dots(scores, Color.red)
 
     show_widget(symbol, begin, end)
 
 
+# main
+
 def execute():
-    symbol = 'PKO.WSE'
+    symbol = 'ABC.NYSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_deals(symbol, begin, end)
     show_swings(symbol, begin, end)
 
 
