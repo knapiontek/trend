@@ -119,6 +119,8 @@ def action(series: List[Clazz]) -> float:
     open_timestamp = 0
 
     for s in series:
+        s.profit = s.action = s.open_position = 0.0
+        s.open_timestamp = 0
 
         # open long
         if position == 0.0 and s.candidate == -3:

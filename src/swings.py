@@ -1,13 +1,13 @@
 from collections import deque
-from typing import List, Iterable
+from typing import List
 
 from src.clazz import Clazz
 
 
 def reduce_init(series: List[Clazz]):
     for s in series:
-        s.candidate = set()
-        s.score = set()
+        s.candidate = []
+        s.score = []
 
 
 def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
@@ -24,21 +24,21 @@ def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
 
         if delta12 > 0:
             if delta23 > 0:
-                s3.candidate |= {score}
+                s3.candidate += [score]
                 queue[-1] = s3
             elif delta23 < -swing_limit:
-                s2.score |= {score}
-                s3.candidate |= {-score}
-                queue.append(s3)
+                s2.score += [score]
+                s3.candidate += [-score]
+                queue += [s3]
 
         if delta12 < 0:
             if delta23 < 0:
-                s3.candidate |= {-score}
+                s3.candidate += [-score]
                 queue[-1] = s3
             elif delta23 > swing_limit:
-                s2.score |= {-score}
-                s3.candidate |= {score}
-                queue.append(s3)
+                s2.score += [-score]
+                s3.candidate += [score]
+                queue += [s3]
 
     return list(queue)
 
@@ -48,11 +48,3 @@ def mark(series: List[Clazz]):
     reduce_init(reduced)
     for score in range(1, 8):
         reduced = reduce_series(reduced, score)
-
-
-def swing_candidates(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.candidate for v in values)]
-
-
-def swing_scores(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.score for v in values)]
