@@ -37,6 +37,13 @@ def plot_dots(series: List[Clazz], color: Color):
              'o', label=f'dot-{color.name}', color=color.name, linewidth=1, markersize=3)
 
 
+def plot_swings(series: List[Clazz], score: int):
+    color = score_to_color(score)
+    plt.plot([s.x for s in series],
+             [s.y for s in series],
+             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color.name, linewidth=1, markersize=1 + score)
+
+
 def score_to_color(score: int) -> Color:
     assert 1 <= score <= 8
     colors = [None,
@@ -52,11 +59,11 @@ def score_to_color(score: int) -> Color:
 
 
 def show_widget(symbol: str, begin: int, end: int):
-    def format_date(timestamp, step=None):
-        if step:
-            return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
-        else:
+    def format_date(timestamp, step=0):
+        if step is None:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
     plt.title(f'Swings 2^(n-1) {symbol} [{format_date(begin)} - {format_date(end)}]')
     plt.legend(loc='upper left')
@@ -139,7 +146,7 @@ def swing_scores(series: List[Clazz], values: Iterable[int]):
 # presentation
 
 
-def show_swings(symbol: str, begin: int, end: int):
+def show_candidates(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
@@ -147,11 +154,24 @@ def show_swings(symbol: str, begin: int, end: int):
 
     score = 3
 
-    candidates = swing_candidates(series, (score,))
+    candidates = swing_candidates(series, (-score, score))
     plot_dots(candidates, Color.green)
 
-    scores = swing_scores(series, (score,))
+    scores = swing_scores(series, (-score, score))
     plot_dots(scores, Color.red)
+
+    show_widget(symbol, begin, end)
+
+
+def show_swings(symbol: str, begin: int, end: int):
+    series = read_series(symbol, begin, end)
+    plot_series(series)
+
+    mark_swings(series)
+
+    for score in range(1, 8):
+        scores = swing_scores(series, (-score, score))
+        plot_swings(scores, score)
 
     show_widget(symbol, begin, end)
 
@@ -166,6 +186,4 @@ def execute():
 
 
 if __name__ == '__main__':
-    rule = (-5, -2, -1)
-    print(rule)
     execute()
