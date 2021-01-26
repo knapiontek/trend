@@ -18,6 +18,11 @@ class Clazz(dict):
         """Prepares dictionary for database update"""
         return Clazz(**{f: super(Clazz, self).__getitem__(f) for f in ('_id',) + fields})
 
+    def clean(self, *args):
+        for a in args:
+            if super().__contains__(a):
+                super().__delitem__(a)
+
     def from_dict(self, dt: Dict) -> 'Clazz':
         self.__dict__.update(dt)
         return self
