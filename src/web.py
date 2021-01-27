@@ -117,8 +117,8 @@ app.layout = dbc.Row(
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
-            dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '50%'}),
-            dbc.Row(dbc.Col(details_table), className='scroll', style={'max-height': '20%'}),
+            dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '40%'}),
+            dbc.Row(dbc.Col(details_table), className='scroll', style={'max-height': '30%'}),
             dbc.Row(dbc.Col(action_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
         dbc.Col(dbc.Spinner(series_graph))
@@ -164,7 +164,7 @@ def cb_security_table(exchange_name, engine_name, query):
             results += [dict(symbol=security.symbol,
                              shortable=boolean[security.shortable],
                              health=boolean[engine.health],
-                             profit_ratio=100 * round(profit_ratio, FLOAT_PRECISION),
+                             profit_ratio=round(100 * profit_ratio, FLOAT_PRECISION - 2),
                              description=security.description,
                              profit=round(engine.profit, FLOAT_PRECISION),
                              total=round(engine.total, FLOAT_PRECISION),
