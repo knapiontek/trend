@@ -19,7 +19,7 @@ LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
 
-ACTIVE_EXCHANGES = ('NYSE', 'NASDAQ', 'LSE', 'XETRA', 'WSE')
+ACTIVE_EXCHANGES = ('WSE', 'XETRA', 'LSE', 'NASDAQ', 'NYSE')
 
 
 @lru_cache(maxsize=1)

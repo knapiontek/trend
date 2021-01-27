@@ -12,8 +12,8 @@ def test_series():
     closing_prices = [(DateTime.from_timestamp(s.timestamp).format(), s.close, s.volume) for s in series]
 
     assert closing_prices == [
-        ('2020-02-03 00:00:00 +0000', 60.73, 27397300),
-        ('2020-02-04 00:00:00 +0000', 59.970001, 31922100)
+        ('2020-02-03 00:00:00', 60.73, 27397300),
+        ('2020-02-04 00:00:00', 59.970001, 31922100)
     ]
 
 

@@ -11,7 +11,7 @@ from typing import List, Iterable, Tuple, Set, Union
 from src import holidays
 from src.clazz import Clazz
 
-DT_FORMAT = '%Y-%m-%d %H:%M:%S %z'
+DT_FORMAT = '%Y-%m-%d %H:%M:%S'
 D_FORMAT = '%Y-%m-%d'
 
 
