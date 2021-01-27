@@ -14,7 +14,7 @@ def init(script_file: str, debug: bool, to_screen=False, to_file=False):
         stem = pathlib.Path(script_file).stem
         file_name = config.LOG_PATH.joinpath(f'{stem}.log')
         print(f'logging to file: {file_name}')
-        file_handler = RotatingFileHandler(file_name, maxBytes=2e6, backupCount=5)
+        file_handler = RotatingFileHandler(file_name, maxBytes=int(2e6), backupCount=5)
         handlers.append(file_handler)
     level = [logging.INFO, logging.DEBUG][debug]
     logging.basicConfig(level=level, format=config.LOG_FORMAT, handlers=handlers)
