@@ -94,7 +94,7 @@ def schedule_endpoint():
         if callable(obj):
             return obj.__name__
         elif isinstance(obj, timedelta):
-            return str(obj)
+            return tool.interval_name(obj)
 
     return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
 

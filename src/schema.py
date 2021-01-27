@@ -74,6 +74,18 @@ EXCHANGE_SCHEMA = {
     'message': 'exchange-schema',
     'level': 'strict',
     'rule': {
+        'definitions': {
+            'Engine': {
+                'type': 'object',
+                'properties': {
+                    'health': {'type': 'boolean'},
+                    'profit': {'type': 'number', 'format': 'float'},
+                    'total': {'type': 'number', 'format': 'float'},
+                    'volume': {'type': 'number', 'format': 'integer'}
+                },
+                'required': ['health', 'profit', 'total', 'volume']
+            }
+        },
         'type': 'object',
         'additionalProperties': False,
         'properties': {
@@ -85,30 +97,9 @@ EXCHANGE_SCHEMA = {
             'description': {'type': 'string'},
             'short_symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
-            'stooq': {
-                'type': 'object',
-                'properties': {
-                    'health': {'type': 'boolean'},
-                    'profit': {'type': 'number', 'format': 'float'}
-                },
-                'required': ['health', 'profit']
-            },
-            'yahoo': {
-                'type': 'object',
-                'properties': {
-                    'health': {'type': 'boolean'},
-                    'profit': {'type': 'number', 'format': 'float'}
-                },
-                'required': ['health', 'profit']
-            },
-            'exante': {
-                'type': 'object',
-                'properties': {
-                    'health': {'type': 'boolean'},
-                    'profit': {'type': 'number', 'format': 'float'}
-                },
-                'required': ['health', 'profit']
-            }
+            'stooq': {'$ref': '#/definitions/Engine'},
+            'yahoo': {'$ref': '#/definitions/Engine'},
+            'exante': {'$ref': '#/definitions/Engine'}
         },
         'required': [
             'symbol',

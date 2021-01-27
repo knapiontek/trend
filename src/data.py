@@ -1,10 +1,11 @@
 import logging
+import urllib
 from datetime import timedelta
 from typing import List, Tuple, Any, Dict
 
 import orjson as json
 import pandas as pd
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
 from src import log, config, tool, flow, store, exante, analyse, swings
 from src.clazz import Clazz
@@ -12,7 +13,9 @@ from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
 
-remote_retry = retry(stop=stop_after_attempt(2), wait=wait_fixed(100))
+remote_retry = retry(stop=stop_after_attempt(2),
+                     wait=wait_fixed(100),
+                     retry=retry_if_exception_type((urllib.error.URLError,)))
 
 INDEX_SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
 INDEX_FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
@@ -60,7 +63,7 @@ def exchange_update():
                         else:
                             document = security
                             document.shortable = shortable
-                            document.update({engine: Clazz(health=False, profit=0.0)
+                            document.update({engine: Clazz(health=False, profit=0.0, total=0.0, volume=0)
                                              for engine in ('stooq', 'yahoo', 'exante')})
                             new_documents += [document]
                 exchange_series *= existing_documents
@@ -225,7 +228,7 @@ def security_analyse(engine: Any):
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
                     entry = security.entry(engine_name)
-                    entry[engine_name].profit = analyse.action(time_series)
+                    entry[engine_name].update(analyse.action(time_series))
                     entries += [entry]
                     security_series *= time_series
 

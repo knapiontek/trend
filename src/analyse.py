@@ -114,16 +114,25 @@ def action_vma(series: List[Clazz]) -> float:
     return profit
 
 
-def action(series: List[Clazz]) -> float:
-    profit = position = 0.0
-    open_timestamp = 0
+def action(series: List[Clazz]) -> Clazz:
+    """
+    profit - total profit or loss
+    total - total cash required for all openings
+    position - cash required for single position
+    open_timestamp - timestamp at the opening
+    volume - number of all opened positions
+    """
+    profit = total = position = 0.0
+    open_timestamp = volume = 0
 
     for s in series:
         s.clean('profit', 'action', 'open_position', 'open_timestamp')
 
         if (position == 0.0) and (-3 in s.candidate):
-            position = s.action = s.close
             open_timestamp = s.timestamp
+            position = s.action = s.close
+            total += position
+            volume += 1
 
         elif (position > 0.0) and (-1 in s.candidate):
             s.action = -s.close
@@ -133,4 +142,4 @@ def action(series: List[Clazz]) -> float:
             profit += s.profit
             position = 0.0
 
-    return profit
+    return Clazz(profit=profit, total=total, volume=volume)
