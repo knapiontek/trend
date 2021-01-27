@@ -34,7 +34,7 @@ if 'gunicorn' in sys.modules:
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profit='Profit %')
+SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profit_ratio='Profit %')
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
@@ -154,19 +154,20 @@ def cb_security_table(exchange_name, engine_name, query):
         LOG.debug(f'Loading symbols with query: "{query or "*"}"')
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
+
+        results = []
         boolean = ['[-]', '[+]']
-
-        def profit(security):
+        for security in securities:
             engine = security[engine_name]
-            return round(100 * engine.profit / engine.total, 2) if engine.total else '-'
-
-        securities = [dict(symbol=security.symbol,
-                           shortable=boolean[security.shortable],
-                           health=boolean[security[engine_name].health],
-                           profit=profit(security),
-                           description=security.description)
-                      for security in securities]
-        return select_securities(securities, query)
+            results += [dict(symbol=security.symbol,
+                             shortable=boolean[security.shortable],
+                             health=boolean[engine.health],
+                             profit_ratio=round(100 * engine.profit / engine.total, 2) if engine.total else '-',
+                             description=security.description,
+                             profit=round(engine.profit, 4),
+                             total=round(engine.total, 4),
+                             volume=round(engine.volume, 4))]
+        return select_securities(results, query)
     return []
 
 
@@ -265,8 +266,10 @@ def cb_action_table(click_data):
                 result += [{'date': date, 'key': 'open-position', 'value': round(v, precision)}]
             elif k == 'timestamp':
                 pass
-            else:
+            elif isinstance(v, float):
                 result += [{'date': date, 'key': k, 'value': round(v, precision)}]
+            else:
+                result += [{'date': date, 'key': k, 'value': v}]
         return result
 
     results = []
