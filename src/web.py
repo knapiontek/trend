@@ -40,6 +40,7 @@ XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
 SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
 PLOT_BGCOLOR = 'rgb(240,240,240)'
+FLOAT_PRECISION = 4
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
@@ -159,14 +160,15 @@ def cb_security_table(exchange_name, engine_name, query):
         boolean = ['[-]', '[+]']
         for security in securities:
             engine = security[engine_name]
+            profit_ratio = engine.profit / engine.total if engine.total else 0.0
             results += [dict(symbol=security.symbol,
                              shortable=boolean[security.shortable],
                              health=boolean[engine.health],
-                             profit_ratio=round(100 * engine.profit / engine.total, 2) if engine.total else '-',
+                             profit_ratio=100 * round(profit_ratio, FLOAT_PRECISION),
                              description=security.description,
-                             profit=round(engine.profit, 4),
-                             total=round(engine.total, 4),
-                             volume=round(engine.volume, 4))]
+                             profit=round(engine.profit, FLOAT_PRECISION),
+                             total=round(engine.total, FLOAT_PRECISION),
+                             volume=round(engine.volume, FLOAT_PRECISION))]
         return select_securities(results, query)
     return []
 
@@ -208,8 +210,8 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             reduced_series = analyse.reduce(time_series, score)
             ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
             reduced_dates = [datetime.utcfromtimestamp(t) for t in ts]
-            reduced_custom = [{k: v for k, v in s.items() if k in ('open', 'close', 'high', 'low', 'timestamp')}
-                              for s in reduced_series]
+            fields = ('open', 'close', 'high', 'low', 'timestamp')
+            reduced_custom = [{k: v for k, v in s.items() if k in fields} for s in reduced_series]
 
             # create traces
             reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=reduced_custom, name='Close', mode='lines',
@@ -255,19 +257,18 @@ def cb_details_table(selected_security):
     Output('action-table', 'data'),
     [Input('series-graph', 'clickData')])
 def cb_action_table(click_data):
-    def convert_click_data(datum: Dict) -> List[Dict]:
-        precision = 4
+    def convert_custom_data(datum: Dict) -> List[Dict]:
         date = DateTime.from_timestamp(datum['timestamp']).format()
         result = []
         for k, v in datum.items():
             if k == 'open_timestamp':
                 result += [{'date': date, 'key': 'open-date', 'value': DateTime.from_timestamp(v).format()}]
             elif k == 'open_position':
-                result += [{'date': date, 'key': 'open-position', 'value': round(v, precision)}]
+                result += [{'date': date, 'key': 'open-position', 'value': round(v, FLOAT_PRECISION)}]
             elif k == 'timestamp':
                 pass
             elif isinstance(v, float):
-                result += [{'date': date, 'key': k, 'value': round(v, precision)}]
+                result += [{'date': date, 'key': k, 'value': round(v, FLOAT_PRECISION)}]
             else:
                 result += [{'date': date, 'key': k, 'value': v}]
         return result
@@ -277,7 +278,7 @@ def cb_action_table(click_data):
         for p in click_data.get('points', []):
             cd = p.get('customdata')
             if cd:
-                results += convert_click_data(cd)
+                results += convert_custom_data(cd)
     return sorted(results, key=lambda d: (d['date'], d['key']))
 
 
