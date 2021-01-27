@@ -34,7 +34,7 @@ if 'gunicorn' in sys.modules:
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
 ENGINES = dict(yahoo=yahoo, exante=exante, stooq=stooq)
-SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profit='Profit')
+SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profit='Profit %')
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
@@ -83,8 +83,8 @@ def table_style(**kwargs):
     )
 
 
-symbol_table = dash_table.DataTable(
-    id='symbol-table',
+security_table = dash_table.DataTable(
+    id='security-table',
     columns=[{'name': v, 'id': k} for k, v in SYMBOL_COLUMNS.items()],
     filter_action='custom',
     row_selectable='single',
@@ -95,6 +95,14 @@ symbol_table = dash_table.DataTable(
 details_table = dash_table.DataTable(
     id='details-table',
     columns=[{'name': name, 'id': _id}
+             for _id, name in (('key', 'Key'), ('value', 'Value'))],
+    page_action='none',
+    **table_style(key='left', value='right')
+)
+
+action_table = dash_table.DataTable(
+    id='action-table',
+    columns=[{'name': name, 'id': _id}
              for _id, name in (('date', 'Date'), ('key', 'Key'), ('value', 'Value'))],
     page_action='none',
     **table_style(date='left', key='left', value='right')
@@ -104,11 +112,13 @@ series_graph = dcc.Graph(id='series-graph', config={'scrollZoom': True}, classNa
 
 app.layout = dbc.Row(
     [
+        dcc.Store(id='selected-security'),
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
-            dbc.Row(dbc.Col(symbol_table), className='scroll', style={'max-height': '50%'}),
-            dbc.Row(dbc.Col(details_table), className='scroll flex-element'),
+            dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '50%'}),
+            dbc.Row(dbc.Col(details_table), className='scroll', style={'max-height': '20%'}),
+            dbc.Row(dbc.Col(action_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
         dbc.Col(dbc.Spinner(series_graph))
     ],
@@ -135,36 +145,48 @@ def select_securities(securities: List[Dict], query) -> List[Dict]:
         return securities
 
 
-@app.callback(Output('symbol-table', 'data'),
+@app.callback(Output('security-table', 'data'),
               [Input('exchange-choice', 'value'),
                Input('engine-choice', 'value'),
-               Input('symbol-table', 'filter_query')])
-def cb_symbol_table(exchange_name, engine_name, query):
+               Input('security-table', 'filter_query')])
+def cb_security_table(exchange_name, engine_name, query):
     if exchange_name and engine_name:
         LOG.debug(f'Loading symbols with query: "{query or "*"}"')
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
         boolean = ['[-]', '[+]']
+
+        def profit(security):
+            engine = security[engine_name]
+            return round(100 * engine.profit / engine.total, 2) if engine.total else '-'
+
         securities = [dict(symbol=security.symbol,
                            shortable=boolean[security.shortable],
                            health=boolean[security[engine_name].health],
-                           profit=round(security[engine_name].profit, 4),
+                           profit=profit(security),
                            description=security.description)
                       for security in securities]
         return select_securities(securities, query)
     return []
 
 
+@app.callback(Output('selected-security', 'data'),
+              [Input('security-table', 'data'), Input('security-table', 'selected_rows')])
+def cb_selected_security(data, selected_rows):
+    if data and selected_rows and selected_rows[0] < len(data):
+        return data[selected_rows[0]]
+    return {}
+
+
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
                Input('score-choice', 'value'),
-               Input('symbol-table', 'data'), Input('symbol-table', 'selected_rows')])
-def cb_series_graph(d_from, engine_name, score, data, selected_rows):
-    if engine_name is not None and d_from and data and selected_rows and selected_rows[0] < len(data):
+               Input('selected-security', 'data')])
+def cb_series_graph(d_from, engine_name, score, selected_security):
+    if engine_name is not None and d_from and selected_security:
         interval = tool.INTERVAL_1D
-        row = data[selected_rows[0]]
-        symbol, description = row['symbol'], row['description']
+        symbol, description = selected_security['symbol'], selected_security['description']
 
         # engine series
         engine = ENGINES[engine_name]
@@ -222,9 +244,17 @@ def cb_series_graph(d_from, engine_name, score, data, selected_rows):
 
 @app.callback(
     Output('details-table', 'data'),
+    [Input('selected-security', 'data')])
+def cb_details_table(selected_security):
+    results = [{'key': k, 'value': v} for k, v in selected_security.items()]
+    return sorted(results, key=lambda d: d['key'])
+
+
+@app.callback(
+    Output('action-table', 'data'),
     [Input('series-graph', 'clickData')])
-def cb_details_table(data):
-    def convert(datum: Dict) -> List[Dict]:
+def cb_action_table(click_data):
+    def convert_click_data(datum: Dict) -> List[Dict]:
         precision = 4
         date = DateTime.from_timestamp(datum['timestamp']).format()
         result = []
@@ -239,14 +269,13 @@ def cb_details_table(data):
                 result += [{'date': date, 'key': k, 'value': round(v, precision)}]
         return result
 
-    if data:
-        results = []
-        for p in data.get('points', []):
+    results = []
+    if click_data:
+        for p in click_data.get('points', []):
             cd = p.get('customdata')
             if cd:
-                results += convert(cd)
-        return sorted(results, key=lambda d: (d['date'], d['key']))
-    return []
+                results += convert_click_data(cd)
+    return sorted(results, key=lambda d: (d['date'], d['key']))
 
 
 def run_module(debug: bool):
