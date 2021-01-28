@@ -160,7 +160,7 @@ def security_verify(engine: Any):
         with flow.Progress(health_name, time_range) as progress:
             for symbol, symbol_range in time_range.items():
                 progress(symbol)
-                short_symbol, exchange = tool.symbol_split(symbol)
+                short_symbol, exchange_name = tool.symbol_split(symbol)
                 overlap, missing = time_series_verify(engine,
                                                       symbol,
                                                       symbol_range.dt_from,
@@ -172,14 +172,17 @@ def security_verify(engine: Any):
                 if missing:
                     security_health.missing = missing
                 if security_health:
-                    health[exchange][short_symbol] = security_health
+                    health[exchange_name][short_symbol] = security_health
 
     with store.File(health_name) as health:
         with store.ExchangeSeries(editable=True) as exchange_series:
-            for name in config.ACTIVE_EXCHANGES:
-                securities = exchange_series[name]
+            for exchange_name in config.ACTIVE_EXCHANGES:
+                securities = exchange_series[exchange_name]
                 for security in securities:
-                    security[engine_name].health = security.symbol not in health
+                    short_symbol, _ = tool.symbol_split(security.symbol)
+                    security_health = health[exchange_name].get(short_symbol, {})
+                    missing_length = len(security_health.get('missing', []))
+                    security[engine_name].health = missing_length < config.HEALTH_MISSING_LIMIT
                 exchange_series *= securities
 
 
