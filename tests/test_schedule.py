@@ -9,5 +9,5 @@ def test_scheduled_tasks():
         assert response.status_code == 200
         reply = json.loads(response.data)
         for t in reply['tasks']:
-            assert schedule.maintain_task.__name__ == t['function']
+            assert schedule.task_daily.__name__ == t['function']
             assert not t['next_run']

@@ -21,12 +21,10 @@ def wsgi(environ, start_response):
 
 
 @tool.catch_exception(LOG)
-def maintain_task():
+def task_daily():
     data.exchange_update()
     for engine in (yahoo, exante, stooq):
-        data.security_update(engine)
-        data.security_verify(engine)
-        data.security_analyse(engine)
+        data.security_daily(engine)
 
 
 TASKS = [
@@ -36,7 +34,7 @@ TASKS = [
           next_run=None,
           last_run=None,
           running=False,
-          function=maintain_task)
+          function=task_daily)
 ]
 
 
@@ -55,7 +53,7 @@ def run_scheduled_tasks():
                     task.running = True
                     task.function()
                 except:
-                    pass
+                    LOG.fatal(f'Task: {task.function.__name__} should always catch exceptions')
                 finally:
                     LOG.info(f'Task: {task.function.__name__} has finished')
                     if 'interval' in task:
@@ -76,8 +74,8 @@ if 'gunicorn' in sys.modules:
 @app.route("/schedule/", methods=['GET', 'POST'])
 def schedule_endpoint():
     if request.method == 'POST':
-        LOG.info(f'Scheduling function {maintain_task.__name__}')
-        task = Clazz(next_run=DateTime.now().replace(microsecond=0), running=False, function=maintain_task)
+        LOG.info(f'Scheduling function {task_daily.__name__}')
+        task = Clazz(next_run=DateTime.now().replace(microsecond=0), running=False, function=task_daily)
         TASKS.append(task)
 
     LOG.info('Listing threads and tasks')

@@ -238,6 +238,13 @@ def security_analyse(engine: Any):
         LOG.info(f'Securities: {len(securities)} analysed in the exchange: {exchange_name}')
 
 
+@tool.catch_exception(LOG)
+def security_daily(engine: Any):
+    security_update(engine)
+    security_verify(engine)
+    security_analyse(engine)
+
+
 def main():
     log.init(__file__, debug=True, to_screen=True)
 
