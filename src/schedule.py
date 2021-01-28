@@ -93,6 +93,8 @@ def schedule_endpoint():
             return obj.__name__
         elif isinstance(obj, timedelta):
             return tool.interval_name(obj)
+        elif isinstance(obj, DateTime):
+            return obj.format()
 
     return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
 
