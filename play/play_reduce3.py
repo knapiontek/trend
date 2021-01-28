@@ -1,10 +1,11 @@
+from collections import deque
 from enum import Enum
-from typing import List
+from typing import List, Iterable
 
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
-from src import tool, exante, swings
+from src import tool, exante
 from src.clazz import Clazz
 from src.tool import DateTime
 
@@ -87,22 +88,77 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     return series
 
 
+# reduce
+
+def reduce_init(series: List[Clazz]):
+    for s in series:
+        s.candidate = set()
+        s.score = set()
+
+
+def reduce_series(series: List[Clazz], score: int) -> List[Clazz]:
+    assert 1 <= score <= 8
+    swing_limit = (2 ** (score - 1)) / 100 * avg_val(series)
+    queue = deque(series[:2])
+
+    for s3 in series[2:]:
+        s1, s2 = queue[-2], queue[-1]
+
+        delta12 = s2.y - s1.y
+        delta23 = s3.y - s2.y
+
+        if delta12 > 0:
+            if delta23 > 0:
+                s3.candidate |= {score}
+                queue[-1] = s3
+            elif delta23 < -swing_limit:
+                s2.score |= {score}
+                s3.candidate |= {-score}
+                queue.append(s3)
+
+        if delta12 < 0:
+            if delta23 < 0:
+                s3.candidate |= {-score}
+                queue[-1] = s3
+            elif delta23 > swing_limit:
+                s2.score |= {-score}
+                s3.candidate |= {score}
+                queue.append(s3)
+
+    return list(queue)
+
+
+def mark_swings(series: List[Clazz]):
+    reduced = series
+    reduce_init(reduced)
+    for score in range(1, 8):
+        reduced = reduce_series(reduced, score)
+
+
+def swing_candidates(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.candidate for v in values)]
+
+
+def swing_scores(series: List[Clazz], values: Iterable[int]):
+    return [s for s in series if any(v in s.score for v in values)]
+
+
 # presentation
 
 
-def show_scores(symbol: str, begin: int, end: int):
+def show_candidates(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
-    swings.select(series)
+    mark_swings(series)
 
     score = 3
 
-    scores = swings.scores(series, (-score, score))
-    plot_dots(scores, Color.green)
+    candidates = swing_candidates(series, (-score, score))
+    plot_dots(candidates, Color.green)
 
-    fixed = swings.fixed(series, (-score, score))
-    plot_dots(fixed, Color.red)
+    scores = swing_scores(series, (-score, score))
+    plot_dots(scores, Color.red)
 
     show_widget(symbol, begin, end)
 
@@ -111,11 +167,11 @@ def show_swings(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
-    swings.select(series)
+    mark_swings(series)
 
     for score in range(1, 8):
-        fixed = swings.fixed(series, (-score, score))
-        plot_swings(fixed, score)
+        scores = swing_scores(series, (-score, score))
+        plot_swings(scores, score)
 
     show_widget(symbol, begin, end)
 

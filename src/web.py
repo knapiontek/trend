@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from plotly.subplots import make_subplots
 
-from src import config, log, tool, store, yahoo, exante, stooq, analyse
+from src import config, log, tool, store, yahoo, exante, stooq, swings
 from src.tool import DateTime
 
 LOG = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ date_choice = dcc.DatePickerSingle(id='date-from',
 
 score_choice = dcc.Input(id='score-choice',
                          type='number',
-                         min=0, max=6, step=1, value=3.0,
+                         min=1, max=8, step=1, value=3,
                          className='score',
                          persistence=True)
 
@@ -207,15 +207,15 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
             action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
-            reduced_series = analyse.reduce(time_series, score)
-            ts, close = tool.transpose(reduced_series, ('timestamp', 'close'))
-            reduced_dates = [datetime.utcfromtimestamp(t) for t in ts]
+            score_series = swings.search(time_series, (-score, score))
+            ts, close = tool.transpose(score_series, ('timestamp', 'close'))
+            score_dates = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')
-            reduced_custom = [{k: v for k, v in s.items() if k in fields} for s in reduced_series]
+            score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
 
             # create traces
-            reduced_trace = go.Scatter(x=reduced_dates, y=close, customdata=reduced_custom, name='Close', mode='lines',
-                                       line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
+            score_trace = go.Scatter(x=score_dates, y=close, customdata=score_custom, name='Close', mode='lines',
+                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
                                        connectgaps=True, marker=dict(color='orange'))
             long_trace = go.Scatter(x=daily_dates, y=long, customdata=action_custom, name='Long', mode='markers',
@@ -230,7 +230,7 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             # create a graph
             figure = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03,
                                    row_heights=[0.6, 0.2, 0.2])
-            figure.add_trace(reduced_trace, row=1, col=1)
+            figure.add_trace(score_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
             figure.add_trace(long_trace, row=1, col=1)
             figure.add_trace(short_trace, row=1, col=1)
