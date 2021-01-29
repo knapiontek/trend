@@ -1,5 +1,4 @@
 import logging
-import urllib
 from datetime import timedelta
 from typing import List, Tuple, Any, Dict
 
@@ -16,7 +15,7 @@ LOG = logging.getLogger(__name__)
 
 remote_retry = retry(stop=stop_after_attempt(2),
                      wait=wait_fixed(100),
-                     retry=retry_if_exception_type((urllib.error.URLError, requests.exceptions.ConnectionError)))
+                     retry=retry_if_exception_type(requests.exceptions.ConnectionError))
 
 INDEX_SP500 = ('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', 0, 'Symbol', '')
 INDEX_FTSE100 = ('https://en.wikipedia.org/wiki/FTSE_100_Index', 3, 'EPIC', '')
@@ -227,7 +226,7 @@ def security_analyse(engine: Any):
                 with engine.SecuritySeries(interval, editable=True) as security_series:
                     time_series = security_series[security.symbol]
                     analyse.clean(time_series)
-                    swings.select(time_series)
+                    swings.calculate(time_series)
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)

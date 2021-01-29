@@ -207,14 +207,14 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
             action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
-            score_series = swings.search(time_series, (-score, score))
-            ts, close = tool.transpose(score_series, ('timestamp', 'close'))
+            score_series = swings.display(time_series, (-score, score))
+            ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
             score_dates = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')
             score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
 
             # create traces
-            score_trace = go.Scatter(x=score_dates, y=close, customdata=score_custom, name='Close', mode='lines',
+            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Value', mode='lines',
                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
                                        connectgaps=True, marker=dict(color='orange'))

@@ -9,10 +9,6 @@ from src.clazz import Clazz
 from src.tool import DateTime
 
 
-def avg_val(series: List[Clazz]):
-    return sum([s.y for s in series]) / len(series)
-
-
 # plot
 
 class Color(Enum):
@@ -24,23 +20,6 @@ class Color(Enum):
     green = 'green'
     blue = 'blue'
     black = 'black'
-
-
-def plot_series(series: List[Clazz]):
-    plt.plot([s.x for s in series], [s.y for s in series], '-', label='series', color='grey', linewidth=1)
-
-
-def plot_dots(series: List[Clazz], color: Color):
-    plt.plot([s.x for s in series],
-             [s.y for s in series],
-             'o', label=f'dot-{color.name}', color=color.name, linewidth=1, markersize=3)
-
-
-def plot_swings(series: List[Clazz], score: int):
-    color = score_to_color(score)
-    plt.plot([s.x for s in series],
-             [s.y for s in series],
-             'o', label=f'score-{score} ({2 ** (score - 1):02})', color=color.name, linewidth=1, markersize=1 + score)
 
 
 def score_to_color(score: int) -> Color:
@@ -55,6 +34,25 @@ def score_to_color(score: int) -> Color:
               Color.blue,
               Color.black]
     return colors[score]
+
+
+def plot_series(series: List[Clazz]):
+    plt.plot([s.timestamp for s in series],
+             [s.value for s in series],
+             '-', label='series', color='grey', linewidth=1)
+
+
+def plot_dots(series: List[Clazz], color: Color):
+    plt.plot([s.timestamp for s in series],
+             [s.value for s in series],
+             'o', label=f'dot-{color.name}', color=color.name, linewidth=1, markersize=3)
+
+
+def plot_swings(series: List[Clazz], score: int):
+    color = score_to_color(score)
+    plt.plot([s.timestamp for s in series],
+             [s.value for s in series],
+             'o', label=f'score-{score} [{2 ** (score - 1):02}%]', color=color.name, linewidth=1, markersize=1 + score)
 
 
 def show_widget(symbol: str, begin: int, end: int):
@@ -81,9 +79,11 @@ def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
     with exante.SecuritySeries(interval) as security_series:
         for s in security_series[symbol]:
             if begin <= s.timestamp <= end:
-                x = s.timestamp
-                y1, y2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
-                series += [Clazz(x=x, y=s.open), Clazz(x=x, y=y1), Clazz(x=x, y=y2), Clazz(x=x, y=s.close)]
+                value1, value2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
+                series += [Clazz(timestamp=s.timestamp, value=s.open),
+                           Clazz(timestamp=s.timestamp, value=value1),
+                           Clazz(timestamp=s.timestamp, value=value2),
+                           Clazz(timestamp=s.timestamp, value=s.close)]
     return series
 
 
@@ -94,15 +94,15 @@ def show_scores(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
-    swings.select(series)
+    swings.calculate(series)
 
     score = 3
 
     scores = swings.scores(series, (-score, score))
     plot_dots(scores, Color.green)
 
-    fixed = swings.fixed(series, (-score, score))
-    plot_dots(fixed, Color.red)
+    fixes = swings.fixes(series, (-score, score))
+    plot_dots(fixes, Color.red)
 
     show_widget(symbol, begin, end)
 
@@ -111,11 +111,11 @@ def show_swings(symbol: str, begin: int, end: int):
     series = read_series(symbol, begin, end)
     plot_series(series)
 
-    swings.select(series)
+    swings.calculate(series)
 
     for score in range(1, 8):
-        fixed = swings.fixed(series, (-score, score))
-        plot_swings(fixed, score)
+        fixes = swings.fixes(series, (-score, score))
+        plot_swings(fixes, score)
 
     show_widget(symbol, begin, end)
 
@@ -126,7 +126,7 @@ def execute():
     symbol = 'ABC.NYSE'
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_swings(symbol, begin, end)
+    show_scores(symbol, begin, end)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,4 @@
-import orjson as json
-
-from src import analyse, tool, config, yahoo
+from src import analyse, tool, yahoo, swings
 from src.clazz import Clazz
 
 SERIES = [
@@ -17,35 +15,10 @@ SERIES = [
 ]
 
 
-def test_windowed():
-    series = [1, 2, 3, 4, 5]
-    assert list(analyse.windowed(series, 6)) == []
-    assert list(analyse.windowed(series, 5)) == [(1, 2, 3, 4, 5)]
-    assert list(analyse.windowed(series, 4)) == [(1, 2, 3, 4), (2, 3, 4, 5)]
-
-
 def test_clean():
     extra = [Clazz(s, extra=1) for s in SERIES]
     analyse.clean(extra)
     assert extra == SERIES
-
-
-def test_reduce_1():
-    series_close = [s.close for s in SERIES]
-    assert series_close == [1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 4.0, 5.0, 6.0]
-
-    reduced = analyse.reduce(SERIES, 1)
-    reduced_close = [s.close for s in reduced]
-    assert reduced_close == [1.0, 5.0, 3.0, 6.0]
-
-
-def test_reduce_3():
-    with config.TESTS_PATH.joinpath('sample.json').open() as sample_io:
-        sample = json.loads(sample_io.read())
-        security = [Clazz(s) for s in sample['KGH.WSE']]
-
-    reduced = analyse.reduce(security, 3)
-    assert len(list(reduced)) == 43
 
 
 def test_sma():
@@ -82,6 +55,7 @@ def test_action():
     with yahoo.SecuritySeries(interval) as security_series:
         time_series = security_series[symbol]
 
-    w_size = 100
-    analyse.vma(time_series, w_size)
-    analyse.action_vma(time_series)
+    time_series = [Clazz(s, value=s['close']) for s in time_series]
+    swings.init(time_series)
+    swings.reduce(time_series, 3)
+    analyse.action(time_series)

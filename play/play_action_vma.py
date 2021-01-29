@@ -50,3 +50,10 @@ def action_vma(series: List[Clazz]) -> float:
                     open_timestamp = s2.timestamp
 
     return profit
+
+
+def test_windowed():
+    series = [1, 2, 3, 4, 5]
+    assert list(windowed(series, 6)) == []
+    assert list(windowed(series, 5)) == [(1, 2, 3, 4, 5)]
+    assert list(windowed(series, 4)) == [(1, 2, 3, 4), (2, 3, 4, 5)]
