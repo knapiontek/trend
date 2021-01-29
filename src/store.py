@@ -85,7 +85,7 @@ class Series:
     def verify_result(self, result: List) -> 'Series':
         errors = [str(e) for e in result if isinstance(e, ArangoServerError)]
         if len(errors):
-            error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf')
+            error = json.dumps(errors, option=json.OPT_INDENT_2).decode('utf-8')
             LOG.exception(error)
             raise Exception(error)
         return self

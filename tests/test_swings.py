@@ -33,6 +33,7 @@ def test_reduce_4():
         sample = json.loads(sample_io.read())
         security = [Clazz(s) for s in sample['KGH.WSE']]
 
+    security = [Clazz(s, value=s['close']) for s in security]
     swings.init(security)
     reduced = swings.reduce(security, 4)
     assert len(reduced) == 43
