@@ -56,7 +56,7 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              className='choice',
                              persistence=True)
 
-datetime_from = config.datetime_from() + timedelta(days=100)
+datetime_from = DateTime.now() - timedelta(days=1000)
 
 date_choice = dcc.DatePickerSingle(id='date-from',
                                    date=datetime_from.date(),
@@ -207,23 +207,25 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
             action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
-            score_series = swings.display(time_series, score)
+            score_series = swings.init(time_series)
+            score_series = swings.reduce(score_series, score)
+            score_series = swings.display(score_series, score)
             ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
             score_dates = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')
             score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
 
             # create traces
-            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score', mode='lines',
-                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
-            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
-                                       connectgaps=True, marker=dict(color='orange'))
-            long_trace = go.Scatter(x=daily_dates, y=long, customdata=action_custom, name='Long', mode='markers',
-                                    line=dict(width=1.5), connectgaps=True, marker=dict(color='green'))
-            short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers',
-                                     line=dict(width=1.5), connectgaps=True, marker=dict(color='red'))
+            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score',
+                                     mode='lines', line=dict(width=1.0), marker=dict(color='blue'))
+            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100',
+                                       mode='lines', line=dict(width=1.0), marker=dict(color='orange'))
+            long_trace = go.Scatter(x=daily_dates, y=long, customdata=action_custom, name='Long',
+                                    mode='markers', marker=dict(color='green'))
+            short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short',
+                                     mode='markers', marker=dict(color='red'))
             profit_trace = go.Scatter(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
-                                      mode='lines+markers', line=dict(width=1.5), connectgaps=True,
+                                      mode='lines+markers', connectgaps=True, line=dict(width=1.0),
                                       marker=dict(color='blue'))
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
 
