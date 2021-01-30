@@ -1,13 +1,11 @@
 from collections import deque
-from typing import List, Iterable
+from typing import List
 
 from src.clazz import Clazz
 
 
-def init(series: List[Clazz]):
-    for s in series:
-        s.score = []
-        s.fix = []
+def limit_ratio(score: int) -> float:
+    return (2 ** (score - 1)) / 100
 
 
 def reduce(series: List[Clazz], score: int) -> List[Clazz]:
@@ -15,48 +13,61 @@ def reduce(series: List[Clazz], score: int) -> List[Clazz]:
     queue = deque(series[:2])
 
     for s3 in series[2:]:
+        append = False
         s1, s2 = queue[-2], queue[-1]
 
-        swing_limit = (2 ** (score - 1)) / 100 * s2.value
-
-        delta12 = s2.value - s1.value
-        delta23 = s3.value - s2.value
-
-        if delta12 > 0:
-            if delta23 > 0:
-                s3.score += [score]
+        if s2.low < s1.high:
+            limit = limit_ratio(score) * s2.low
+            if s3.low < s2.low:
+                s3.low_score = score
                 queue[-1] = s3
-            elif delta23 < -swing_limit:
-                s2.fix += [score]
-                s3.score += [-score]
-                queue += [s3]
+            elif s3.high > s2.low + limit:
+                s2.valid_low_score = s2.low_score
+                s3.high_score = score
+                append = True
 
-        if delta12 < 0:
-            if delta23 < 0:
-                s3.score += [-score]
+        if s2.high > s1.low:
+            limit = limit_ratio(score) * s2.high
+            if s3.high > s2.high:
+                s3.high_score = score
                 queue[-1] = s3
-            elif delta23 > swing_limit:
-                s2.fix += [-score]
-                s3.score += [score]
-                queue += [s3]
+            elif s3.low < s2.high - limit:
+                s2.valid_high_score = s2.high_score
+                s3.low_score = score
+                append = True
+
+        if append:
+            queue += [s3]
 
     return list(queue)
 
 
-def scores(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.score for v in values)]
+def display(series: List[Clazz], score: int):
+    if score is None:
+        return series
+    else:
+        begin = series[0]
+        end = series[-1]
+        results = [Clazz(begin, value=begin.open)]
+        for s in series[1:-1]:
+            if score <= s.valid_low_score:
+                results += [Clazz(s, value=s.low)]
+            if score <= s.valid_high_score:
+                results += [Clazz(s, value=s.high)]
+        results += [Clazz(end, value=end.close)]
+        return results
 
 
-def fixes(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if any(v in s.fix for v in values)]
-
-
-def display(series: List[Clazz], values: Iterable[int]):
-    return [s for s in series if s in (series[0], series[-1]) or any(v in s.fix for v in values)]
+def init(series: List[Clazz]) -> List[Clazz]:
+    for s in series:
+        s.low_score = 0
+        s.high_score = 0
+        s.valid_low_score = 0
+        s.valid_high_score = 0
+    return series
 
 
 def calculate(series: List[Clazz]):
-    reduced = series
-    init(reduced)
+    reduced = init(series)
     for score in range(1, 8):
         reduced = reduce(reduced, score)

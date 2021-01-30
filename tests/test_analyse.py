@@ -55,7 +55,5 @@ def test_action():
     with yahoo.SecuritySeries(interval) as security_series:
         time_series = security_series[symbol]
 
-    time_series = [Clazz(s, value=s['close']) for s in time_series]
-    swings.init(time_series)
-    swings.reduce(time_series, 3)
+    swings.calculate(time_series)
     analyse.action(time_series)

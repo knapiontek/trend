@@ -187,7 +187,7 @@ def cb_selected_security(data, selected_rows):
                Input('score-choice', 'value'),
                Input('selected-security', 'data')])
 def cb_series_graph(d_from, engine_name, score, selected_security):
-    if engine_name is not None and d_from and selected_security:
+    if engine_name and d_from and selected_security:
         interval = tool.INTERVAL_1D
         symbol, description = selected_security['symbol'], selected_security['description']
 
@@ -207,14 +207,14 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
             action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
-            score_series = swings.display(time_series, (-score, score))
+            score_series = swings.display(time_series, score)
             ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
             score_dates = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')
             score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
 
             # create traces
-            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Value', mode='lines',
+            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score', mode='lines',
                                      line=dict(width=1.5), connectgaps=True, marker=dict(color='blue'))
             vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.5),
                                        connectgaps=True, marker=dict(color='orange'))
