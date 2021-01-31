@@ -36,4 +36,4 @@ def test_reduce_4():
     score = 4
     reduced = swings.init(security)
     reduced = swings.reduce(reduced, score)
-    assert len(reduced) == 72
+    assert len(reduced) == 64

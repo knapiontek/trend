@@ -207,9 +207,7 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
             action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
-            score_series = swings.init(time_series)
-            score_series = swings.reduce(score_series, score)
-            score_series = swings.display(score_series, score)
+            score_series = swings.display(time_series, score)
             ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
             score_dates = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')

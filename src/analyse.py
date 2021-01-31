@@ -46,13 +46,13 @@ def action(series: List[Clazz]) -> Clazz:
     open_timestamp = volume = 0
 
     for s in series:
-        if (position == 0.0) and (-3 <= s.low_score):
+        if (position == 0.0) and (4 <= s.low_score):
             open_timestamp = s.timestamp
             position = s.action = s.close
             total += position
             volume += 1
 
-        elif (position > 0.0) and (-1 <= s.low_score):
+        elif (position > 0.0) and (2 <= s.low_score):
             s.action = -s.close
             s.open_timestamp = open_timestamp
             s.open_position = position

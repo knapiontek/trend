@@ -12,8 +12,11 @@ def reduce(series: List[Clazz], score: int) -> List[Clazz]:
     assert 1 <= score <= 8
     queue = deque(series[:2])
 
+    def append(s):
+        if s != queue[-1]:
+            queue.append(s)
+
     for s3 in series[2:]:
-        append = False
         s1, s2 = queue[-2], queue[-1]
 
         if s2.low < s1.high:
@@ -24,7 +27,7 @@ def reduce(series: List[Clazz], score: int) -> List[Clazz]:
             elif s3.high > s2.low + limit:
                 s2.valid_low_score = s2.low_score
                 s3.high_score = score
-                append = True
+                append(s3)
 
         if s2.high > s1.low:
             limit = limit_ratio(score) * s2.high
@@ -34,10 +37,7 @@ def reduce(series: List[Clazz], score: int) -> List[Clazz]:
             elif s3.low < s2.high - limit:
                 s2.valid_high_score = s2.high_score
                 s3.low_score = score
-                append = True
-
-        if append:
-            queue += [s3]
+                append(s3)
 
     return list(queue)
 

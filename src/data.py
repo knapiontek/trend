@@ -230,10 +230,12 @@ def security_analyse(engine: Any):
                     for w_size in w_sizes:
                         analyse.sma(time_series, w_size)
                         analyse.vma(time_series, w_size)
-                    entry = security.entry(engine_name)
-                    entry[engine_name].update(analyse.action(time_series))
-                    entries += [entry]
+                    action = analyse.action(time_series)
                     security_series *= time_series
+
+                    entry = security.entry(engine_name)
+                    entry[engine_name].update(action)
+                    entries += [entry]
 
         with store.ExchangeSeries(editable=True) as exchange_series:
             exchange_series |= entries
