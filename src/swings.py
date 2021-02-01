@@ -22,6 +22,7 @@ def init(series: List[Clazz]) -> List[Clazz]:
 
 
 def limit_ratio(score: int) -> float:
+    assert 1 <= score <= 8
     return (2 ** (score - 1)) / 100  # 1, 2, 4, 8, 16, 32, 64, 128
 
 

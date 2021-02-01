@@ -29,8 +29,8 @@ def task_daily():
 
 TASKS = [
     Clazz(interval=tool.INTERVAL_1D,
-          hour=2,
-          minute=30,
+          hour=1,
+          minute=7,
           next_run=None,
           last_run=None,
           running=False,

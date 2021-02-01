@@ -189,7 +189,11 @@ def cb_selected_security(data, selected_rows):
 def cb_series_graph(d_from, engine_name, score, selected_security):
     if engine_name and d_from and selected_security:
         interval = tool.INTERVAL_1D
-        symbol, description = selected_security['symbol'], selected_security['description']
+        symbol = selected_security['symbol']
+        if score is None:
+            description = selected_security['description']
+        else:
+            description = f"{selected_security['description']} [{100 * swings.limit_ratio(score)}%]"
 
         # engine series
         engine = ENGINES[engine_name]
