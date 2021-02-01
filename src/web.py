@@ -38,7 +38,8 @@ SYMBOL_COLUMNS = dict(symbol='Symbol', shortable='Short', health='Health', profi
 DATE_PICKER_FORMAT = 'YYYY-MM-DD'
 XAXIS_FORMAT = '%Y-%m-%d'
 GRAPH_MARGIN = {'l': 10, 'r': 10, 't': 35, 'b': 10, 'pad': 0}
-SPIKE = {'spikemode': 'toaxis+across+marker', 'spikethickness': 1, 'spikecolor': 'black'}
+SPIKE = dict(spikemode='toaxis+across+marker', spikethickness=1, spikecolor='black')
+LEGEND = dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
 PLOT_BGCOLOR = 'rgb(240,240,240)'
 FLOAT_PRECISION = 4
 
@@ -203,8 +204,8 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
 
         if time_series:
             # customize data
-            fields = ('timestamp', 'vma-100', 'profit', 'action', 'volume')
-            ts, vma_100, profit, action, volume = tool.transpose(time_series, fields)
+            fields = ('timestamp', 'vma-50', 'vma-100', 'vma-200', 'profit', 'action', 'volume')
+            ts, vma_50, vma_100, vma_200, profit, action, volume = tool.transpose(time_series, fields)
             daily_dates = [datetime.utcfromtimestamp(t) for t in ts]
             long = [a if a and a > 0 else None for a in action]
             short = [-a if a and a < 0 else None for a in action]
@@ -219,29 +220,29 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
 
             # create traces
             score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score',
-                                     mode='lines', line=dict(width=1.0), marker=dict(color='blue'))
-            vma_100_trace = go.Scatter(x=daily_dates, y=vma_100, name='VMA-100',
-                                       mode='lines', line=dict(width=1.0), marker=dict(color='orange'))
-            long_trace = go.Scatter(x=daily_dates, y=long, customdata=action_custom, name='Long',
-                                    mode='markers', marker=dict(color='green'))
-            short_trace = go.Scatter(x=daily_dates, y=short, customdata=action_custom, name='Short',
-                                     mode='markers', marker=dict(color='red'))
-            profit_trace = go.Scatter(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
-                                      mode='lines+markers', connectgaps=True, line=dict(width=1.0),
-                                      marker=dict(color='blue'))
-            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', marker=dict(color='blue'))
+                                     mode='lines', line=dict(width=1.0), showlegend=False)
+            vma_50_trace = go.Scattergl(x=daily_dates, y=vma_50, name='VMA-50', mode='lines', line=dict(width=1.0))
+            vma_100_trace = go.Scattergl(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.0))
+            vma_200_trace = go.Scattergl(x=daily_dates, y=vma_200, name='VMA-200', mode='lines', line=dict(width=1.0))
+            long_trace = go.Scattergl(x=daily_dates, y=long, customdata=action_custom, name='Long', mode='markers')
+            short_trace = go.Scattergl(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers')
+            profit_trace = go.Scattergl(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
+                                        mode='lines+markers', connectgaps=True, line=dict(width=1.0), showlegend=False)
+            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', showlegend=False)
 
             # create a graph
             figure = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03,
                                    row_heights=[0.6, 0.2, 0.2])
             figure.add_trace(score_trace, row=1, col=1)
+            figure.add_trace(vma_50_trace, row=1, col=1)
             figure.add_trace(vma_100_trace, row=1, col=1)
+            figure.add_trace(vma_200_trace, row=1, col=1)
             figure.add_trace(long_trace, row=1, col=1)
             figure.add_trace(short_trace, row=1, col=1)
             figure.add_trace(profit_trace, row=2, col=1)
             figure.add_trace(volume_trace, row=3, col=1)
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
-            figure.update_layout(margin=GRAPH_MARGIN, showlegend=False, title_text=description, hovermode='closest',
+            figure.update_layout(margin=GRAPH_MARGIN, legend=LEGEND, title_text=description, hovermode='closest',
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
             figure.update_xaxes(range=[daily_dates[0], daily_dates[-1]])
             return figure
