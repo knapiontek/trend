@@ -4,8 +4,8 @@ from typing import Any, Dict
 class Clazz(dict):
 
     def __init__(self, *args, **kwargs):
-        args = [Clazz(**a) if isinstance(a, dict) else a for a in args]
-        kwargs = {k: Clazz(**v) if isinstance(v, dict) else v for k, v in kwargs.items()}
+        args = [Clazz(**a) if type(a) == dict else a for a in args]
+        kwargs = {k: Clazz(**v) if type(v) == dict else v for k, v in kwargs.items()}
         super().__init__(*args, **kwargs)
 
     def __getattr__(self, key):

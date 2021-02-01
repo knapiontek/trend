@@ -1,3 +1,4 @@
+from datetime import timedelta
 from enum import Enum
 from typing import List
 
@@ -11,8 +12,7 @@ from src.tool import DateTime
 
 # data
 
-def read_series(symbol: str, begin: int, end: int) -> List[Clazz]:
-    interval = tool.INTERVAL_1D
+def read_series(symbol: str, interval: timedelta, begin: int, end: int) -> List[Clazz]:
     with exante.SecuritySeries(interval) as security_series:
         return [s for s in security_series[symbol] if begin <= s.timestamp <= end]
 
@@ -89,8 +89,8 @@ def show_widget(symbol: str, begin: int, end: int):
 # show
 
 
-def show_swings(symbol: str, begin: int, end: int):
-    series = read_series(symbol, begin, end)
+def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
+    series = read_series(symbol, interval, begin, end)
     plot_series(series)
 
     swings.calculate(series)
@@ -105,9 +105,10 @@ def show_swings(symbol: str, begin: int, end: int):
 
 def execute():
     symbol = 'ABC.NYSE'
+    interval = tool.INTERVAL_1D
     begin = DateTime(2017, 11, 1).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_swings(symbol, begin, end)
+    show_swings(symbol, interval, begin, end)
 
 
 if __name__ == '__main__':

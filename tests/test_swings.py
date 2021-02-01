@@ -25,7 +25,7 @@ def test_reduce_1():
     score = 1
     reduced = swings.init(SERIES)
     reduced = swings.reduce(reduced, score)
-    assert [s.value for s in swings.display(reduced, score)] == [1.0, 5.0, 3.0, 6.0]
+    assert [s.value for s in swings.display(SERIES, score)] == [1.0, 5.0, 3.0, 6.0]
 
 
 def test_reduce_4():
@@ -36,4 +36,4 @@ def test_reduce_4():
     score = 4
     reduced = swings.init(security)
     reduced = swings.reduce(reduced, score)
-    assert len(reduced) == 64
+    assert len(reduced) == 68
