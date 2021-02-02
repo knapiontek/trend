@@ -184,3 +184,12 @@ def catch_exception(logger: logging.Logger):
         return wrapper
 
     return decorator
+
+
+def json_default(obj):
+    if callable(obj):
+        return obj.__name__
+    elif isinstance(obj, timedelta):
+        return interval_name(obj)
+    elif isinstance(obj, DateTime):
+        return obj.format()

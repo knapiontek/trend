@@ -76,6 +76,11 @@ class Session(session.Session):
         assert len(data) < max_size
         return list(filter(None, data))
 
+    def active_orders(self) -> List[dict]:
+        url = f'{TRADE_URL}/orders/active'
+        response = self.get(url)
+        return response.json()
+
 
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):

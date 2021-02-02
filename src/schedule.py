@@ -1,7 +1,6 @@
 import logging
 import sys
 import threading
-from datetime import timedelta
 
 import orjson as json
 from flask import Flask, request
@@ -88,15 +87,16 @@ def schedule_endpoint():
         for thread in threading.enumerate()
     ]
 
-    def default(obj):
-        if callable(obj):
-            return obj.__name__
-        elif isinstance(obj, timedelta):
-            return tool.interval_name(obj)
-        elif isinstance(obj, DateTime):
-            return obj.format()
+    content = dict(threads=threads, tasks=TASKS)
+    return json.dumps(content, option=json.OPT_INDENT_2, default=tool.json_default).decode('utf-8')
 
-    return json.dumps(dict(threads=threads, tasks=TASKS), option=json.OPT_INDENT_2, default=default).decode('utf-8')
+
+@app.route("/orders/", methods=['GET'])
+def orders_endpoint():
+    with exante.Session() as session:
+        orders = session.active_orders()
+    content = {o['orderParameters']['symbolId']: o['orderParameters'] for o in orders}
+    return json.dumps(content, option=json.OPT_INDENT_2, default=tool.json_default).decode('utf-8')
 
 
 def run_module(debug: bool):

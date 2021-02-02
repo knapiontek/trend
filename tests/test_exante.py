@@ -2,7 +2,7 @@ from src import tool, exante
 from src.tool import DateTime
 
 
-def test_session():
+def test_session_series():
     symbol = 'XOM.NYSE'
     interval = tool.INTERVAL_1H
     dt_from = DateTime(2020, 2, 2, 23)
@@ -52,6 +52,12 @@ def test_session():
         ('2020-02-04 18:00:00', 60.13, 2743043),
         ('2020-02-04 19:00:00', 60.06, 2958939)
     ]
+
+
+def test_session_orders():
+    with exante.Session() as session:
+        orders = session.active_orders()
+    assert len(orders) >= 0
 
 
 def test_securities():
