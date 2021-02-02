@@ -57,7 +57,7 @@ engine_choice = dcc.Dropdown(id='engine-choice',
                              className='choice',
                              persistence=True)
 
-datetime_from = DateTime.now() - timedelta(days=1000)
+datetime_from = DateTime.now() - timedelta(days=3 * 365)
 
 date_choice = dcc.DatePickerSingle(id='date-from',
                                    date=datetime_from.date(),
@@ -250,17 +250,15 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN, plot_bgcolor=PLOT_BGCOLOR))
 
 
-@app.callback(
-    Output('details-table', 'data'),
-    [Input('selected-security', 'data')])
+@app.callback(Output('details-table', 'data'),
+              [Input('selected-security', 'data')])
 def cb_details_table(selected_security):
     results = [{'key': k, 'value': v} for k, v in selected_security.items()]
     return sorted(results, key=lambda d: d['key'])
 
 
-@app.callback(
-    Output('action-table', 'data'),
-    [Input('series-graph', 'clickData')])
+@app.callback(Output('action-table', 'data'),
+              [Input('series-graph', 'clickData')])
 def cb_action_table(click_data):
     def convert_custom_data(datum: Dict) -> List[Dict]:
         date = DateTime.from_timestamp(datum['timestamp']).format()
