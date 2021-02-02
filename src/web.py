@@ -221,11 +221,16 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             # create traces
             score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score',
                                      mode='lines', line=dict(width=1.0), showlegend=False)
-            vma_50_trace = go.Scattergl(x=daily_dates, y=vma_50, name='VMA-50', mode='lines', line=dict(width=1.0))
-            vma_100_trace = go.Scattergl(x=daily_dates, y=vma_100, name='VMA-100', mode='lines', line=dict(width=1.0))
-            vma_200_trace = go.Scattergl(x=daily_dates, y=vma_200, name='VMA-200', mode='lines', line=dict(width=1.0))
-            long_trace = go.Scattergl(x=daily_dates, y=long, customdata=action_custom, name='Long', mode='markers')
-            short_trace = go.Scattergl(x=daily_dates, y=short, customdata=action_custom, name='Short', mode='markers')
+            vma_50_trace = go.Scattergl(x=daily_dates, y=vma_50, name='VMA-50',
+                                        mode='lines', line=dict(width=1.0), visible='legendonly')
+            vma_100_trace = go.Scattergl(x=daily_dates, y=vma_100, name='VMA-100',
+                                         mode='lines', line=dict(width=1.0))
+            vma_200_trace = go.Scattergl(x=daily_dates, y=vma_200, name='VMA-200',
+                                         mode='lines', line=dict(width=1.0), visible='legendonly')
+            long_trace = go.Scattergl(x=daily_dates, y=long, customdata=action_custom, name='Long',
+                                      mode='markers', visible='legendonly')
+            short_trace = go.Scattergl(x=daily_dates, y=short, customdata=action_custom, name='Short',
+                                       mode='markers', visible='legendonly')
             profit_trace = go.Scattergl(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
                                         mode='lines+markers', connectgaps=True, line=dict(width=1.0), showlegend=False)
             volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', showlegend=False)
