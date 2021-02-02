@@ -14,6 +14,7 @@ def init(series: List[Clazz]) -> List[Clazz]:
     results = []
     for s in series:
         if s.low != s.high:  # avoid duplicates
+            # assume order is (open, low, high, close) for (open < close)
             value1, value2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
             results += [Clazz(data=s, value=value1), Clazz(data=s, value=value2)]
         else:
@@ -59,6 +60,7 @@ def display(series: List[Clazz], score: int):
     results = []
     if score is None:
         for s in series:
+            # assume order is (open, low, high, close) for (open < close)
             value1, value2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
             results += [Clazz(timestamp=s.timestamp, value=s.open),
                         Clazz(timestamp=s.timestamp, value=value1),
@@ -70,10 +72,17 @@ def display(series: List[Clazz], score: int):
         end = series[-1]
         results += [Clazz(begin, value=begin.open)]
         for s in series[1:-1]:
-            if score <= s.valid_low_score:
-                results += [Clazz(s, value=s.low)]
-            if score <= s.valid_high_score:
-                results += [Clazz(s, value=s.high)]
+            # assume order is (open, low, high, close) for (open < close)
+            if s.open < s.close:
+                if score <= s.valid_low_score:
+                    results += [Clazz(s, value=s.low)]
+                if score <= s.valid_high_score:
+                    results += [Clazz(s, value=s.high)]
+            else:
+                if score <= s.valid_high_score:
+                    results += [Clazz(s, value=s.high)]
+                if score <= s.valid_low_score:
+                    results += [Clazz(s, value=s.low)]
         results += [Clazz(end, value=end.close)]
     return results
 
