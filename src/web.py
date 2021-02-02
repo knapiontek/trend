@@ -204,36 +204,34 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
 
         if time_series:
             # customize data
-            fields = ('timestamp', 'vma-50', 'vma-100', 'vma-200', 'profit', 'action', 'volume')
-            ts, vma_50, vma_100, vma_200, profit, action, volume = tool.transpose(time_series, fields)
-            daily_dates = [datetime.utcfromtimestamp(t) for t in ts]
-            long = [a if a and a > 0 else None for a in action]
-            short = [-a if a and a < 0 else None for a in action]
-            fields = ('action', 'profit', 'timestamp', 'open_timestamp', 'open_position')
-            action_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
+            fields = ('timestamp', 'vma-50', 'vma-100', 'vma-200', 'long', 'short', 'profit', 'volume')
+            ts, vma_50, vma_100, vma_200, long, short, profit, volume = tool.transpose(time_series, fields)
+            dts = [datetime.utcfromtimestamp(t) for t in ts]
+            fields = ('long', 'short', 'profit', 'timestamp', 'open_timestamp', 'open_long')
+            trade_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
             score_series = swings.display(time_series, score)
             ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
-            score_dates = [datetime.utcfromtimestamp(t) for t in ts]
+            score_dts = [datetime.utcfromtimestamp(t) for t in ts]
             fields = ('open', 'close', 'high', 'low', 'timestamp')
             score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
 
             # create traces
-            score_trace = go.Scatter(x=score_dates, y=score_values, customdata=score_custom, name='Score',
+            score_trace = go.Scatter(x=score_dts, y=score_values, customdata=score_custom, name='Score',
                                      mode='lines', line=dict(width=1.0), showlegend=False)
-            vma_50_trace = go.Scattergl(x=daily_dates, y=vma_50, name='VMA-50',
+            vma_50_trace = go.Scattergl(x=dts, y=vma_50, name='VMA-50',
                                         mode='lines', line=dict(width=1.0), visible='legendonly')
-            vma_100_trace = go.Scattergl(x=daily_dates, y=vma_100, name='VMA-100',
+            vma_100_trace = go.Scattergl(x=dts, y=vma_100, name='VMA-100',
                                          mode='lines', line=dict(width=1.0))
-            vma_200_trace = go.Scattergl(x=daily_dates, y=vma_200, name='VMA-200',
+            vma_200_trace = go.Scattergl(x=dts, y=vma_200, name='VMA-200',
                                          mode='lines', line=dict(width=1.0), visible='legendonly')
-            long_trace = go.Scattergl(x=daily_dates, y=long, customdata=action_custom, name='Long',
+            long_trace = go.Scattergl(x=dts, y=long, customdata=trade_custom, name='Long',
                                       mode='markers', visible='legendonly')
-            short_trace = go.Scattergl(x=daily_dates, y=short, customdata=action_custom, name='Short',
+            short_trace = go.Scattergl(x=dts, y=short, customdata=trade_custom, name='Short',
                                        mode='markers', visible='legendonly')
-            profit_trace = go.Scattergl(x=daily_dates, y=profit, customdata=action_custom, name='Profit',
+            profit_trace = go.Scattergl(x=dts, y=profit, customdata=trade_custom, name='Profit',
                                         mode='lines+markers', connectgaps=True, line=dict(width=1.0), showlegend=False)
-            volume_trace = go.Bar(x=daily_dates, y=volume, name='Volume', showlegend=False)
+            volume_trace = go.Bar(x=dts, y=volume, name='Volume', showlegend=False)
 
             # create a graph
             figure = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.03,
@@ -249,7 +247,7 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, legend=LEGEND, title_text=description, hovermode='closest',
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
-            figure.update_xaxes(range=[daily_dates[0], daily_dates[-1]])
+            figure.update_xaxes(range=[dts[0], dts[-1]])
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN, plot_bgcolor=PLOT_BGCOLOR))
@@ -271,8 +269,8 @@ def cb_action_table(click_data):
         for k, v in datum.items():
             if k == 'open_timestamp':
                 result += [{'date': date, 'key': 'open-date', 'value': DateTime.from_timestamp(v).format()}]
-            elif k == 'open_position':
-                result += [{'date': date, 'key': 'open-position', 'value': round(v, FLOAT_PRECISION)}]
+            elif k == 'open_long':
+                result += [{'date': date, 'key': 'open-long', 'value': round(v, FLOAT_PRECISION)}]
             elif k == 'timestamp':
                 pass
             elif isinstance(v, float):

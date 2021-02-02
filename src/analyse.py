@@ -37,27 +37,29 @@ def vma(series: List[Clazz], w_size: int):
 def action(series: List[Clazz]) -> Clazz:
     """
     profit - total profit or loss
-    total - total cash required for all openings
-    position - cash required for single position
+    total - total cash required for all open positions
+    long - cash required for single long position
     open_timestamp - timestamp at the opening
-    volume - number of all opened positions
+    volume - number of all opened longs
     """
-    profit = total = position = 0.0
+    profit = total = long = 0.0
     open_timestamp = volume = 0
 
     for s in series:
-        if (position == 0.0) and (4 <= s.low_score):
+        if (long == 0.0) and (4 <= s.low_score):
             open_timestamp = s.timestamp
-            position = s.action = s.close
-            total += position
+            long = s.long = s.close
+
+            total += long
             volume += 1
 
-        elif (position > 0.0) and (2 <= s.low_score):
-            s.action = -s.close
+        elif (long > 0.0) and (2 <= s.low_score):
             s.open_timestamp = open_timestamp
-            s.open_position = position
-            s.profit = s.close - position
+            s.open_long = long
+            s.short = s.close
+            s.profit = s.short - s.open_long
+            long = 0.0
+
             profit += s.profit
-            position = 0.0
 
     return Clazz(profit=profit, total=total, volume=volume)
