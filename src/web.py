@@ -43,6 +43,21 @@ LEGEND = dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
 PLOT_BGCOLOR = 'rgb(240,240,240)'
 FLOAT_PRECISION = 4
 
+env_choice = dcc.Dropdown(id='env-choice',
+                          options=[{'label': 'Test', 'value': 'test'}, {'label': 'Live', 'value': 'live'}],
+                          value=config.ACTIVE_EXCHANGES[0],
+                          placeholder='env',
+                          className='choice',
+                          persistence=True)
+
+interval_choice = dcc.Dropdown(id='interval-choice',
+                               options=[{'label': 'Interval 1H', 'value': '1h'},
+                                        {'label': 'Interval 1D', 'value': '1d'}],
+                               value=config.ACTIVE_EXCHANGES[0],
+                               placeholder='interval',
+                               className='choice',
+                               persistence=True)
+
 exchange_choice = dcc.Dropdown(id='exchange-choice',
                                options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
                                value=config.ACTIVE_EXCHANGES[0],
@@ -117,6 +132,7 @@ app.layout = dbc.Row(
         dcc.Store(id='xaxis-range'),
         dcc.Store(id='selected-security'),
         dbc.Col([
+            dbc.Row([dbc.Col(env_choice), dbc.Col(interval_choice)], className='frame'),
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
             dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '40%'}),
@@ -185,13 +201,14 @@ def cb_selected_security(data, selected_rows):
 
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
+               Input('interval-choice', 'value'),
                Input('engine-choice', 'value'),
                Input('score-choice', 'value'),
                Input('selected-security', 'data')],
               [State('xaxis-range', 'data')])
-def cb_series_graph(d_from, engine_name, score, selected_security, xaxis_range):
-    if engine_name and d_from and selected_security:
-        interval = tool.INTERVAL_1D
+def cb_series_graph(d_from, interval_name, engine_name, score, selected_security, xaxis_range):
+    if d_from and interval_name and engine_name and selected_security:
+        interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]
         symbol = selected_security['symbol']
         if score is None:
             description = selected_security['description']
