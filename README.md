@@ -74,6 +74,7 @@ MMTH - how many stocks are above SMA-200
 - Fear & Greed Index
 - Dollar Index (reverse correlation to the stock)
 - Margin Debt
+- Wskaźnik Koniunktury DNA Rynków
 
 ### Global Financial Indices
 

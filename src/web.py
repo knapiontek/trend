@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_table
 import plotly.graph_objects as go
-from dash.dependencies import Output, Input
+from dash.dependencies import Output, Input, State
 from plotly.subplots import make_subplots
 
 from src import config, log, tool, store, yahoo, exante, stooq, swings
@@ -114,6 +114,7 @@ series_graph = dcc.Graph(id='series-graph', config={'scrollZoom': True}, classNa
 
 app.layout = dbc.Row(
     [
+        dcc.Store(id='xaxis-range'),
         dcc.Store(id='selected-security'),
         dbc.Col([
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
@@ -186,8 +187,9 @@ def cb_selected_security(data, selected_rows):
               [Input('date-from', 'date'),
                Input('engine-choice', 'value'),
                Input('score-choice', 'value'),
-               Input('selected-security', 'data')])
-def cb_series_graph(d_from, engine_name, score, selected_security):
+               Input('selected-security', 'data')],
+              [State('xaxis-range', 'data')])
+def cb_series_graph(d_from, engine_name, score, selected_security, xaxis_range):
     if engine_name and d_from and selected_security:
         interval = tool.INTERVAL_1D
         symbol = selected_security['symbol']
@@ -247,7 +249,7 @@ def cb_series_graph(d_from, engine_name, score, selected_security):
             figure.update_xaxes(tickformat=XAXIS_FORMAT)
             figure.update_layout(margin=GRAPH_MARGIN, legend=LEGEND, title_text=description, hovermode='closest',
                                  xaxis=SPIKE, yaxis=SPIKE, plot_bgcolor=PLOT_BGCOLOR)
-            figure.update_xaxes(range=[dts[0], dts[-1]])
+            figure.update_xaxes(range=xaxis_range or [dts[0], dts[-1]])
             return figure
 
     return go.Figure(data=[], layout=dict(margin=GRAPH_MARGIN, plot_bgcolor=PLOT_BGCOLOR))
@@ -286,6 +288,18 @@ def cb_action_table(click_data):
             if cd:
                 results += convert_custom_data(cd)
     return sorted(results, key=lambda d: (d['date'], d['key']))
+
+
+@app.callback(Output('xaxis-range', 'data'),
+              [Input('series-graph', 'relayoutData')],
+              [State('xaxis-range', 'data')])
+def cb_relayout_data(relayout_data, xaxis_range):
+    if relayout_data:
+        if 'xaxis.autorange' in relayout_data:
+            return None
+        if 'xaxis.range[0]' in relayout_data and 'xaxis.range[1]' in relayout_data:
+            return [relayout_data['xaxis.range[0]'], relayout_data['xaxis.range[1]']]
+    return xaxis_range
 
 
 def run_module(debug: bool):
