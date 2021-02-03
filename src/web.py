@@ -207,8 +207,8 @@ def cb_selected_security(data, selected_rows):
                Input('selected-security', 'data')],
               [State('xaxis-range', 'data')])
 def cb_series_graph(d_from, interval_name, engine_name, score, selected_security, xaxis_range):
-    if d_from and interval_name and engine_name and selected_security:
-        interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]
+    if d_from and interval_name == '1d' and interval_name and engine_name and selected_security:
+        interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]  # TODO: support 1h
         symbol = selected_security['symbol']
         if score is None:
             description = selected_security['description']
