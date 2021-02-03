@@ -2,7 +2,15 @@ from src import tool, exante
 from src.tool import DateTime
 
 
-def test_session_series():
+def test_securities():
+    symbol = 'XOM.NYSE'
+    interval = tool.INTERVAL_1D
+    with exante.SecuritySeries(interval) as security_series:
+        time_series = security_series[symbol]
+    assert len(time_series) >= 1000
+
+
+def test_series():
     symbol = 'XOM.NYSE'
     interval = tool.INTERVAL_1H
     dt_from = DateTime(2020, 2, 2, 23)
@@ -54,15 +62,13 @@ def test_session_series():
     ]
 
 
-def test_session_orders():
+def test_transactions():
     with exante.Session() as session:
-        orders = session.active_orders()
+        transactions = session.transactions()
+    assert len(transactions) >= 0
+
+
+def test_orders():
+    with exante.Session() as session:
+        orders = session.orders()
     assert len(orders) >= 0
-
-
-def test_securities():
-    symbol = 'XOM.NYSE'
-    interval = tool.INTERVAL_1D
-    with exante.SecuritySeries(interval) as security_series:
-        time_series = security_series[symbol]
-    assert len(time_series) >= 1000

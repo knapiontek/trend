@@ -76,8 +76,13 @@ class Session(session.Session):
         assert len(data) < max_size
         return list(filter(None, data))
 
-    def active_orders(self) -> List[dict]:
-        url = f'{TRADE_URL}/orders/active'
+    def transactions(self) -> List[dict]:
+        url = f'{DATA_URL}/transactions'
+        response = self.get(url)
+        return response.json()
+
+    def orders(self) -> List[dict]:
+        url = f'{TRADE_URL}/orders'
         response = self.get(url)
         return response.json()
 

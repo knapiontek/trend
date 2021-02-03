@@ -91,14 +91,6 @@ def schedule_endpoint():
     return json.dumps(content, option=json.OPT_INDENT_2, default=tool.json_default).decode('utf-8')
 
 
-@app.route("/orders/", methods=['GET'])
-def orders_endpoint():
-    with exante.Session() as session:
-        orders = session.active_orders()
-    content = {o['orderParameters']['symbolId']: o['orderParameters'] for o in orders}
-    return json.dumps(content, option=json.OPT_INDENT_2, default=tool.json_default).decode('utf-8')
-
-
 def run_module(debug: bool):
     flow.execute(run_scheduled_tasks)
     return app.run(debug=debug)
