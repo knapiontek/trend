@@ -208,11 +208,17 @@ def security_clean(engine: Any):
 
 
 def security_analyse(engine: Any):
+    security_analyse_by_interval(engine, tool.INTERVAL_1D)
+    security_analyse_by_interval(engine, tool.INTERVAL_1H)
+
+
+def security_analyse_by_interval(engine: Any, interval: timedelta):
     engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_analyse.__name__} engine: {engine_name}')
+    if interval == tool.INTERVAL_1H and engine_name != 'exante':
+        return
+    LOG.info(f'>> {security_analyse.__name__} engine: {engine_name} interval: {tool.interval_name(interval)}')
 
     w_sizes = [50, 100, 200]
-    interval = tool.INTERVAL_1D
 
     for exchange_name in config.ACTIVE_EXCHANGES:
         with store.ExchangeSeries() as exchange_series:

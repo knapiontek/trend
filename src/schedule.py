@@ -22,7 +22,7 @@ def wsgi(environ, start_response):
 @tool.catch_exception(LOG)
 def task_daily():
     data.exchange_update()
-    for engine in (yahoo, exante, stooq):
+    for engine in (yahoo, stooq, exante):
         data.security_daily(engine)
 
 
