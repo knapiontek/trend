@@ -85,3 +85,7 @@ class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
         name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
         super().__init__(name, editable, dt_from)
+
+
+def supported_interval(interval: timedelta):
+    return interval in (tool.INTERVAL_1D,)

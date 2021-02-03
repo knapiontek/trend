@@ -92,7 +92,7 @@ def security_update(engine: Any):
 @remote_retry
 def security_update_by_interval(engine: Any, interval: timedelta):
     engine_name = tool.module_name(engine.__name__)
-    if interval == tool.INTERVAL_1H and engine_name != 'exante':
+    if not engine.supported_interval(interval):
         return
     LOG.info(f'>> {security_update.__name__} engine: {engine_name} interval: {tool.interval_name(interval)}')
 
@@ -214,7 +214,7 @@ def security_analyse(engine: Any):
 
 def security_analyse_by_interval(engine: Any, interval: timedelta):
     engine_name = tool.module_name(engine.__name__)
-    if interval == tool.INTERVAL_1H and engine_name != 'exante':
+    if not engine.supported_interval(interval):
         return
     LOG.info(f'>> {security_analyse.__name__} engine: {engine_name} interval: {tool.interval_name(interval)}')
 

@@ -93,6 +93,10 @@ class SecuritySeries(store.SecuritySeries):
         super().__init__(name, editable, dt_from)
 
 
+def supported_interval(interval: timedelta):
+    return interval in (tool.INTERVAL_1H, tool.INTERVAL_1D)
+
+
 def read_shortables() -> Dict[str, bool]:
     import re
     import xlrd
