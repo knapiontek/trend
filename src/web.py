@@ -43,8 +43,9 @@ LEGEND = dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
 PLOT_BGCOLOR = 'rgb(240,240,240)'
 FLOAT_PRECISION = 4
 
+# TODO: support live
 env_choice = dcc.Dropdown(id='env-choice',
-                          options=[{'label': 'Test', 'value': 'test'}, {'label': 'Live', 'value': 'live'}],
+                          options=[{'label': 'Test', 'value': 'test'}],
                           value=config.EXCHANGES[0],
                           placeholder='env',
                           className='choice',
@@ -52,7 +53,7 @@ env_choice = dcc.Dropdown(id='env-choice',
 
 # TODO: support 1h
 interval_choice = dcc.Dropdown(id='interval-choice',
-                               options=[{'label': 'Interval 1H', 'value': '1h'}],
+                               options=[{'label': 'Interval 1D', 'value': '1d'}],
                                value=config.EXCHANGES[0],
                                placeholder='interval',
                                className='choice',
@@ -167,26 +168,29 @@ def select_securities(securities: List[Dict], query) -> List[Dict]:
 @app.callback(Output('security-table', 'data'),
               [Input('exchange-choice', 'value'),
                Input('engine-choice', 'value'),
+               Input('interval-choice', 'value'),
+               Input('env-choice', 'value'),
                Input('security-table', 'filter_query')])
-def cb_security_table(exchange_name, engine_name, query):
-    if exchange_name and engine_name:
+def cb_security_table(exchange_name, engine_name, interval_name, env_name, query):
+    if exchange_name and engine_name and interval_name and env_name:
         LOG.debug(f'Loading symbols with query: "{query or "*"}"')
         with store.ExchangeSeries() as exchange_series:
             securities = exchange_series[exchange_name]
 
         results = []
         boolean = ['[-]', '[+]']
+        result_name = tool.result_name(engine_name, interval_name, env_name)
         for security in securities:
-            engine = security[engine_name]
-            profit_ratio = engine.profit / engine.total if engine.total else 0.0
+            result = security[result_name]
+            profit_ratio = result.profit / result.total if result.total else 0.0
             results += [dict(symbol=security.symbol,
                              shortable=boolean[security.shortable],
-                             health=boolean[engine.health],
+                             health=boolean[result.health],
                              profit_ratio=round(100 * profit_ratio, FLOAT_PRECISION - 2),
                              description=security.description,
-                             profit=round(engine.profit, FLOAT_PRECISION),
-                             total=round(engine.total, FLOAT_PRECISION),
-                             volume=round(engine.volume, FLOAT_PRECISION))]
+                             profit=round(result.profit, FLOAT_PRECISION),
+                             total=round(result.total, FLOAT_PRECISION),
+                             volume=round(result.volume, FLOAT_PRECISION))]
         return select_securities(results, query)
     return []
 
@@ -201,13 +205,14 @@ def cb_selected_security(data, selected_rows):
 
 @app.callback(Output('series-graph', 'figure'),
               [Input('date-from', 'date'),
-               Input('interval-choice', 'value'),
                Input('engine-choice', 'value'),
+               Input('interval-choice', 'value'),
+               Input('env-choice', 'value'),
                Input('score-choice', 'value'),
                Input('selected-security', 'data')],
               [State('xaxis-range', 'data')])
-def cb_series_graph(d_from, interval_name, engine_name, score, selected_security, xaxis_range):
-    if d_from and interval_name and interval_name and engine_name and selected_security:
+def cb_series_graph(d_from, engine_name, interval_name, env_name, score, selected_security, xaxis_range):
+    if d_from and engine_name and interval_name and env_name and selected_security:
         interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]  # TODO: support 1h
         symbol = selected_security['symbol']
         if score is None:

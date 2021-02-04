@@ -75,7 +75,7 @@ EXCHANGE_SCHEMA = {
     'level': 'strict',
     'rule': {
         'definitions': {
-            'Case': {
+            'Result': {
                 'type': 'object',
                 'properties': {
                     'health': {'type': 'boolean'},
@@ -97,9 +97,9 @@ EXCHANGE_SCHEMA = {
             'description': {'type': 'string'},
             'short_symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
-            'stooq_1d': {'$ref': '#/definitions/Case'},
-            'yahoo_1d': {'$ref': '#/definitions/Case'},
-            'exante_1d': {'$ref': '#/definitions/Case'}
+            'stooq_1d_test': {'$ref': '#/definitions/Result'},
+            'yahoo_1d_test': {'$ref': '#/definitions/Result'},
+            'exante_1d_test': {'$ref': '#/definitions/Result'}
         },
         'required': [
             'symbol',
@@ -110,9 +110,9 @@ EXCHANGE_SCHEMA = {
             'description',
             'short_symbol',
             'shortable',
-            'stooq_1d',
-            'yahoo_1d',
-            'exante_1d'
+            'stooq_1d_test',
+            'yahoo_1d_test',
+            'exante_1d_test'
         ]
     }
 }

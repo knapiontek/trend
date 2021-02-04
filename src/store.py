@@ -151,7 +151,7 @@ def security_erase(engine: Any):
 
     db = db_connect()
     for interval in (tool.INTERVAL_1H, tool.INTERVAL_1D, tool.INTERVAL_1W):
-        name = f'security_{tool.case_name(engine, interval)}'
+        name = f'security_{tool.source_name(engine, interval)}'
         if db.has_collection(name):
             LOG.info(f'Erasing arango collection: {name}')
             deleted = db.delete_collection(name)

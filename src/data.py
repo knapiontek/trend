@@ -63,8 +63,8 @@ def exchange_update():
                         else:
                             document = security
                             document.shortable = shortable
-                            document.update({case: Clazz(health=False, profit=0.0, total=0.0, volume=0)
-                                             for case in ('stooq_1d', 'yahoo_1d', 'exante_1d')})
+                            document.update({result_name: Clazz(health=False, profit=0.0, total=0.0, volume=0)
+                                             for result_name in ('stooq_1d_test', 'yahoo_1d_test', 'exante_1d_test')})
                             new_documents += [document]
                 exchange_series *= existing_documents
                 LOG.info(f'Securities: {len(existing_documents)} updated in the exchange: {exchange_name}')
@@ -74,7 +74,7 @@ def exchange_update():
 
 def security_range(engine: Any):
     interval = tool.INTERVAL_1D
-    LOG.info(f'>> {security_range.__name__} case: {tool.case_name(engine, interval)}')
+    LOG.info(f'>> {security_range.__name__} source: {tool.source_name(engine, interval)}')
 
     with engine.SecuritySeries(interval) as security_series:
         print(json.dumps(security_series.time_range(),
@@ -90,7 +90,7 @@ def security_update(engine: Any):
 
 @remote_retry
 def security_update_by_interval(engine: Any, interval: timedelta):
-    LOG.info(f'>> {security_update.__name__} case: {tool.case_name(engine, interval)}')
+    LOG.info(f'>> {security_update.__name__} source: {tool.source_name(engine, interval)}')
 
     default_range = Clazz(dt_to=config.datetime_from())
     with engine.SecuritySeries(interval) as security_series:
@@ -142,9 +142,10 @@ def time_series_verify(engine: Any,
 
 def security_verify(engine: Any):
     interval = tool.INTERVAL_1D
-    case_name = tool.case_name(engine, interval)
-    health_name = f'health_{case_name}'
-    LOG.info(f'>> {security_verify.__name__} case: {case_name}')
+    source_name = tool.source_name(engine, interval)
+    result_name = tool.result_name(engine, interval, tool.ENV_TEST)
+    health_name = f'health_{source_name}'
+    LOG.info(f'>> {security_verify.__name__} source: {source_name}')
 
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
@@ -177,14 +178,14 @@ def security_verify(engine: Any):
                     short_symbol, _ = tool.symbol_split(security.symbol)
                     security_health = health[exchange_name].get(short_symbol, {})
                     missing_length = len(security_health.get('missing', []))
-                    security[case_name].health = missing_length < config.HEALTH_MISSING_LIMIT
+                    security[result_name].health = missing_length < config.HEALTH_MISSING_LIMIT
                 exchange_series *= securities
 
 
 def security_clean(engine: Any):
     interval = tool.INTERVAL_1D
-    case_name = tool.case_name(engine, interval)
-    LOG.info(f'>> {security_clean.__name__} case: {case_name}')
+    source_name = tool.source_name(engine, interval)
+    LOG.info(f'>> {security_clean.__name__} source: {source_name}')
 
     for exchange_name in config.EXCHANGES:
         with store.ExchangeSeries() as exchange_series:
@@ -204,8 +205,9 @@ def security_clean(engine: Any):
 def security_analyse(engine: Any):
     interval = tool.INTERVAL_1D
     w_sizes = [50, 100, 200]
-    case_name = tool.case_name(engine, interval)
-    LOG.info(f'>> {security_analyse.__name__} case: {case_name}')
+    source_name = tool.source_name(engine, interval)
+    result_name = tool.result_name(engine, interval, tool.ENV_TEST)
+    LOG.info(f'>> {security_analyse.__name__} source: {source_name}')
 
     for exchange_name in config.EXCHANGES:
         with store.ExchangeSeries() as exchange_series:
@@ -226,8 +228,8 @@ def security_analyse(engine: Any):
                     action = analyse.action(time_series)
                     security_series *= time_series
 
-                    entry = security.entry(case_name)
-                    entry[case_name].update(action)
+                    entry = security.entry(result_name)
+                    entry[result_name].update(action)
                     entries += [entry]
 
         with store.ExchangeSeries(editable=True) as exchange_series:

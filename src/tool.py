@@ -103,11 +103,22 @@ def interval_name(interval: timedelta) -> str:
     }[interval]
 
 
-def case_name(engine: Any, interval: timedelta) -> str:
+def source_name(engine: Any, interval: Union[timedelta, str]) -> str:
     if not isinstance(engine, str):
         engine = engine.__name__
     engine_name = engine.split('.')[-1]
-    return f'{engine_name}_{interval_name(interval)}'
+    if isinstance(interval, timedelta):
+        interval = interval_name(interval)
+    return f'{engine_name}_{interval}'
+
+
+ENV_TEST = 'test'
+ENV_LIVE = 'live'
+
+
+def result_name(engine: Any, interval: Union[timedelta, str], env_name: str) -> str:
+    source = source_name(engine, interval)
+    return f'{source}_{env_name}'
 
 
 @lru_cache(maxsize=16)
