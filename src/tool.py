@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone, date, time
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Iterable, Tuple, Set, Union
+from typing import List, Iterable, Tuple, Set, Union, Any
 
 from src import holidays
 from src.clazz import Clazz
@@ -90,10 +90,6 @@ def symbol_split(symbol: str) -> Tuple[str, str]:
     return '.'.join(parts[:-1]), parts[-1]
 
 
-def module_name(name: str) -> str:
-    return name.split('.')[-1]
-
-
 INTERVAL_1H = timedelta(hours=1)
 INTERVAL_1D = timedelta(days=1)
 INTERVAL_1W = timedelta(days=7)
@@ -107,9 +103,16 @@ def interval_name(interval: timedelta) -> str:
     }[interval]
 
 
+def case_name(engine: Any, interval: timedelta) -> str:
+    if not isinstance(engine, str):
+        engine = engine.__name__
+    engine_name = engine.split('.')[-1]
+    return f'{engine_name}_{interval_name(interval)}'
+
+
 @lru_cache(maxsize=16)
 def exchange_holidays(exchange: str) -> Set[str]:
-    return {DateTime.parse_date(dt) for dt in holidays.EXCHANGE_HOLIDAYS[exchange]}
+    return {DateTime.parse_datetime(dt) for dt in holidays.EXCHANGE_HOLIDAYS[exchange]}
 
 
 def last_workday(exchange: str, dt: DateTime) -> DateTime:

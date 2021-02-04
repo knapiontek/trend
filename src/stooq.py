@@ -92,7 +92,7 @@ def datum_from_stooq(dt: Dict, symbol: str) -> Optional[Clazz]:
 
 class Session(session.Session):
     def __init__(self, exchanges=None):
-        self.exchanges = exchanges if exchanges else {e: [tool.INTERVAL_1D] for e in config.ACTIVE_EXCHANGES}
+        self.exchanges = exchanges if exchanges else {e: [tool.INTERVAL_1D] for e in config.EXCHANGES}
 
         for exchange, intervals in self.exchanges.items():
             for interval in intervals:
@@ -143,5 +143,5 @@ class Session(session.Session):
 
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
-        name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
+        name = f'security_{tool.case_name(__name__, interval)}'
         super().__init__(name, editable, dt_from)

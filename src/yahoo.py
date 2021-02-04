@@ -83,5 +83,5 @@ class Session(session.Session):
 
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):
-        name = f'security_{tool.module_name(__name__)}_{tool.interval_name(interval)}'
+        name = f'security_{tool.case_name(__name__, interval)}'
         super().__init__(name, editable, dt_from)

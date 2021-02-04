@@ -45,22 +45,22 @@ FLOAT_PRECISION = 4
 
 env_choice = dcc.Dropdown(id='env-choice',
                           options=[{'label': 'Test', 'value': 'test'}, {'label': 'Live', 'value': 'live'}],
-                          value=config.ACTIVE_EXCHANGES[0],
+                          value=config.EXCHANGES[0],
                           placeholder='env',
                           className='choice',
                           persistence=True)
 
+# TODO: support 1h
 interval_choice = dcc.Dropdown(id='interval-choice',
-                               options=[{'label': 'Interval 1H', 'value': '1h'},
-                                        {'label': 'Interval 1D', 'value': '1d'}],
-                               value=config.ACTIVE_EXCHANGES[0],
+                               options=[{'label': 'Interval 1H', 'value': '1h'}],
+                               value=config.EXCHANGES[0],
                                placeholder='interval',
                                className='choice',
                                persistence=True)
 
 exchange_choice = dcc.Dropdown(id='exchange-choice',
-                               options=[{'label': e, 'value': e} for e in config.ACTIVE_EXCHANGES],
-                               value=config.ACTIVE_EXCHANGES[0],
+                               options=[{'label': e, 'value': e} for e in config.EXCHANGES],
+                               value=config.EXCHANGES[0],
                                placeholder='exchange',
                                className='choice',
                                persistence=True)
@@ -207,7 +207,7 @@ def cb_selected_security(data, selected_rows):
                Input('selected-security', 'data')],
               [State('xaxis-range', 'data')])
 def cb_series_graph(d_from, interval_name, engine_name, score, selected_security, xaxis_range):
-    if d_from and interval_name == '1d' and interval_name and engine_name and selected_security:
+    if d_from and interval_name and interval_name and engine_name and selected_security:
         interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]  # TODO: support 1h
         symbol = selected_security['symbol']
         if score is None:

@@ -6,7 +6,7 @@ from src.tool import DateTime
 
 
 def test_exchange_holidays():
-    for exchange in config.ACTIVE_EXCHANGES:
+    for exchange in config.EXCHANGES:
         result = tool.exchange_holidays(exchange)
         assert isinstance(result, set)
 

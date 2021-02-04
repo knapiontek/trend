@@ -138,23 +138,21 @@ class SecuritySeries(Series):
 def exchange_erase():
     LOG.info(f'>> {exchange_erase.__name__}')
 
+    name = 'exchange'
     db = db_connect()
-    names = [c['name'] for c in db.collections()]
-    for name in names:
-        if name.startswith('exchange'):
-            LOG.debug(f'Erasing arango collection: {name}')
-            deleted = db.delete_collection(name)
-            assert deleted
+    if db.has_collection(name):
+        LOG.info(f'Erasing arango collection: {name}')
+        deleted = db.delete_collection(name)
+        assert deleted
 
 
 def security_erase(engine: Any):
-    engine_name = tool.module_name(engine.__name__)
-    LOG.info(f'>> {security_erase.__name__}({engine_name})')
+    LOG.info(f'>> {security_erase.__name__}')
 
     db = db_connect()
-    names = [c['name'] for c in db.collections()]
-    for name in names:
-        if name.startswith(f'security_{tool.module_name(engine.__name__)}'):
-            LOG.debug(f'Erasing arango collection: {name}')
+    for interval in (tool.INTERVAL_1H, tool.INTERVAL_1D, tool.INTERVAL_1W):
+        name = f'security_{tool.case_name(engine, interval)}'
+        if db.has_collection(name):
+            LOG.info(f'Erasing arango collection: {name}')
             deleted = db.delete_collection(name)
             assert deleted

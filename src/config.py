@@ -1,7 +1,7 @@
 import pathlib
 from datetime import datetime
 from functools import lru_cache
-from typing import Tuple, Text
+from typing import Tuple
 
 import jsonschema
 import orjson as json
@@ -19,7 +19,7 @@ LOG_PATH = TREND_PATH.joinpath('logs')
 CONFIG_FILE = pathlib.Path('~/.trend').expanduser()
 LOG_FORMAT = '[%(asctime)s] [%(levelname)s]\t[%(module)s]\t%(message)s'
 
-ACTIVE_EXCHANGES = ('WSE', 'XETRA', 'LSE', 'NASDAQ', 'NYSE')
+EXCHANGES = ('WSE', 'XETRA', 'LSE', 'NASDAQ', 'NYSE')
 HEALTH_MISSING_LIMIT = 20
 
 
@@ -62,7 +62,7 @@ def iex_auth() -> str:
     return config['iex']['shared-key']
 
 
-def arango_db_auth() -> Tuple[Text, Text, Text, Text]:
+def arango_db_auth() -> Tuple[str, str, str, str]:
     config = load_file()
     arango_config = config['arango-db']
     return arango_config['url'], arango_config['username'], arango_config['password'], arango_config['database']
