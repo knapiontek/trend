@@ -97,6 +97,9 @@ EXCHANGE_SCHEMA = {
             'description': {'type': 'string'},
             'short_symbol': {'type': 'string'},
             'shortable': {'type': 'boolean'},
+            'stooq_1d_health': {'type': 'boolean'},
+            'yahoo_1d_health': {'type': 'boolean'},
+            'exante_1d_health': {'type': 'boolean'},
             'stooq_1d_test': {'$ref': '#/definitions/Result'},
             'yahoo_1d_test': {'$ref': '#/definitions/Result'},
             'exante_1d_test': {'$ref': '#/definitions/Result'}
@@ -110,6 +113,9 @@ EXCHANGE_SCHEMA = {
             'description',
             'short_symbol',
             'shortable',
+            'stooq_1d_health',
+            'yahoo_1d_health',
+            'exante_1d_health',
             'stooq_1d_test',
             'yahoo_1d_test',
             'exante_1d_test'

@@ -121,6 +121,11 @@ def result_name(engine: Any, interval: Union[timedelta, str], env_name: str) -> 
     return f'{source}_{env_name}'
 
 
+def health_name(engine: Any, interval: Union[timedelta, str]) -> str:
+    source = source_name(engine, interval)
+    return f'{source}_health'
+
+
 @lru_cache(maxsize=16)
 def exchange_holidays(exchange: str) -> Set[str]:
     return {DateTime.parse_datetime(dt) for dt in holidays.EXCHANGE_HOLIDAYS[exchange]}

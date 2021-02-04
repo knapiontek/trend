@@ -63,8 +63,10 @@ def exchange_update():
                         else:
                             document = security
                             document.shortable = shortable
-                            document.update({result_name: Clazz(health=False, profit=0.0, total=0.0, volume=0)
-                                             for result_name in ('stooq_1d_test', 'yahoo_1d_test', 'exante_1d_test')})
+                            document.update({name: Clazz(health=False, profit=0.0, total=0.0, volume=0)
+                                             for name in ('stooq_1d_test', 'yahoo_1d_test', 'exante_1d_test')})
+                            document.update({name: False
+                                             for name in ('stooq_1d_health', 'yahoo_1d_health', 'exante_1d_health')})
                             new_documents += [document]
                 exchange_series *= existing_documents
                 LOG.info(f'Securities: {len(existing_documents)} updated in the exchange: {exchange_name}')
@@ -144,7 +146,7 @@ def security_verify(engine: Any):
     interval = tool.INTERVAL_1D
     source_name = tool.source_name(engine, interval)
     result_name = tool.result_name(engine, interval, tool.ENV_TEST)
-    health_name = f'health_{source_name}'
+    health_name = tool.health_name(engine, interval)
     LOG.info(f'>> {security_verify.__name__} source: {source_name}')
 
     with engine.SecuritySeries(interval) as security_series:
@@ -178,7 +180,7 @@ def security_verify(engine: Any):
                     short_symbol, _ = tool.symbol_split(security.symbol)
                     security_health = health[exchange_name].get(short_symbol, {})
                     missing_length = len(security_health.get('missing', []))
-                    security[result_name].health = missing_length < config.HEALTH_MISSING_LIMIT
+                    security[health_name] = missing_length < config.HEALTH_MISSING_LIMIT
                 exchange_series *= securities
 
 

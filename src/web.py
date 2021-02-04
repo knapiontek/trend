@@ -179,13 +179,15 @@ def cb_security_table(exchange_name, engine_name, interval_name, env_name, query
 
         results = []
         boolean = ['[-]', '[+]']
+        health_name = tool.health_name(engine_name, interval_name)
         result_name = tool.result_name(engine_name, interval_name, env_name)
         for security in securities:
+            health = security[health_name]
             result = security[result_name]
             profit_ratio = result.profit / result.total if result.total else 0.0
             results += [dict(symbol=security.symbol,
                              shortable=boolean[security.shortable],
-                             health=boolean[result.health],
+                             health=boolean[health],
                              profit_ratio=round(100 * profit_ratio, FLOAT_PRECISION - 2),
                              description=security.description,
                              profit=round(result.profit, FLOAT_PRECISION),
