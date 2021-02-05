@@ -31,7 +31,7 @@ class Color(Enum):
 
     @staticmethod
     def from_score(score: int) -> 'Color':
-        assert 1 <= score <= 8
+        assert 0 <= score <= 7
         colors = [None,
                   Color.yellow,
                   Color.orange,

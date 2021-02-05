@@ -81,25 +81,22 @@ class DateTime(datetime):
         return self.strftime(DT_FORMAT)
 
 
-def url_encode(name: str) -> str:
-    return urllib.parse.quote(name, safe='')
-
-
-def symbol_split(symbol: str) -> Tuple[str, str]:
-    parts = symbol.split('.')
-    return '.'.join(parts[:-1]), parts[-1]
-
+# global constants
 
 INTERVAL_1H = timedelta(hours=1)
 INTERVAL_1D = timedelta(days=1)
 INTERVAL_1W = timedelta(days=7)
 
+INTERVAL_1H_NAME = '1h'
+INTERVAL_1D_NAME = '1d'
+INTERVAL_1W_NAME = '1w'
+
 
 def interval_name(interval: timedelta) -> str:
     return {
-        INTERVAL_1H: '1h',
-        INTERVAL_1D: '1d',
-        INTERVAL_1W: '1w'
+        INTERVAL_1H: INTERVAL_1H_NAME,
+        INTERVAL_1D: INTERVAL_1D_NAME,
+        INTERVAL_1W: INTERVAL_1W_NAME
     }[interval]
 
 
@@ -125,6 +122,8 @@ def health_name(engine: Any, interval: Union[timedelta, str]) -> str:
     source = source_name(engine, interval)
     return f'{source}_health'
 
+
+# working days
 
 @lru_cache(maxsize=16)
 def exchange_holidays(exchange: str) -> Set[str]:
@@ -166,6 +165,18 @@ def is_latest(path: Path, interval: timedelta, exchange: str) -> bool:
         now_dt_last = last_session(exchange, interval, DateTime.now())
         return path_dt_last >= now_dt_last
     return False
+
+
+# auxiliaries
+
+
+def url_encode(name: str) -> str:
+    return urllib.parse.quote(name, safe='')
+
+
+def symbol_split(symbol: str) -> Tuple[str, str]:
+    parts = symbol.split('.')
+    return '.'.join(parts[:-1]), parts[-1]
 
 
 def time_slices(dt_from: DateTime, dt_to: DateTime, interval: timedelta, size: int):

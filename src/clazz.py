@@ -28,4 +28,4 @@ class Clazz(dict):
         return self
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(self)
+        return {k: v if type(v) != Clazz else v.to_dict() for k, v in self.items()}

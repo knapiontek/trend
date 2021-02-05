@@ -145,7 +145,6 @@ def time_series_verify(engine: Any,
 def security_verify(engine: Any):
     interval = tool.INTERVAL_1D
     source_name = tool.source_name(engine, interval)
-    result_name = tool.result_name(engine, interval, tool.ENV_TEST)
     health_name = tool.health_name(engine, interval)
     LOG.info(f'>> {security_verify.__name__} source: {source_name}')
 
@@ -231,7 +230,7 @@ def security_analyse(engine: Any):
                     security_series *= time_series
 
                     entry = security.entry(result_name)
-                    entry[result_name].update(action)
+                    entry[result_name] = action
                     entries += [entry]
 
         with store.ExchangeSeries(editable=True) as exchange_series:

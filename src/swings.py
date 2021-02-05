@@ -23,12 +23,12 @@ def init(series: List[Clazz]) -> List[Clazz]:
 
 
 def limit_ratio(score: int) -> float:
-    assert 1 <= score <= 8
-    return (2 ** (score - 1)) / 100  # 1, 2, 4, 8, 16, 32, 64, 128
+    assert 0 <= score <= 7
+    return (2 ** score) / 100  # 1%, 2%, 4%, 8%, 16%, 32%, 64%, 128%
 
 
 def reduce(series: List[Clazz], score: int) -> List[Clazz]:
-    assert 1 <= score <= 8
+    assert 0 <= score <= 7
     queue = deque(series[:2])
 
     for s3 in series[2:]:
@@ -67,7 +67,7 @@ def display(series: List[Clazz], score: int):
                         Clazz(timestamp=s.timestamp, value=value2),
                         Clazz(timestamp=s.timestamp, value=s.close)]
     else:
-        assert 1 <= score <= 8
+        assert 0 <= score <= 7
         begin = series[0]
         end = series[-1]
         results += [Clazz(begin, value=begin.open)]

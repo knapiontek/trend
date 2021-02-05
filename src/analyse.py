@@ -46,20 +46,22 @@ def action(series: List[Clazz]) -> Clazz:
     open_timestamp = volume = 0
 
     for s in series:
+        s.test = Clazz()
+
         if (long == 0.0) and (4 <= s.low_score):
             open_timestamp = s.timestamp
-            long = s.long = s.close
+            long = s.test.long = s.close
 
             total += long
             volume += 1
 
         elif (long > 0.0) and (2 <= s.low_score):
-            s.open_timestamp = open_timestamp
-            s.open_long = long
-            s.short = s.close
-            s.profit = s.short - s.open_long
+            s.test.open_timestamp = open_timestamp
+            s.test.open_long = long
+            s.test.short = s.close
+            s.test.profit = s.test.short - s.test.open_long
             long = 0.0
 
-            profit += s.profit
+            profit += s.test.profit
 
     return Clazz(profit=profit, total=total, volume=volume)

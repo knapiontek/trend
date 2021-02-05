@@ -45,7 +45,7 @@ FLOAT_PRECISION = 4
 
 # TODO: support live
 env_choice = dcc.Dropdown(id='env-choice',
-                          options=[{'label': 'Test', 'value': 'test'}],
+                          options=[{'label': 'Test', 'value': tool.ENV_TEST}],
                           value=config.EXCHANGES[0],
                           placeholder='env',
                           className='choice',
@@ -53,7 +53,7 @@ env_choice = dcc.Dropdown(id='env-choice',
 
 # TODO: support 1h
 interval_choice = dcc.Dropdown(id='interval-choice',
-                               options=[{'label': 'Interval 1D', 'value': '1d'}],
+                               options=[{'label': 'Interval 1D', 'value': tool.INTERVAL_1D_NAME}],
                                value=config.EXCHANGES[0],
                                placeholder='interval',
                                className='choice',
@@ -83,7 +83,7 @@ date_choice = dcc.DatePickerSingle(id='date-from',
 
 score_choice = dcc.Input(id='score-choice',
                          type='number',
-                         min=1, max=8, step=1, value=3,
+                         min=0, max=7, step=1, value=2,
                          className='score',
                          persistence=True)
 
@@ -136,8 +136,8 @@ app.layout = dbc.Row(
             dbc.Row([dbc.Col(env_choice), dbc.Col(interval_choice)], className='frame'),
             dbc.Row([dbc.Col(exchange_choice), dbc.Col(engine_choice)], className='frame'),
             dbc.Row([dbc.Col(date_choice), dbc.Col(score_choice)], className='frame'),
-            dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '40%'}),
-            dbc.Row(dbc.Col(details_table), className='scroll', style={'max-height': '30%'}),
+            dbc.Row(dbc.Col(security_table), className='scroll', style={'max-height': '35%'}),
+            dbc.Row(dbc.Col(details_table), className='scroll', style={'max-height': '20%'}),
             dbc.Row(dbc.Col(action_table), className='scroll flex-element'),
         ], className='panel flex-box', width=3),
         dbc.Col(dbc.Spinner(series_graph))
@@ -229,18 +229,21 @@ def cb_series_graph(d_from, engine_name, interval_name, env_name, score, selecte
             time_series = security_series[symbol]
 
         if time_series:
-            # customize data
-            fields = ('timestamp', 'vma-50', 'vma-100', 'vma-200', 'long', 'short', 'profit', 'volume')
-            ts, vma_50, vma_100, vma_200, long, short, profit, volume = tool.transpose(time_series, fields)
+            # customize static data
+            fields = ('timestamp', 'vma-50', 'vma-100', 'vma-200', 'volume', env_name)
+            ts, vma_50, vma_100, vma_200, volume, trade = tool.transpose(time_series, fields)
             dts = [datetime.utcfromtimestamp(t) for t in ts]
-            fields = ('long', 'short', 'profit', 'timestamp', 'open_timestamp', 'open_long')
-            trade_custom = [{k: v for k, v in s.items() if k in fields} for s in time_series]
 
+            # customize swing data
             score_series = swings.display(time_series, score)
             ts, score_values = tool.transpose(score_series, ('timestamp', 'value'))
             score_dts = [datetime.utcfromtimestamp(t) for t in ts]
-            fields = ('open', 'close', 'high', 'low', 'timestamp')
-            score_custom = [{k: v for k, v in s.items() if k in fields} for s in score_series]
+            score_custom = [s.to_dict() for s in score_series]
+
+            # customize trade data
+            fields = ('long', 'short', 'profit')
+            long, short, profit = tool.transpose(trade, fields)
+            trade_custom = [t.to_dict() for t in trade]
 
             # create traces
             score_trace = go.Scatter(x=score_dts, y=score_values, customdata=score_custom, name='Score',
@@ -289,18 +292,19 @@ def cb_details_table(selected_security):
 @app.callback(Output('action-table', 'data'),
               [Input('series-graph', 'clickData')])
 def cb_action_table(click_data):
-    def convert_custom_data(datum: Dict) -> List[Dict]:
-        date = DateTime.from_timestamp(datum['timestamp']).format()
+    def convert_custom_data(date: str, datum: Dict) -> List[Dict]:
         result = []
         for k, v in datum.items():
-            if k == 'open_timestamp':
+            if k in ('_id', '_key', '_rev', 'timestamp'):
+                pass
+            elif k == 'open_timestamp':
                 result += [{'date': date, 'key': 'open-date', 'value': DateTime.from_timestamp(v).format()}]
             elif k == 'open_long':
                 result += [{'date': date, 'key': 'open-long', 'value': round(v, FLOAT_PRECISION)}]
-            elif k == 'timestamp':
-                pass
             elif isinstance(v, float):
                 result += [{'date': date, 'key': k, 'value': round(v, FLOAT_PRECISION)}]
+            elif isinstance(v, dict):
+                result += convert_custom_data(date, v)
             else:
                 result += [{'date': date, 'key': k, 'value': v}]
         return result
@@ -310,7 +314,7 @@ def cb_action_table(click_data):
         for p in click_data.get('points', []):
             cd = p.get('customdata')
             if cd:
-                results += convert_custom_data(cd)
+                results += convert_custom_data(p['x'], cd)
     return sorted(results, key=lambda d: (d['date'], d['key']))
 
 
