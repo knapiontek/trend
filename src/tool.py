@@ -112,10 +112,16 @@ def source_name(engine: Any, interval: Union[timedelta, str]) -> str:
 ENV_TEST = 'test'
 ENV_LIVE = 'live'
 
+ENV_RESULT_DEFAULT = {name: Clazz(profit=0.0, total=0.0, volume=0)
+                      for name in ('stooq_1d_test', 'yahoo_1d_test', 'exante_1d_test')}
+
 
 def result_name(engine: Any, interval: Union[timedelta, str], env_name: str) -> str:
     source = source_name(engine, interval)
     return f'{source}_{env_name}'
+
+
+HEALTH_RESULT_DEFAULT = {name: False for name in ('stooq_1d_health', 'yahoo_1d_health', 'exante_1d_health')}
 
 
 def health_name(engine: Any, interval: Union[timedelta, str]) -> str:

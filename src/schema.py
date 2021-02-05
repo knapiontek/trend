@@ -78,12 +78,11 @@ EXCHANGE_SCHEMA = {
             'Result': {
                 'type': 'object',
                 'properties': {
-                    'health': {'type': 'boolean'},
                     'profit': {'type': 'number', 'format': 'float'},
                     'total': {'type': 'number', 'format': 'float'},
                     'volume': {'type': 'number', 'format': 'integer'}
                 },
-                'required': ['health', 'profit', 'total', 'volume']
+                'required': ['profit', 'total', 'volume']
             }
         },
         'type': 'object',

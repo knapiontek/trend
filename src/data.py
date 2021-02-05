@@ -63,10 +63,8 @@ def exchange_update():
                         else:
                             document = security
                             document.shortable = shortable
-                            document.update({name: Clazz(health=False, profit=0.0, total=0.0, volume=0)
-                                             for name in ('stooq_1d_test', 'yahoo_1d_test', 'exante_1d_test')})
-                            document.update({name: False
-                                             for name in ('stooq_1d_health', 'yahoo_1d_health', 'exante_1d_health')})
+                            document.update(tool.ENV_RESULT_DEFAULT)
+                            document.update(tool.HEALTH_RESULT_DEFAULT)
                             new_documents += [document]
                 exchange_series *= existing_documents
                 LOG.info(f'Securities: {len(existing_documents)} updated in the exchange: {exchange_name}')
@@ -161,7 +159,7 @@ def security_verify(engine: Any):
                 overlap, missing = time_series_verify(engine,
                                                       symbol,
                                                       symbol_range.dt_from,
-                                                      symbol_range.dt_to,
+                                                      tool.last_session(exchange_name, interval, tool.DateTime.now()),
                                                       interval)
                 security_health = Clazz()
                 if overlap:
