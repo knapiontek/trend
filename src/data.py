@@ -177,7 +177,7 @@ def security_verify(engine: Any):
                             if len(missing) > config.HEALTH_MISSING_LIMIT:
                                 result.message = f'The missing limit reached: {len(missing)}'
                         if last_session in missing:
-                            result.message = f'The last session {last_session} is missing: {symbol_range.dt_to}'
+                            result.message = f'The last session {symbol_range.dt_to} < {last_session}'
                     else:
                         result.message = 'There is no time series for this symbol'
 
@@ -186,7 +186,7 @@ def security_verify(engine: Any):
                         health[exchange_name][short_symbol] = result
 
                     entry = security.entry(health_name)
-                    entry[health_name] = not result.get('message')
+                    entry[health_name] = 'message' not in result
                     entries += [entry]
 
             with store.ExchangeSeries(editable=True) as exchange_series:
