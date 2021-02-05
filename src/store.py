@@ -27,7 +27,7 @@ class File(dict):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.editable and not exc_type:
             with self.filename.open('wb') as write_io:
-                write_io.write(json.dumps(self, option=json.OPT_INDENT_2))
+                write_io.write(json.dumps(self, option=json.OPT_INDENT_2, default=tool.json_default))
 
     def __setitem__(self, key: str, value: Any):
         assert self.editable

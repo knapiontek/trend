@@ -132,7 +132,7 @@ def health_name(engine: Any, interval: Union[timedelta, str]) -> str:
 # working days
 
 @lru_cache(maxsize=16)
-def exchange_holidays(exchange: str) -> Set[str]:
+def exchange_holidays(exchange: str) -> Set[DateTime]:
     return {DateTime.parse_datetime(dt) for dt in holidays.EXCHANGE_HOLIDAYS[exchange]}
 
 

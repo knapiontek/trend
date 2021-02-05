@@ -119,7 +119,7 @@ def security_update_by_interval(engine: Any, interval: timedelta):
 def time_series_verify(engine: Any,
                        symbol: str,
                        dt_from: DateTime, dt_to: DateTime,
-                       interval: timedelta) -> Tuple[List, List]:
+                       interval: timedelta) -> Tuple[List[DateTime], List[DateTime]]:
     with engine.SecuritySeries(interval) as security_series:
         time_series = security_series[symbol]
 
@@ -127,14 +127,14 @@ def time_series_verify(engine: Any,
     dates = [DateTime.from_timestamp(s.timestamp) for s in time_series]
     holidays = tool.exchange_holidays(exchange)
 
-    overlap = [d.format() for d in dates if d in holidays]
+    overlap = [d for d in dates if d in holidays]
 
     missing = []
     start = dt_from
     while start <= dt_to:
         if start.weekday() in (0, 1, 2, 3, 4):
-            if start not in dates and start not in holidays:
-                missing.append(start.format())
+            if not (start in dates or start in holidays):
+                missing.append(start)
         start += interval
 
     return overlap, missing
@@ -148,40 +148,46 @@ def security_verify(engine: Any):
 
     with engine.SecuritySeries(interval) as security_series:
         time_range = security_series.time_range()
-        LOG.info(f'Time range entries: {len(time_range)}')
 
     with store.File(health_name, editable=True) as health:
-        health.update({e: {} for e in config.EXCHANGES})
-        with flow.Progress(health_name, time_range) as progress:
-            for symbol, symbol_range in time_range.items():
-                progress(symbol)
-                short_symbol, exchange_name = tool.symbol_split(symbol)
-                last_session = tool.last_session(exchange_name, interval, tool.DateTime.now())
-                overlap, missing = time_series_verify(engine,
-                                                      symbol,
-                                                      symbol_range.dt_from,
-                                                      last_session,
-                                                      interval)
-                security_health = Clazz()
-                if overlap:
-                    security_health.overlap = overlap
-                if missing:
-                    security_health.missing = missing
-                if symbol_range.dt_to < last_session:
-                    security_health.last_session = symbol_range.dt_to
-                if security_health:
-                    health[exchange_name][short_symbol] = security_health
+        for exchange_name in config.EXCHANGES:
+            health[exchange_name] = {}
+            last_session = tool.last_session(exchange_name, interval, DateTime.now())
+            default_range = Clazz(dt_from=last_session, dt_to=last_session)
 
-    with store.File(health_name) as health:
-        with store.ExchangeSeries(editable=True) as exchange_series:
-            for exchange_name in config.EXCHANGES:
+            with store.ExchangeSeries() as exchange_series:
                 securities = exchange_series[exchange_name]
+
+            entries = []
+            with flow.Progress(health_name, securities) as progress:
                 for security in securities:
-                    short_symbol, _ = tool.symbol_split(security.symbol)
-                    security_health = health[exchange_name].get(short_symbol, {})
-                    missing_length = len(security_health.get('missing', []))
-                    security[health_name] = missing_length < config.HEALTH_MISSING_LIMIT
-                exchange_series *= securities
+                    progress(security.symbol)
+
+                    symbol_range = time_range.get(security.symbol, default_range)
+                    overlap, missing = time_series_verify(engine,
+                                                          security.symbol,
+                                                          symbol_range.dt_from,
+                                                          last_session,
+                                                          interval)
+                    security_health = Clazz()
+                    if overlap:
+                        security_health.overlap = overlap
+                    if missing:
+                        security_health.missing = missing
+                    if last_session in missing:
+                        security_health.last_session = symbol_range.dt_to
+                    if security_health:
+                        short_symbol, _ = tool.symbol_split(security.symbol)
+                        health[exchange_name][short_symbol] = security_health
+
+                    entry = security.entry(health_name)
+                    entry[health_name] = len(missing) < config.HEALTH_MISSING_LIMIT or last_session not in missing
+                    entries += [entry]
+
+            with store.ExchangeSeries(editable=True) as exchange_series:
+                exchange_series |= entries
+
+            LOG.info(f'Securities: {len(securities)} verified in the exchange: {exchange_name}')
 
 
 def security_clean(engine: Any):
