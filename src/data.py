@@ -156,16 +156,19 @@ def security_verify(engine: Any):
             for symbol, symbol_range in time_range.items():
                 progress(symbol)
                 short_symbol, exchange_name = tool.symbol_split(symbol)
+                last_session = tool.last_session(exchange_name, interval, tool.DateTime.now())
                 overlap, missing = time_series_verify(engine,
                                                       symbol,
                                                       symbol_range.dt_from,
-                                                      tool.last_session(exchange_name, interval, tool.DateTime.now()),
+                                                      last_session,
                                                       interval)
                 security_health = Clazz()
                 if overlap:
                     security_health.overlap = overlap
                 if missing:
                     security_health.missing = missing
+                if symbol_range.dt_to < last_session:
+                    security_health.last_session = symbol_range.dt_to
                 if security_health:
                     health[exchange_name][short_symbol] = security_health
 

@@ -31,9 +31,8 @@ class Color(Enum):
 
     @staticmethod
     def from_score(score: int) -> 'Color':
-        assert 0 <= score <= 7
-        colors = [None,
-                  Color.yellow,
+        assert 1 <= score <= 8
+        colors = [Color.yellow,
                   Color.orange,
                   Color.red,
                   Color.brown,
@@ -41,7 +40,7 @@ class Color(Enum):
                   Color.green,
                   Color.blue,
                   Color.black]
-        return colors[score]
+        return colors[score - 1]
 
 
 def plot_series(series: List[Clazz]):
@@ -67,7 +66,8 @@ def plot_swings(series: List[Clazz], score: int):
     color = Color.from_score(score)
     plt.plot([s.timestamp for s in results],
              [s.value for s in results],
-             'o', label=f'score-{score} [{2 ** (score - 1):02}%]', color=color.name, linewidth=1, markersize=1 + score)
+             'o', label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
+             color=color.name, linewidth=1, markersize=1 + score)
 
 
 def show_widget(symbol: str, begin: int, end: int):
@@ -95,7 +95,7 @@ def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
 
     swings.calculate(series)
 
-    for score in range(1, 8):
+    for score in range(1, 9):
         plot_swings(series, score)
 
     show_widget(symbol, begin, end)

@@ -83,7 +83,7 @@ date_choice = dcc.DatePickerSingle(id='date-from',
 
 score_choice = dcc.Input(id='score-choice',
                          type='number',
-                         min=0, max=7, step=1, value=2,
+                         min=1, max=8, step=1, value=3,
                          className='score',
                          persistence=True)
 
@@ -217,10 +217,10 @@ def cb_series_graph(d_from, engine_name, interval_name, env_name, score, selecte
     if d_from and engine_name and interval_name and env_name and selected_security:
         interval = {'1h': tool.INTERVAL_1H, '1d': tool.INTERVAL_1D}[interval_name]  # TODO: support 1h
         symbol = selected_security['symbol']
-        if score is None:
-            description = selected_security['description']
-        else:
+        if score:
             description = f"{selected_security['description']} [{100 * swings.limit_ratio(score)}%]"
+        else:
+            description = selected_security['description']
 
         # engine series
         engine = ENGINES[engine_name]
