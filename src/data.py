@@ -153,7 +153,6 @@ def security_verify(engine: Any):
         for exchange_name in config.EXCHANGES:
             health[exchange_name] = {}
             last_session = tool.last_session(exchange_name, interval, DateTime.now())
-            default_range = Clazz(dt_from=last_session, dt_to=last_session)
 
             with store.ExchangeSeries() as exchange_series:
                 securities = exchange_series[exchange_name]
@@ -163,25 +162,31 @@ def security_verify(engine: Any):
                 for security in securities:
                     progress(security.symbol)
 
-                    symbol_range = time_range.get(security.symbol, default_range)
-                    overlap, missing = time_series_verify(engine,
-                                                          security.symbol,
-                                                          symbol_range.dt_from,
-                                                          last_session,
-                                                          interval)
-                    security_health = Clazz()
-                    if overlap:
-                        security_health.overlap = overlap
-                    if missing:
-                        security_health.missing = missing
-                    if last_session in missing:
-                        security_health.last_session = symbol_range.dt_to
-                    if security_health:
+                    result = Clazz()
+                    symbol_range = time_range.get(security.symbol)
+                    if symbol_range:
+                        overlap, missing = time_series_verify(engine,
+                                                              security.symbol,
+                                                              symbol_range.dt_from,
+                                                              last_session,
+                                                              interval)
+                        if overlap:
+                            result.overlap = overlap
+                        if missing:
+                            result.missing = missing
+                            if len(missing) > config.HEALTH_MISSING_LIMIT:
+                                result.message = f'The missing limit reached: {len(missing)}'
+                        if last_session in missing:
+                            result.message = f'The last session {last_session} is missing: {symbol_range.dt_to}'
+                    else:
+                        result.message = 'There is no time series for this symbol'
+
+                    if result:
                         short_symbol, _ = tool.symbol_split(security.symbol)
-                        health[exchange_name][short_symbol] = security_health
+                        health[exchange_name][short_symbol] = result
 
                     entry = security.entry(health_name)
-                    entry[health_name] = len(missing) < config.HEALTH_MISSING_LIMIT or last_session not in missing
+                    entry[health_name] = not result.get('message')
                     entries += [entry]
 
             with store.ExchangeSeries(editable=True) as exchange_series:
