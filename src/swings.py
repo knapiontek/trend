@@ -56,7 +56,7 @@ def reduce(series: List[Clazz], score: int) -> List[Clazz]:
     return list(queue)
 
 
-def display(series: List[Clazz], score: int):
+def display(series: List[Clazz], score: int) -> List[Clazz]:
     results = []
     if score:
         assert 1 <= score <= 8

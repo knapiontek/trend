@@ -70,6 +70,20 @@ def plot_swings(series: List[Clazz], score: int):
              color=color.name, linewidth=1, markersize=1 + score)
 
 
+def plot_candidates(series: List[Clazz], score: int):
+    results = []
+    for s in series:
+        if score <= s.low_score:
+            results += [Clazz(timestamp=s.timestamp, value=s.low)]
+        if score <= s.high_score:
+            results += [Clazz(timestamp=s.timestamp, value=s.high)]
+    color = Color.from_score(score)
+    plt.plot([s.timestamp for s in results],
+             [s.value for s in results],
+             'o', label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
+             color=color.name, linewidth=1, markersize=1 + score)
+
+
 def show_widget(symbol: str, begin: int, end: int):
     def format_date(timestamp, step=0):
         if step is None:
@@ -101,14 +115,26 @@ def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
     show_widget(symbol, begin, end)
 
 
+def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
+    series = read_series(symbol, interval, begin, end)
+    plot_series(series)
+
+    swings.calculate(series)
+
+    for score in range(1, 4):
+        plot_candidates(series, score)
+
+    show_widget(symbol, begin, end)
+
+
 # main
 
 def execute():
     symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
-    begin = DateTime(2017, 11, 1).to_timestamp()
-    end = DateTime.now().to_timestamp()
-    show_swings(symbol, interval, begin, end)
+    begin = DateTime(2018, 9, 1).to_timestamp()
+    end = DateTime(2019, 9, 1).to_timestamp()
+    show_candidates(symbol, interval, begin, end)
 
 
 if __name__ == '__main__':
