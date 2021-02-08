@@ -86,6 +86,20 @@ class Session(session.Session):
         response = self.get(url)
         return response.json()
 
+    def place_order(self, symbol: str, limit: float, stop_loss: float):
+        params = {'side': 'buy',
+                  'duration': 'day',
+                  'quantity': '1',
+                  'symbolId': symbol,
+                  'ocoGroup': None,
+                  'ifDoneParentId': None,
+                  'orderType': 'limit',
+                  'limitPrice': str(limit),
+                  'stopLoss': str(stop_loss)}
+        url = f'{TRADE_URL}/orders'
+        response = self.post(url, params=params)
+        return response.json()
+
 
 class SecuritySeries(store.SecuritySeries):
     def __init__(self, interval: timedelta, editable=False, dt_from: DateTime = None):

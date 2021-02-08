@@ -79,7 +79,7 @@ class Series:
         return self.verify_result(result)
 
     def __ior__(self, series: List[Clazz]) -> 'Series':
-        result = self.tnx_collection.update_many(series, sync=True)
+        result = self.tnx_collection.update_many(series, merge=False, sync=True)
         return self.verify_result(result)
 
     def verify_result(self, result: List) -> 'Series':

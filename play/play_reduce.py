@@ -84,6 +84,17 @@ def plot_candidates(series: List[Clazz], score: int):
              color=color.name, linewidth=1, markersize=1 + score)
 
 
+def plot_strategy(series: List[Clazz]):
+    plt.plot([s.timestamp for s in series],
+             [s.long for s in series],
+             'o', label='Long',
+             color=Color.green, linewidth=1, markersize=2)
+    plt.plot([s.timestamp for s in series],
+             [s.short for s in series],
+             'o', label='Short',
+             color=Color.red, linewidth=1, markersize=2)
+
+
 def show_widget(symbol: str, begin: int, end: int):
     def format_date(timestamp, step=0):
         if step is None:
@@ -127,14 +138,36 @@ def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
     show_widget(symbol, begin, end)
 
 
+class State(Enum):
+    LOW_SCORE = 1
+    LOW_SCORE1 = 2
+
+
+def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
+    series = read_series(symbol, interval, begin, end)
+    plot_bars(series)
+
+    state = State.LOW_SCORE
+    reduced = swings.init(series)
+    reduced = swings.reduce(reduced, 4)
+    for r in reduced:
+        if 4 <= r.low_score:
+            if state == State.LOW_SCORE:
+                state = State.LOW_SCORE1
+                r.state = state
+    plot_strategy(series)
+
+    show_widget(symbol, begin, end)
+
+
 # main
 
 def execute():
     symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
-    begin = DateTime(2018, 2, 1).to_timestamp()
-    end = DateTime(2019, 6, 1).to_timestamp()
-    show_candidates(symbol, interval, begin, end)
+    begin = DateTime(2018, 11, 18).to_timestamp()
+    end = DateTime(2019, 11, 18).to_timestamp()
+    show_strategy(symbol, interval, begin, end)
 
 
 if __name__ == '__main__':
