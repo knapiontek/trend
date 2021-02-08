@@ -43,7 +43,7 @@ class Color(Enum):
         return colors[score - 1]
 
 
-def plot_series(series: List[Clazz]):
+def plot_bars(series: List[Clazz]):
     results = []
     for s in series:
         value1, value2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
@@ -105,7 +105,7 @@ def show_widget(symbol: str, begin: int, end: int):
 
 def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
     series = read_series(symbol, interval, begin, end)
-    plot_series(series)
+    plot_bars(series)
 
     swings.calculate(series)
 
@@ -117,11 +117,11 @@ def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
 
 def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
     series = read_series(symbol, interval, begin, end)
-    plot_series(series)
+    plot_bars(series)
 
-    swings.calculate(series)
-
-    for score in range(1, 4):
+    reduced = swings.init(series)
+    for score in (1, 3):
+        reduced = swings.reduce(reduced, score)
         plot_candidates(series, score)
 
     show_widget(symbol, begin, end)
@@ -132,8 +132,8 @@ def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
 def execute():
     symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
-    begin = DateTime(2018, 9, 1).to_timestamp()
-    end = DateTime(2019, 9, 1).to_timestamp()
+    begin = DateTime(2018, 2, 1).to_timestamp()
+    end = DateTime(2019, 6, 1).to_timestamp()
     show_candidates(symbol, interval, begin, end)
 
 
