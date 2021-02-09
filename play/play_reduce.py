@@ -20,6 +20,7 @@ def read_series(symbol: str, interval: timedelta, begin: int, end: int) -> List[
 # plot
 
 class Color(Enum):
+    grey = 'grey'
     yellow = 'yellow'
     orange = 'orange'
     red = 'red'
@@ -43,6 +44,14 @@ class Color(Enum):
         return colors[score - 1]
 
 
+def plot_line(xs: List[float], ys: List[float], label: str, color: Color):
+    plt.plot(xs, ys, '-', label=label, color=color.value, linewidth=1)
+
+
+def plot_dots(xs: List[float], ys: List[float], label: str, color: Color, size: int):
+    plt.plot(xs, ys, 'o', label=label, color=color.value, linewidth=1, markersize=size)
+
+
 def plot_bars(series: List[Clazz]):
     results = []
     for s in series:
@@ -51,12 +60,10 @@ def plot_bars(series: List[Clazz]):
                     Clazz(timestamp=s.timestamp, value=value1),
                     Clazz(timestamp=s.timestamp, value=value2),
                     Clazz(timestamp=s.timestamp, value=s.close)]
-    plt.plot([s.timestamp for s in results],
-             [s.value for s in results],
-             '-', label='series', color='grey', linewidth=1)
+    plot_line([s.timestamp for s in results], [s.value for s in results], label='bars', color=Color.grey)
 
 
-def plot_swings(series: List[Clazz], score: int):
+def plot_valid_swings(series: List[Clazz], score: int):
     results = []
     for s in series:
         if score <= s.valid_low_score:
@@ -64,13 +71,12 @@ def plot_swings(series: List[Clazz], score: int):
         if score <= s.valid_high_score:
             results += [Clazz(timestamp=s.timestamp, value=s.high)]
     color = Color.from_score(score)
-    plt.plot([s.timestamp for s in results],
-             [s.value for s in results],
-             'o', label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
-             color=color.name, linewidth=1, markersize=1 + score)
+    plot_dots([s.timestamp for s in results], [s.value for s in results],
+              label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
+              color=color, size=1 + score)
 
 
-def plot_candidates(series: List[Clazz], score: int):
+def plot_candidate_swings(series: List[Clazz], score: int):
     results = []
     for s in series:
         if score <= s.low_score:
@@ -78,21 +84,14 @@ def plot_candidates(series: List[Clazz], score: int):
         if score <= s.high_score:
             results += [Clazz(timestamp=s.timestamp, value=s.high)]
     color = Color.from_score(score)
-    plt.plot([s.timestamp for s in results],
-             [s.value for s in results],
-             'o', label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
-             color=color.name, linewidth=1, markersize=1 + score)
+    plot_dots([s.timestamp for s in results], [s.value for s in results],
+              label=f'score-{score} [{int(100 * swings.limit_ratio(score)):03}%]',
+              color=color, size=1 + score)
 
 
 def plot_strategy(series: List[Clazz]):
-    plt.plot([s.timestamp for s in series],
-             [s.long for s in series],
-             'o', label='Long',
-             color=Color.green, linewidth=1, markersize=2)
-    plt.plot([s.timestamp for s in series],
-             [s.short for s in series],
-             'o', label='Short',
-             color=Color.red, linewidth=1, markersize=2)
+    plot_dots([s.timestamp for s in series], [s.test.long for s in series], label='Long', color=Color.green, size=2)
+    plot_dots([s.timestamp for s in series], [s.test.short for s in series], label='Short', color=Color.red, size=2)
 
 
 def show_widget(symbol: str, begin: int, end: int):
@@ -102,7 +101,7 @@ def show_widget(symbol: str, begin: int, end: int):
         else:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
-    plt.title(f'Swings 2^(n-1) {symbol} [{format_date(begin)} - {format_date(end)}]')
+    plt.title(f'{symbol} [{format_date(begin)} - {format_date(end)}]')
     plt.legend(loc='upper left')
     plt.grid()
     plt.tight_layout()
@@ -121,7 +120,7 @@ def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
     swings.calculate(series)
 
     for score in range(1, 9):
-        plot_swings(series, score)
+        plot_valid_swings(series, score)
 
     show_widget(symbol, begin, end)
 
@@ -133,7 +132,7 @@ def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
     reduced = swings.init(series)
     for score in (1, 3):
         reduced = swings.reduce(reduced, score)
-        plot_candidates(series, score)
+        plot_candidate_swings(series, score)
 
     show_widget(symbol, begin, end)
 
@@ -149,12 +148,14 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
 
     state = State.LOW_SCORE
     reduced = swings.init(series)
-    reduced = swings.reduce(reduced, 4)
-    for r in reduced:
-        if 4 <= r.low_score:
+    swings.reduce(reduced, 4)
+    for s in series:
+        s.test = Clazz(long=0.0, short=0.0)
+        if 4 <= s.low_score:
             if state == State.LOW_SCORE:
                 state = State.LOW_SCORE1
-                r.state = state
+                s.state = state
+
     plot_strategy(series)
 
     show_widget(symbol, begin, end)
@@ -167,7 +168,7 @@ def execute():
     interval = tool.INTERVAL_1D
     begin = DateTime(2018, 11, 18).to_timestamp()
     end = DateTime(2019, 11, 18).to_timestamp()
-    show_strategy(symbol, interval, begin, end)
+    show_candidates(symbol, interval, begin, end)
 
 
 if __name__ == '__main__':
