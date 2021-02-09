@@ -1,11 +1,12 @@
+import math
 from datetime import timedelta
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import List
 
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
-from src import tool, exante, swings, analyse
+from src import tool, swings, analyse, stooq
 from src.clazz import Clazz
 from src.tool import DateTime
 
@@ -13,7 +14,7 @@ from src.tool import DateTime
 # data
 
 def read_series(symbol: str, interval: timedelta, begin: int, end: int) -> List[Clazz]:
-    with exante.SecuritySeries(interval) as security_series:
+    with stooq.SecuritySeries(interval) as security_series:
         return [s for s in security_series[symbol] if begin <= s.timestamp <= end]
 
 
@@ -95,8 +96,11 @@ def plot_candidate_swings(series: List[Clazz], score: int):
 
 
 def plot_strategy(series: List[Clazz]):
-    plot_dots([s.timestamp for s in series], [s.test.long for s in series], label='Long', color=Color.green, size=2)
-    plot_dots([s.timestamp for s in series], [s.test.short for s in series], label='Short', color=Color.red, size=2)
+    ts = [s.timestamp for s in series]
+    plot_dots(ts, [s.low if s.low_score else None for s in series], label='Candidate', color=Color.orange, size=2)
+    plot_dots(ts, [s.test.drop for s in series], label='Drop', color=Color.red, size=4)
+    plot_dots(ts, [s.test.long for s in series], label='Long', color=Color.green, size=4)
+    plot_dots(ts, [s.test.short for s in series], label='Short', color=Color.blue, size=4)
 
 
 def show_widget(symbol: str, begin: int, end: int):
@@ -151,24 +155,38 @@ def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int
     show_widget(symbol, begin, end)
 
 
-class State(Enum):
-    LOW_SCORE = 1
-    LOW_SCORE1 = 2
+def nearby(f1: float, f2: float) -> bool:
+    diff = math.fabs(f1 - f2)
+    avg = (f1 + f2) / 2
+    return diff < (0.01 * avg)
+
+
+class Swing(IntEnum):
+    MINOR = 3
+    MAYOR = 5
 
 
 def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
     series = read_series(symbol, interval, begin, end)
     plot_bars(series)
 
-    state = State.LOW_SCORE
     reduced = swings.init(series)
-    swings.reduce(reduced, 4)
+    for swing in (Swing.MINOR, Swing.MAYOR):
+        reduced = swings.reduce(reduced, swing.value)
+
+    mayor = None
     for s in series:
-        s.test = Clazz(long=0.0, short=0.0)
-        if 4 <= s.low_score:
-            if state == State.LOW_SCORE:
-                state = State.LOW_SCORE1
-                s.state = state
+        s.test = Clazz(drop=None, long=None, short=None)
+
+        if Swing.MAYOR <= s.low_score:
+            mayor = s
+        elif Swing.MAYOR <= s.high_score:
+            mayor = None
+        elif mayor:
+            if Swing.MINOR <= s.low_score and nearby(s.low, mayor.low):
+                mayor.test.drop = mayor.low
+                s.test.long = s.low
+                mayor = None
 
     plot_strategy(series)
 
@@ -182,9 +200,9 @@ def execute():
     interval = tool.INTERVAL_1D
     begin = DateTime(2008, 11, 18).to_timestamp()
     end = DateTime.now().to_timestamp()
-    show_vma(symbol, interval, begin, end)
-    show_valid_swings(symbol, interval, begin, end)
-    show_candidate_swings(symbol, interval, begin, end)
+    # show_vma(symbol, interval, begin, end)
+    # show_valid_swings(symbol, interval, begin, end)
+    # show_candidate_swings(symbol, interval, begin, end)
     show_strategy(symbol, interval, begin, end)
 
 
