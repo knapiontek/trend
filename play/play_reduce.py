@@ -5,7 +5,7 @@ from typing import List
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
-from src import tool, exante, swings
+from src import tool, exante, swings, analyse
 from src.clazz import Clazz
 from src.tool import DateTime
 
@@ -63,6 +63,11 @@ def plot_bars(series: List[Clazz]):
     plot_line([s.timestamp for s in results], [s.value for s in results], label='bars', color=Color.grey)
 
 
+def plot_vma(series: List[Clazz], w_size: int, color: Color):
+    vma_name = f'vma-{w_size}'
+    plot_line([s.timestamp for s in series], [s.get(vma_name) for s in series], label=vma_name, color=color)
+
+
 def plot_valid_swings(series: List[Clazz], score: int):
     results = []
     for s in series:
@@ -112,20 +117,29 @@ def show_widget(symbol: str, begin: int, end: int):
 
 # show
 
+def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
+    series = read_series(symbol, interval, begin, end)
+    plot_bars(series)
 
-def show_swings(symbol: str, interval: timedelta, begin: int, end: int):
+    for w_size, color in ((30, Color.green), (90, Color.blue)):
+        analyse.vma(series, w_size)
+        plot_vma(series, w_size, color)
+
+    show_widget(symbol, begin, end)
+
+
+def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
     series = read_series(symbol, interval, begin, end)
     plot_bars(series)
 
     swings.calculate(series)
-
     for score in range(1, 9):
         plot_valid_swings(series, score)
 
     show_widget(symbol, begin, end)
 
 
-def show_candidates(symbol: str, interval: timedelta, begin: int, end: int):
+def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int):
     series = read_series(symbol, interval, begin, end)
     plot_bars(series)
 
@@ -166,9 +180,12 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
 def execute():
     symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
-    begin = DateTime(2018, 11, 18).to_timestamp()
-    end = DateTime(2019, 11, 18).to_timestamp()
-    show_candidates(symbol, interval, begin, end)
+    begin = DateTime(2008, 11, 18).to_timestamp()
+    end = DateTime.now().to_timestamp()
+    show_vma(symbol, interval, begin, end)
+    show_valid_swings(symbol, interval, begin, end)
+    show_candidate_swings(symbol, interval, begin, end)
+    show_strategy(symbol, interval, begin, end)
 
 
 if __name__ == '__main__':
