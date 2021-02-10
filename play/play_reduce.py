@@ -1,6 +1,5 @@
-import math
 from datetime import timedelta
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -155,15 +154,14 @@ def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int
     show_widget(symbol, begin, end)
 
 
-def nearby(f1: float, f2: float) -> bool:
-    diff = math.fabs(f1 - f2)
-    avg = (f1 + f2) / 2
-    return diff < (0.01 * avg)
-
-
 class Swing(IntEnum):
-    MINOR = 3
-    MAYOR = 5
+    DROP = 5
+
+
+class State(IntEnum):
+    START = auto()
+    DROPPED = auto()
+    LONG = auto()
 
 
 def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
@@ -171,22 +169,32 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
     plot_bars(series)
 
     reduced = swings.init(series)
-    for swing in (Swing.MINOR, Swing.MAYOR):
-        reduced = swings.reduce(reduced, swing.value)
+    swings.reduce(reduced, Swing.DROP.value)
 
-    mayor = None
+    state = State.START
+    lowest_close = None
+
     for s in series:
         s.test = Clazz(drop=None, long=None, short=None)
 
-        if Swing.MAYOR <= s.low_score:
-            mayor = s
-        elif Swing.MAYOR <= s.high_score:
-            mayor = None
-        elif mayor:
-            if Swing.MINOR <= s.low_score and nearby(s.low, mayor.low):
-                mayor.test.drop = mayor.low
-                s.test.long = s.low
-                mayor = None
+        if state in (State.START, State.DROPPED):
+            if Swing.DROP.value <= s.low_score:
+                state = State.DROPPED
+                lowest_close = s.test.drop = s.close
+                continue
+
+        if state == State.DROPPED:
+            if s.close > lowest_close:
+                state = State.LONG
+                lowest_close = s.test.long = s.close
+                continue
+
+        if state == State.LONG:
+            if s.close < lowest_close:
+                state = State.START
+                s.test.short = s.close
+                lowest_close = None
+                continue
 
     plot_strategy(series)
 
@@ -198,7 +206,7 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
 def execute():
     symbol = 'ABC.NYSE'
     interval = tool.INTERVAL_1D
-    begin = DateTime(2008, 11, 18).to_timestamp()
+    begin = DateTime(2014, 11, 18).to_timestamp()
     end = DateTime.now().to_timestamp()
     # show_vma(symbol, interval, begin, end)
     # show_valid_swings(symbol, interval, begin, end)
