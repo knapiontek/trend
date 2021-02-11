@@ -1,9 +1,10 @@
 from datetime import timedelta
 from enum import Enum, IntEnum, auto
-from typing import List
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
-from matplotlib import ticker, axes
+from matplotlib import ticker
+from matplotlib.axes import Axes
 
 from src import tool, swings, analyse, stooq
 from src.clazz import Clazz
@@ -45,38 +46,41 @@ class Color(Enum):
         return colors[score - 1]
 
 
-fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-
-
-def plot_line(ax: axes.Axes, xs: List[float], ys: List[float], label: str, color: Color):
-    ax.plot(xs, ys, '-', label=label, color=color.value, linewidth=1)
-
-
-def plot_dots(ax: axes.Axes, xs: List[float], ys: List[float], label: str, color: Color, size: int):
-    ax.plot(xs, ys, 'o', label=label, color=color.value, linewidth=1, markersize=size)
-
-
-def show_widget(symbol: str, begin: int, end: int):
+def init_widget(symbol: str, begin: int, end: int) -> Tuple[Axes, Axes]:
     def format_date(timestamp, step=0):
         if step is None:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
         else:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
 
-    for a in (ax1, ax2):
+    fig, axes = plt.subplots(2, 1, sharex=True)
+    fig.tight_layout()
+
+    for a in axes:
         a.set(title=f'{symbol} [{format_date(begin)} - {format_date(end)}]')
         a.legend(loc='upper left')
         a.grid()
         a.set_facecolor(Color.silver.value)
         a.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-    fig.tight_layout()
+    return axes
+
+
+def show_widget():
     plt.show()
+
+
+def plot_line(ax: Axes, xs: List[float], ys: List[float], label: str, color: Color):
+    ax.plot(xs, ys, '-', label=label, color=color.value, linewidth=1)
+
+
+def plot_dots(ax: Axes, xs: List[float], ys: List[float], label: str, color: Color, size: int):
+    ax.plot(xs, ys, 'o', label=label, color=color.value, linewidth=1, markersize=size)
 
 
 # show
 
 
-def plot_bars(ax: axes.Axes, series: List[Clazz]):
+def plot_bars(ax: Axes, series: List[Clazz]):
     results = []
     for s in series:
         value1, value2 = (s.low, s.high) if s.close > s.open else (s.high, s.low)
@@ -87,12 +91,12 @@ def plot_bars(ax: axes.Axes, series: List[Clazz]):
     plot_line(ax, [s.timestamp for s in results], [s.value for s in results], label='bars', color=Color.grey)
 
 
-def plot_vma(ax: axes.Axes, series: List[Clazz], w_size: int, color: Color):
+def plot_vma(ax: Axes, series: List[Clazz], w_size: int, color: Color):
     vma_name = f'vma-{w_size}'
     plot_line(ax, [s.timestamp for s in series], [s.get(vma_name) for s in series], label=vma_name, color=color)
 
 
-def plot_valid_swings(ax: axes.Axes, series: List[Clazz], score: int):
+def plot_valid_swings(ax: Axes, series: List[Clazz], score: int):
     results = []
     for s in series:
         if score <= s.valid_low_score:
@@ -105,7 +109,7 @@ def plot_valid_swings(ax: axes.Axes, series: List[Clazz], score: int):
               color=color, size=1 + score)
 
 
-def plot_candidate_swings(ax: axes.Axes, series: List[Clazz], score: int):
+def plot_candidate_swings(ax: Axes, series: List[Clazz], score: int):
     results = []
     for s in series:
         if score <= s.low_score:
@@ -118,7 +122,7 @@ def plot_candidate_swings(ax: axes.Axes, series: List[Clazz], score: int):
               color=color, size=1 + score)
 
 
-def plot_strategy(ax: axes.Axes, series: List[Clazz]):
+def plot_strategy(ax: Axes, series: List[Clazz]):
     ts = [s.timestamp for s in series]
     plot_dots(ax, ts, [s.low if s.low_score else None for s in series], label='Candidate', color=Color.orange, size=2)
     plot_dots(ax, ts, [s.test.drop for s in series], label='Drop', color=Color.red, size=4)
@@ -127,6 +131,8 @@ def plot_strategy(ax: axes.Axes, series: List[Clazz]):
 
 
 def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
+    ax1, ax2 = init_widget(symbol, begin, end)
+
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
 
@@ -134,10 +140,12 @@ def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
         analyse.vma(series, w_size)
         plot_vma(ax1, series, w_size, color)
 
-    show_widget(symbol, begin, end)
+    show_widget()
 
 
 def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
+    ax1, ax2 = init_widget(symbol, begin, end)
+
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
 
@@ -145,10 +153,12 @@ def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
     for score in range(1, 9):
         plot_valid_swings(ax1, series, score)
 
-    show_widget(symbol, begin, end)
+    show_widget()
 
 
 def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int):
+    ax1, ax2 = init_widget(symbol, begin, end)
+
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
 
@@ -157,7 +167,7 @@ def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int
         reduced = swings.reduce(reduced, score)
         plot_candidate_swings(ax1, series, score)
 
-    show_widget(symbol, begin, end)
+    show_widget()
 
 
 class Swing(IntEnum):
@@ -171,6 +181,8 @@ class State(IntEnum):
 
 
 def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
+    ax1, ax2 = init_widget(symbol, begin, end)
+
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
 
@@ -204,7 +216,7 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
 
     plot_strategy(ax1, series)
 
-    show_widget(symbol, begin, end)
+    show_widget()
 
 
 # main
@@ -214,9 +226,9 @@ def execute():
     interval = tool.INTERVAL_1D
     begin = DateTime(2014, 11, 18).to_timestamp()
     end = DateTime.now().to_timestamp()
-    # show_vma(symbol, interval, begin, end)
-    # show_valid_swings(symbol, interval, begin, end)
-    # show_candidate_swings(symbol, interval, begin, end)
+    show_vma(symbol, interval, begin, end)
+    show_valid_swings(symbol, interval, begin, end)
+    show_candidate_swings(symbol, interval, begin, end)
     show_strategy(symbol, interval, begin, end)
 
 
