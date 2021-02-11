@@ -46,15 +46,18 @@ class Color(Enum):
         return colors[score - 1]
 
 
-def init_widget(symbol: str, begin: int, end: int) -> Tuple[Axes, Axes]:
+def init_widget() -> Tuple[Axes, Axes]:
+    fig, axes = plt.subplots(2, 1, sharex=True)
+    fig.tight_layout()
+    return axes
+
+
+def show_widget(axes: Tuple[Axes, Axes], symbol: str, begin: int, end: int):
     def format_date(timestamp, step=0):
         if step is None:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
         else:
             return DateTime.from_timestamp(timestamp).strftime('%Y-%m-%d')
-
-    fig, axes = plt.subplots(2, 1, sharex=True)
-    fig.tight_layout()
 
     for a in axes:
         a.set(title=f'{symbol} [{format_date(begin)} - {format_date(end)}]')
@@ -62,10 +65,7 @@ def init_widget(symbol: str, begin: int, end: int) -> Tuple[Axes, Axes]:
         a.grid()
         a.set_facecolor(Color.silver.value)
         a.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-    return axes
 
-
-def show_widget():
     plt.show()
 
 
@@ -131,7 +131,7 @@ def plot_strategy(ax: Axes, series: List[Clazz]):
 
 
 def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
-    ax1, ax2 = init_widget(symbol, begin, end)
+    ax1, ax2 = init_widget()
 
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
@@ -140,11 +140,11 @@ def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
         analyse.vma(series, w_size)
         plot_vma(ax1, series, w_size, color)
 
-    show_widget()
+    show_widget((ax1, ax2), symbol, begin, end)
 
 
 def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
-    ax1, ax2 = init_widget(symbol, begin, end)
+    ax1, ax2 = init_widget()
 
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
@@ -153,11 +153,11 @@ def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
     for score in range(1, 9):
         plot_valid_swings(ax1, series, score)
 
-    show_widget()
+    show_widget((ax1, ax2), symbol, begin, end)
 
 
 def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int):
-    ax1, ax2 = init_widget(symbol, begin, end)
+    ax1, ax2 = init_widget()
 
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
@@ -167,7 +167,7 @@ def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int
         reduced = swings.reduce(reduced, score)
         plot_candidate_swings(ax1, series, score)
 
-    show_widget()
+    show_widget((ax1, ax2), symbol, begin, end)
 
 
 class Swing(IntEnum):
@@ -181,7 +181,7 @@ class State(IntEnum):
 
 
 def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
-    ax1, ax2 = init_widget(symbol, begin, end)
+    ax1, ax2 = init_widget()
 
     series = read_series(symbol, interval, begin, end)
     plot_bars(ax1, series)
@@ -190,7 +190,7 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
     swings.reduce(reduced, Swing.DROP.value)
 
     state = State.START
-    lowest_close = None
+    lowest_low = None
 
     for s in series:
         s.test = Clazz(drop=None, long=None, short=None)
@@ -198,25 +198,25 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
         if state in (State.START, State.DROPPED):
             if Swing.DROP.value <= s.low_score:
                 state = State.DROPPED
-                lowest_close = s.test.drop = s.close
+                lowest_low = s.test.drop = s.low
                 continue
 
         if state == State.DROPPED:
-            if s.close > lowest_close:
+            if s.low > lowest_low:
                 state = State.LONG
-                lowest_close = s.test.long = s.close
+                lowest_low = s.test.long = s.low
                 continue
 
         if state == State.LONG:
-            if s.close < lowest_close:
+            if s.low < lowest_low:
                 state = State.START
-                s.test.short = s.close
-                lowest_close = None
+                s.test.short = s.low
+                lowest_low = None
                 continue
 
     plot_strategy(ax1, series)
 
-    show_widget()
+    show_widget((ax1, ax2), symbol, begin, end)
 
 
 # main
