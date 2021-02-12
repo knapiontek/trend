@@ -7,7 +7,7 @@ def analyse_transactions():
     with exante.Session() as session:
         transactions = session.transactions()
         for t in transactions:
-            if t['operationType'] == 'TRADE' and t['symbolId'] == 'KRU.WSE':
+            if t.type == 'TRADE' and t.symbol == 'KRU.WSE':
                 pprint(t)
 
 

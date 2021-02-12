@@ -76,10 +76,16 @@ class Session(session.Session):
         assert len(data) < max_size
         return list(filter(None, data))
 
-    def transactions(self) -> List[dict]:
+    def transactions(self) -> List[Clazz]:
         url = f'{DATA_URL}/transactions'
         response = self.get(url)
-        return response.json()
+        convert = {'asset': 'asset',
+                   'id': 'id',
+                   'type': 'operationType',
+                   'sum': 'sum',
+                   'symbol': 'symbolId',
+                   'timestamp': 'timestamp'}
+        return [Clazz(**{k: d[v] for k, v in convert.items()}) for d in response.json()]
 
     def orders(self) -> List[dict]:
         url = f'{TRADE_URL}/orders'
