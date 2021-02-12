@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from src import tool, exante
 from src.tool import DateTime
 
@@ -65,6 +67,7 @@ def test_series():
 def test_transactions():
     with exante.Session() as session:
         transactions = session.transactions()
+        pprint(transactions)
     assert len(transactions) >= 0
 
 
