@@ -25,19 +25,21 @@ class Currency(Enum):
 
 class CurrencyExchange:
     def __init__(self):
-        self.nbp = read_nbp()
+        self.nbp = {}
+        self.nbp.update(read_nbp(2020))
+        self.nbp.update(read_nbp(2021))
 
-    def convert(self, dt: datetime, currency: Currency) -> float:
+    def value(self, dt: datetime, currency: Currency) -> float:
         assert dt.year == 2020
         dt -= timedelta(days=1)
         while dt not in self.nbp:
             dt -= timedelta(days=1)
             assert dt.year == 2020
-        return self.nbp[dt][currency]
+        return self.nbp[dt][currency.name]
 
 
-def read_nbp() -> Dict[datetime, Clazz]:
-    xls = config.EXANTE_PATH.joinpath('nbp_2020.xls')
+def read_nbp(year) -> Dict[datetime, Clazz]:
+    xls = config.EXANTE_PATH.joinpath(f'nbp_{year}.xls')
     workbook = xlrd.open_workbook(xls)
     sheet = workbook.sheet_by_name('Kursy średnie')
     return {
@@ -79,20 +81,28 @@ def analyse_exante_transactions():
 
     trades = [t for t in transactions if t.type == 'TRADE']
 
-    open_transactions = defaultdict(Clazz)
-    for tr in transactions:
-        t = Clazz(**tr)
-        if t.type == 'TRADE':
-            if t.symbol == 'KRU.WSE':
-                pprint(t)
+    trade_index = defaultdict(lambda: Clazz(quantity=0.0, price=0.0, currency=None))
+    for t in trades:
+        i = trade_index[t.timestamp]
+        i.datetime = datetime.fromtimestamp(t.timestamp // 1000)
+        if t.symbol.endswith('.EXANTE'):
+            pass  # currency exchange, no need for 2020
+        else:
             if t.asset == t.symbol:
-                open_transactions[t.timestamp].update({'quantity': t.sum})
+                i.symbol = t.symbol
+                i.quantity += float(t.sum)
             else:
-                open_transactions[t.timestamp].update(t)
+                i.price += float(t.sum)
+                assert not i.currency or i.currency == t.asset
+                i.currency = t.asset
 
-    pprint(open_transactions)
+    pprint(sorted(trade_index.values(), key=lambda x: x.datetime))
 
 
 if __name__ == '__main__':
+    # save_exante_transactions()
+
     exchange = CurrencyExchange()
-    assert 4.5084 == exchange.convert(datetime(2020, 12, 27), Currency.EUR)
+    assert 3.6981 == exchange.value(datetime(2020, 12, 27), Currency.USD)
+
+    analyse_exante_transactions()
