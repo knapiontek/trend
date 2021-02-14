@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -62,7 +63,7 @@ def write_json(filename: str, content: List[Dict[str, Any]]):
 
 
 def write_csv(filename: str, content: List[Clazz]):
-    df = pd.DataFrame(content)
+    df = pd.DataFrame([c.to_dict() for c in content])
     path = config.STORE_PATH.joinpath(filename).with_suffix('.csv')
     df.to_csv(path, index=False, header=True)
 
@@ -71,6 +72,7 @@ def save_exante_transactions():
     with exante.Session() as session:
         transactions = session.transactions()
         write_json(EXANTE_TRANSACTIONS, transactions)
+        write_csv(EXANTE_TRANSACTIONS, transactions)
 
 
 def analyse_exante_transactions():
@@ -84,9 +86,9 @@ def analyse_exante_transactions():
     trade_index = defaultdict(lambda: Clazz(quantity=0.0, price=0.0, currency=None))
     for t in trades:
         i = trade_index[t.timestamp]
-        i.datetime = datetime.fromtimestamp(t.timestamp // 1000)
+        i.datetime = datetime.fromtimestamp(t.timestamp // 1000).isoformat(sep=' ')
         if t.symbol.endswith('.EXANTE'):
-            pass  # currency exchange, no need for 2020
+            i.symbol = t.symbol  # currency exchange, no need for 2020
         else:
             if t.asset == t.symbol:
                 i.symbol = t.symbol
@@ -96,7 +98,10 @@ def analyse_exante_transactions():
                 assert not i.currency or i.currency == t.asset
                 i.currency = t.asset
 
-    pprint(sorted(trade_index.values(), key=lambda x: x.datetime))
+    trades = sorted(trade_index.values(), key=lambda x: x.datetime)
+    for t in trades:
+        if math.copysign(1.0, t.quantity) != -math.copysign(1.0, t.price):
+            pprint(t)
 
 
 if __name__ == '__main__':
