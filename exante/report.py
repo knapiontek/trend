@@ -1,4 +1,3 @@
-import math
 from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -14,8 +13,8 @@ from src.clazz import Clazz
 
 EXANTE_TRANSACTIONS = 'exante_transactions'
 COMMISSIONS = 'commissions'
-DIVIDENDS = 'dividend'
-TRADE = 'trade'
+DIVIDENDS = 'dividends'
+TRADES = 'trades'
 
 
 class Currency(Enum):
@@ -75,37 +74,47 @@ def save_exante_transactions():
         write_csv(EXANTE_TRANSACTIONS, transactions)
 
 
-def analyse_exante_transactions():
+def split_transactions():
     transactions = read_json(EXANTE_TRANSACTIONS)
 
-    write_json(COMMISSIONS, [t for t in transactions if t.type in ('COMMISSION', 'INTEREST')])
-    write_json(DIVIDENDS, [t for t in transactions if t.type in ('TAX', 'DIVIDEND')])
+    commissions = [t for t in transactions if t.type in ('COMMISSION', 'INTEREST')]
+    write_json(COMMISSIONS, commissions)
+    write_csv(COMMISSIONS, commissions)
+
+    dividends = [t for t in transactions if t.type in ('TAX', 'DIVIDEND')]
+    write_json(DIVIDENDS, dividends)
+    write_csv(DIVIDENDS, dividends)
 
     trades = [t for t in transactions if t.type == 'TRADE']
+    write_json(TRADES, trades)
+    write_csv(TRADES, trades)
 
-    trade_index = defaultdict(lambda: Clazz(quantity=0.0, price=0.0, currency=None))
-    for t in trades:
-        i = trade_index[t.timestamp]
-        i.datetime = datetime.fromtimestamp(t.timestamp // 1000).isoformat(sep=' ')
-        if t.symbol.endswith('.EXANTE'):
-            i.symbol = t.symbol  # currency exchange, no need for 2020
-        else:
-            if t.asset == t.symbol:
-                i.symbol = t.symbol
-                i.quantity += float(t.sum)
-            else:
-                i.price += float(t.sum)
-                assert not i.currency or i.currency == t.asset
-                i.currency = t.asset
 
-    trades = sorted(trade_index.values(), key=lambda x: x.datetime)
+def to_datetime(timestamp: int) -> str:
+    return datetime.fromtimestamp(timestamp // 1000).isoformat(sep=' ')
+
+
+def analyse_exante_transactions():
+    trades = read_json(TRADES)
+
+    symbol_transactions = defaultdict(list)
     for t in trades:
-        if math.copysign(1.0, t.quantity) != -math.copysign(1.0, t.price):
-            pprint(t)
+        symbol_transactions[t.symbol] += [t]
+
+    symbol_trades = {}
+    for symbol, trades in symbol_transactions.items():
+        trade_index = defaultdict(list)
+        for t in trades:
+            trade_index[to_datetime(t.timestamp)] += [Clazz(asset=t.asset, sum=float(t.sum))]
+        symbol_trades[symbol] = trade_index
+
+    symbol_trades = {k: dict(v) for k, v in symbol_trades.items()}
+    pprint(symbol_trades)
 
 
 if __name__ == '__main__':
     # save_exante_transactions()
+    split_transactions()
 
     exchange = CurrencyExchange()
     assert 3.6981 == exchange.value(datetime(2020, 12, 27), Currency.USD)
