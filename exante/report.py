@@ -133,32 +133,38 @@ def calculate():
                 else:
                     tt.value = abs(t.sum)
                     tt.currency = t.asset
-            tt.unit_value = round(tt.value / tt.quantity, 6)
+            tt.unit_value = tt.value / tt.quantity
             pprint(tt, width=1000)
 
             for p in pending:
                 if tt.quantity != 0.0 and p.side != tt.side:
-                    profit = p.side * p.quantity * (tt.unit_value - p.unit_value)
+                    quantity = 0.0
+                    if p.quantity <= tt.quantity:
+                        quantity = p.quantity
+                        tt.quantity -= quantity
+                        p.quantity = 0.0
+                    elif p.quantity > tt.quantity:
+                        quantity = tt.quantity
+                        p.quantity -= quantity
+                        tt.quantity = 0.0
+                    unit_profit = p.side * (tt.unit_value - p.unit_value)
+                    profit = quantity * unit_profit
+                    open_value = quantity * p.unit_value
+                    close_value = quantity * tt.unit_value
                     pln_exchange_value = exchange.value(tt.time, tt.currency)
                     total_profit += profit
                     closed_transactions += [Clazz(symbol=symbol,
                                                   open_time=p.time,
                                                   close_time=tt.time,
-                                                  quantity=p.quantity,
-                                                  open_value=p.value,
-                                                  close_value=tt.value,
-                                                  open_unit_value=p.unit_value,
-                                                  close_unit_value=tt.unit_value,
+                                                  quantity=quantity,
+                                                  open_value=round(open_value, 4),
+                                                  close_value=round(close_value, 4),
+                                                  open_unit_value=round(p.unit_value, 4),
+                                                  close_unit_value=round(tt.unit_value, 4),
                                                   profit=round(profit, 4),
                                                   currency=tt.currency,
                                                   pln_exchange_value=pln_exchange_value,
                                                   profit_pln=round(profit * pln_exchange_value, 4))]
-                    if p.quantity <= tt.quantity:
-                        tt.quantity -= p.quantity
-                        p.quantity = 0.0
-                    elif p.quantity > tt.quantity:
-                        p.quantity -= tt.quantity
-                        tt.quantity = 0.0
 
             pending = [p for p in pending if p.quantity != 0]
             if tt.quantity != 0.0:
