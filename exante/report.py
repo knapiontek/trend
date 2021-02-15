@@ -12,6 +12,7 @@ from src import exante, config, tool
 from src.clazz import Clazz
 
 EXANTE_TRANSACTIONS = 'exante_transactions'
+TAX_TRANSACTIONS = 'tax_transactions'
 COMMISSIONS = 'commissions'
 DIVIDENDS = 'dividends'
 TRADES = 'trades'
@@ -29,13 +30,14 @@ class CurrencyExchange:
         self.nbp.update(read_nbp(2020))
         self.nbp.update(read_nbp(2021))
 
-    def value(self, dt: datetime, currency: Currency) -> float:
-        assert dt.year == 2020
-        dt -= timedelta(days=1)
-        while dt not in self.nbp:
-            dt -= timedelta(days=1)
-            assert dt.year == 2020
-        return self.nbp[dt][currency.name]
+    def value(self, time: str, currency: str) -> float:
+        time = datetime.fromisoformat(time).replace(hour=0, minute=0, second=0)
+        assert time.year == 2020
+        time -= timedelta(days=1)
+        while time not in self.nbp:
+            time -= timedelta(days=1)
+            assert time.year == 2020
+        return self.nbp[time][currency]
 
 
 def read_nbp(year) -> Dict[datetime, Clazz]:
@@ -112,47 +114,68 @@ def sort_trades() -> Dict:
 
 
 def calculate():
+    exchange = CurrencyExchange()
     trades = sort_trades()
+    closed_transactions = []
+    total_profit = 0.0
     for symbol, time_transactions in trades.items():
 
         pprint(time_transactions, width=200)
         pending = []
 
-        for dt, sub_transactions in time_transactions.items():
+        for time, sub_transactions in time_transactions.items():
 
-            time_transaction = Clazz()
+            tt = Clazz(time=time)
             for t in sub_transactions:
                 if symbol == t.asset:
-                    time_transaction.side = 'long' if t.sum > 0 else 'short'
-                    time_transaction.quantity = abs(t.sum)
+                    tt.side = 1.0 if t.sum > 0 else -1.0
+                    tt.quantity = abs(t.sum)
                 else:
-                    time_transaction.value = abs(t.sum)
-                    time_transaction.currency = t.asset
-            time_transaction.unit = round(time_transaction.value / time_transaction.quantity, 6)
-            pprint(time_transaction, width=1000)
+                    tt.value = abs(t.sum)
+                    tt.currency = t.asset
+            tt.unit_value = round(tt.value / tt.quantity, 6)
+            pprint(tt, width=1000)
 
             for p in pending:
-                if time_transaction.quantity != 0.0 and p.side != time_transaction.side:
-                    if p.quantity <= time_transaction.quantity:
-                        time_transaction.quantity -= p.quantity
+                if tt.quantity != 0.0 and p.side != tt.side:
+                    profit = p.side * p.quantity * (tt.unit_value - p.unit_value)
+                    pln_exchange_value = exchange.value(tt.time, tt.currency)
+                    total_profit += profit
+                    closed_transactions += [Clazz(symbol=symbol,
+                                                  open_time=p.time,
+                                                  close_time=tt.time,
+                                                  quantity=p.quantity,
+                                                  open_value=p.value,
+                                                  close_value=tt.value,
+                                                  open_unit_value=p.unit_value,
+                                                  close_unit_value=tt.unit_value,
+                                                  profit=round(profit, 4),
+                                                  currency=tt.currency,
+                                                  pln_exchange_value=pln_exchange_value,
+                                                  profit_pln=round(profit * pln_exchange_value, 4))]
+                    if p.quantity <= tt.quantity:
+                        tt.quantity -= p.quantity
                         p.quantity = 0.0
-                        pprint(f'reduction old p: {p.quantity} t: {time_transaction.quantity}')
-                    elif p.quantity > time_transaction.quantity:
-                        p.quantity -= time_transaction.quantity
-                        time_transaction.quantity -= 0.0
-                        pprint(f'reduction new p: {p.quantity} t: {time_transaction.quantity}')
+                    elif p.quantity > tt.quantity:
+                        p.quantity -= tt.quantity
+                        tt.quantity = 0.0
 
             pending = [p for p in pending if p.quantity != 0]
-            if time_transaction.quantity != 0.0:
-                pending += [time_transaction]
+            if tt.quantity != 0.0:
+                pending += [tt]
         break
+    pprint(closed_transactions, width=400)
+    pprint(round(total_profit, 4))
+
+    write_csv(TAX_TRANSACTIONS, closed_transactions)
+
+
+def test_currency_exchange():
+    exchange = CurrencyExchange()
+    assert 3.6981 == exchange.value('2020-12-27 00:00:00', Currency.USD.name)
 
 
 if __name__ == '__main__':
     # save_exante_transactions()
-    split_transactions()
-
-    exchange = CurrencyExchange()
-    assert 3.6981 == exchange.value(datetime(2020, 12, 27), Currency.USD)
-
+    # split_transactions()
     calculate()
