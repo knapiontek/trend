@@ -108,7 +108,7 @@ def sort_trades() -> Dict:
     for symbol, trades in symbol_transactions.items():
         trade_index = defaultdict(list)
         for t in trades:
-            trade_index[to_datetime(t.timestamp)] += [Clazz(asset=t.asset, sum=float(t.sum))]
+            trade_index[t.timestamp] += [Clazz(asset=t.asset, sum=float(t.sum))]
         symbol_trades[symbol] = trade_index
 
     return {k: dict(v) for k, v in symbol_trades.items()}
@@ -118,17 +118,18 @@ def calculate():
     exchange = CurrencyExchange()
     trades = sort_trades()
     closed_transactions = []
+    total_profit = {}
     for symbol, time_transactions in trades.items():
 
         if symbol.endswith('.EXANTE') or symbol.endswith('.E.FX'):
             continue
         pprint(time_transactions, width=200)
-        total_profit = 0.0
+        total_profit[symbol] = 0.0
         pending = []
 
-        for time, sub_transactions in time_transactions.items():
+        for timestamp, sub_transactions in time_transactions.items():
 
-            tt = Clazz(time=time)
+            tt = Clazz(time=to_datetime(timestamp))
             for t in sub_transactions:
                 if symbol == t.asset:
                     tt.side = 1.0 if t.sum > 0 else -1.0
@@ -155,7 +156,7 @@ def calculate():
                     open_value = quantity * p.unit_value
                     close_value = quantity * tt.unit_value
                     pln_exchange_value = exchange.value(tt.time, tt.currency)
-                    total_profit += profit
+                    total_profit[symbol] += profit
                     closed_transactions += [Clazz(symbol=symbol,
                                                   open_time=p.time,
                                                   close_time=tt.time,
@@ -173,9 +174,8 @@ def calculate():
             if tt.quantity != 0.0:
                 pending += [tt]
 
-        pprint(f'{symbol}: {round(total_profit, 4)}')
-
     pprint(closed_transactions, width=400)
+    pprint(total_profit, width=400)
 
     write_csv(TAX_TRANSACTIONS, closed_transactions)
 
