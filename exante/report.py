@@ -45,7 +45,8 @@ def read_nbp(year) -> Dict[datetime, Clazz]:
     workbook = xlrd.open_workbook(xls)
     sheet = workbook.sheet_by_name('Kursy średnie')
     return {
-        xlrd.xldate_as_datetime(sheet.cell(i, 0).value, 0): Clazz(USD=sheet.cell(i, 2).value,
+        xlrd.xldate_as_datetime(sheet.cell(i, 0).value, 0): Clazz(PLN=1.0,
+                                                                  USD=sheet.cell(i, 2).value,
                                                                   EUR=sheet.cell(i, 8).value)
         for i in range(2, sheet.nrows - 4)
     }
@@ -117,10 +118,12 @@ def calculate():
     exchange = CurrencyExchange()
     trades = sort_trades()
     closed_transactions = []
-    total_profit = 0.0
     for symbol, time_transactions in trades.items():
 
+        if symbol.endswith('.EXANTE') or symbol.endswith('.E.FX'):
+            continue
         pprint(time_transactions, width=200)
+        total_profit = 0.0
         pending = []
 
         for time, sub_transactions in time_transactions.items():
@@ -169,9 +172,10 @@ def calculate():
             pending = [p for p in pending if p.quantity != 0]
             if tt.quantity != 0.0:
                 pending += [tt]
-        break
+
+        pprint(f'{symbol}: {round(total_profit, 4)}')
+
     pprint(closed_transactions, width=400)
-    pprint(round(total_profit, 4))
 
     write_csv(TAX_TRANSACTIONS, closed_transactions)
 
