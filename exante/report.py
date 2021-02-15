@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -10,6 +11,8 @@ import xlrd
 
 from src import exante, config, tool
 from src.clazz import Clazz
+
+FX_PATTERN = re.compile('.+?/(.+?).E.FX')
 
 EXANTE_TRANSACTIONS = 'exante_transactions'
 TAX_TRANSACTIONS = 'tax_transactions'
@@ -32,11 +35,11 @@ class CurrencyExchange:
 
     def value(self, time: str, currency: str) -> float:
         time = datetime.fromisoformat(time).replace(hour=0, minute=0, second=0)
-        assert time.year == 2020
+        assert time.year in (2020, 2021)
         time -= timedelta(days=1)
         while time not in self.nbp:
             time -= timedelta(days=1)
-            assert time.year == 2020
+            assert time.year in (2020, 2021)
         return self.nbp[time][currency]
 
 
@@ -121,8 +124,9 @@ def calculate():
     total_profit = {}
     for symbol, time_transactions in trades.items():
 
-        if symbol.endswith('.EXANTE') or symbol.endswith('.E.FX'):
+        if symbol.endswith('.EXANTE'):
             continue
+        pprint(symbol)
         pprint(time_transactions, width=200)
         total_profit[symbol] = 0.0
         pending = []
@@ -130,6 +134,11 @@ def calculate():
         for timestamp, sub_transactions in time_transactions.items():
 
             tt = Clazz(time=to_datetime(timestamp))
+            found = re.search(FX_PATTERN, symbol)
+            if found:
+                tt.currency = found.group(1)
+                tt.value = 0.0
+
             for t in sub_transactions:
                 if symbol == t.asset:
                     tt.side = 1.0 if t.sum > 0 else -1.0
@@ -175,9 +184,10 @@ def calculate():
                 pending += [tt]
 
     pprint(closed_transactions, width=400)
-    pprint(total_profit, width=400)
-
     write_csv(TAX_TRANSACTIONS, closed_transactions)
+    total_profit = {k: round(v, 4) for k, v in total_profit.items()}
+    pprint(total_profit)
+    return total_profit
 
 
 def test_currency_exchange():
@@ -185,7 +195,31 @@ def test_currency_exchange():
     assert 3.6981 == exchange.value('2020-12-27 00:00:00', Currency.USD.name)
 
 
+def test_calculate():
+    total_profit = calculate()
+    assert total_profit == {'DRW.ARCA': -16.0,
+                            'EUR/USD.E.FX': 44.6,
+                            'EWS.ARCA': -101.0,
+                            'FXF.ARCA': 7.36,
+                            'GDXJ.ARCA': -27.6,
+                            'KGH.WSE': -176.0,
+                            'KRU.WSE': 234.0,
+                            'OGZD.LSEIOB': -180.6,
+                            'PKO.WSE': -380.0,
+                            'PSLV.ARCA': 411.0,
+                            'RSX.ARCA': 19.0,
+                            'SDEM.ARCA': -9.4,
+                            'SPY.ARCA': -15.9,
+                            'USD/PLN.E.FX': 55.98,
+                            'VNQI.NASDAQ': -5.64,
+                            'XAU/USD.E.FX': 0.0,
+                            'XME.ARCA': -0.8,
+                            'XOM.NYSE': -49.6}
+
+
 if __name__ == '__main__':
     # save_exante_transactions()
     # split_transactions()
+    # test_currency_exchange()
+    # test_calculate()
     calculate()
