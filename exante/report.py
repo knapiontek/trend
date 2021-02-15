@@ -94,7 +94,7 @@ def to_datetime(timestamp: int) -> str:
     return datetime.fromtimestamp(timestamp // 1000).isoformat(sep=' ')
 
 
-def analyse_exante_transactions():
+def sort_trades() -> Dict:
     trades = read_json(TRADES)
 
     symbol_transactions = defaultdict(list)
@@ -108,8 +108,44 @@ def analyse_exante_transactions():
             trade_index[to_datetime(t.timestamp)] += [Clazz(asset=t.asset, sum=float(t.sum))]
         symbol_trades[symbol] = trade_index
 
-    symbol_trades = {k: dict(v) for k, v in symbol_trades.items()}
-    pprint(symbol_trades)
+    return {k: dict(v) for k, v in symbol_trades.items()}
+
+
+def calculate():
+    trades = sort_trades()
+    for symbol, time_transactions in trades.items():
+
+        pprint(time_transactions, width=200)
+        pending = []
+
+        for dt, sub_transactions in time_transactions.items():
+
+            time_transaction = Clazz()
+            for t in sub_transactions:
+                if symbol == t.asset:
+                    time_transaction.side = 'long' if t.sum > 0 else 'short'
+                    time_transaction.quantity = abs(t.sum)
+                else:
+                    time_transaction.value = abs(t.sum)
+                    time_transaction.currency = t.asset
+            time_transaction.unit = round(time_transaction.value / time_transaction.quantity, 6)
+            pprint(time_transaction, width=1000)
+
+            for p in pending:
+                if time_transaction.quantity != 0.0 and p.side != time_transaction.side:
+                    if p.quantity <= time_transaction.quantity:
+                        time_transaction.quantity -= p.quantity
+                        p.quantity = 0.0
+                        pprint(f'reduction old p: {p.quantity} t: {time_transaction.quantity}')
+                    elif p.quantity > time_transaction.quantity:
+                        p.quantity -= time_transaction.quantity
+                        time_transaction.quantity -= 0.0
+                        pprint(f'reduction new p: {p.quantity} t: {time_transaction.quantity}')
+
+            pending = [p for p in pending if p.quantity != 0]
+            if time_transaction.quantity != 0.0:
+                pending += [time_transaction]
+        break
 
 
 if __name__ == '__main__':
@@ -119,4 +155,4 @@ if __name__ == '__main__':
     exchange = CurrencyExchange()
     assert 3.6981 == exchange.value(datetime(2020, 12, 27), Currency.USD)
 
-    analyse_exante_transactions()
+    calculate()
