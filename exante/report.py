@@ -244,7 +244,7 @@ def create_trade_xls(trade_sheet) -> Tuple[float, float]:
     profit_pln = sum([t.profit_pln for t in trades])
     loss_pln = sum([t.loss_pln for t in trades])
     row = trade_sheet.row(len(trades) + 3)
-    row.write(0, 'pnl PLN')
+    row.write(0, 'Profit PLN')
     row.write(1, profit_pln)
     row.write(3, 'Loss PLN')
     row.write(4, loss_pln)
@@ -382,7 +382,7 @@ def create_xls():
 
     summary_sheet = book.add_sheet("Summary")
     row = summary_sheet.row(0)
-    row.write(1, 'pnl PLN')
+    row.write(1, 'Profit PLN')
     row.write(2, 'Loss PLN')
     row.write(3, 'Prepaid Tax PLN')
 
