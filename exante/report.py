@@ -16,6 +16,7 @@ TAX_TRANSACTIONS = 'tax_transactions'
 COMMISSIONS = 'commissions'
 DIVIDENDS = 'dividends'
 TRADES = 'trades'
+FOREX = 'forex'
 
 
 class Currency(Enum):
@@ -88,6 +89,10 @@ def split_transactions():
     write_json(DIVIDENDS, dividends)
     write_csv(DIVIDENDS, dividends)
 
+    forex = [t for t in transactions if t.type == 'TRADE' and t.symbol.endswith('.E.FX')]
+    write_json(FOREX, forex)
+    write_csv(FOREX, forex)
+
     trades = [t for t in transactions
               if t.type == 'TRADE' and not t.symbol.endswith('.EXANTE') and not t.symbol.endswith('.E.FX')]
     write_json(TRADES, trades)
@@ -115,7 +120,7 @@ def sort_trades() -> Dict:
     return {k: dict(v) for k, v in symbol_trades.items()}
 
 
-def calculate_stocks():
+def calculate_trades():
     exchange = CurrencyExchange()
     trades = sort_trades()
     closed_transactions = []
@@ -186,22 +191,22 @@ def test_currency_exchange():
 
 
 def test_calculate():
-    total_profit = calculate_stocks()
-    assert total_profit == {'DRW.ARCA': -16.0,
-                            'EWS.ARCA': -101.0,
-                            'FXF.ARCA': 7.36,
-                            'GDXJ.ARCA': -27.6,
-                            'KGH.WSE': -176.0,
-                            'KRU.WSE': 234.0,
-                            'OGZD.LSEIOB': -180.6,
-                            'PKO.WSE': -380.0,
-                            'PSLV.ARCA': 411.0,
-                            'RSX.ARCA': 19.0,
-                            'SDEM.ARCA': -9.4,
-                            'SPY.ARCA': -15.9,
-                            'VNQI.NASDAQ': -5.64,
-                            'XME.ARCA': -0.8,
-                            'XOM.NYSE': -49.6}
+    trade_profits = calculate_trades()
+    assert trade_profits == {'DRW.ARCA': -16.0,
+                             'EWS.ARCA': -101.0,
+                             'FXF.ARCA': 7.36,
+                             'GDXJ.ARCA': -27.6,
+                             'KGH.WSE': -176.0,
+                             'KRU.WSE': 234.0,
+                             'OGZD.LSEIOB': -180.6,
+                             'PKO.WSE': -380.0,
+                             'PSLV.ARCA': 411.0,
+                             'RSX.ARCA': 19.0,
+                             'SDEM.ARCA': -9.4,
+                             'SPY.ARCA': -15.9,
+                             'VNQI.NASDAQ': -5.64,
+                             'XME.ARCA': -0.8,
+                             'XOM.NYSE': -49.6}
 
 
 if __name__ == '__main__':
