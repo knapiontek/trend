@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -11,8 +10,6 @@ import xlrd
 
 from src import exante, config, tool
 from src.clazz import Clazz
-
-FX_PATTERN = re.compile('.+?/(.+?).E.FX')
 
 EXANTE_TRANSACTIONS = 'exante_transactions'
 TAX_TRANSACTIONS = 'tax_transactions'
@@ -91,7 +88,8 @@ def split_transactions():
     write_json(DIVIDENDS, dividends)
     write_csv(DIVIDENDS, dividends)
 
-    trades = [t for t in transactions if t.type == 'TRADE']
+    trades = [t for t in transactions
+              if t.type == 'TRADE' and not t.symbol.endswith('.EXANTE') and not t.symbol.endswith('.E.FX')]
     write_json(TRADES, trades)
     write_csv(TRADES, trades)
 
@@ -117,15 +115,12 @@ def sort_trades() -> Dict:
     return {k: dict(v) for k, v in symbol_trades.items()}
 
 
-def calculate():
+def calculate_stocks():
     exchange = CurrencyExchange()
     trades = sort_trades()
     closed_transactions = []
     total_profit = {}
     for symbol, time_transactions in trades.items():
-
-        if symbol.endswith('.EXANTE'):
-            continue
         pprint(symbol)
         pprint(time_transactions, width=200)
         total_profit[symbol] = 0.0
@@ -134,11 +129,6 @@ def calculate():
         for timestamp, sub_transactions in time_transactions.items():
 
             tt = Clazz(time=to_datetime(timestamp))
-            found = re.search(FX_PATTERN, symbol)
-            if found:
-                tt.currency = found.group(1)
-                tt.value = 0.0
-
             for t in sub_transactions:
                 if symbol == t.asset:
                     tt.side = 1.0 if t.sum > 0 else -1.0
@@ -196,9 +186,8 @@ def test_currency_exchange():
 
 
 def test_calculate():
-    total_profit = calculate()
+    total_profit = calculate_stocks()
     assert total_profit == {'DRW.ARCA': -16.0,
-                            'EUR/USD.E.FX': 44.6,
                             'EWS.ARCA': -101.0,
                             'FXF.ARCA': 7.36,
                             'GDXJ.ARCA': -27.6,
@@ -210,16 +199,13 @@ def test_calculate():
                             'RSX.ARCA': 19.0,
                             'SDEM.ARCA': -9.4,
                             'SPY.ARCA': -15.9,
-                            'USD/PLN.E.FX': -55.98,
                             'VNQI.NASDAQ': -5.64,
-                            'XAU/USD.E.FX': 0.0,
                             'XME.ARCA': -0.8,
                             'XOM.NYSE': -49.6}
 
 
 if __name__ == '__main__':
     # save_exante_transactions()
-    # split_transactions()
-    # test_currency_exchange()
+    split_transactions()
+    test_currency_exchange()
     test_calculate()
-    # calculate()
