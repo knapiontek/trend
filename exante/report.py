@@ -245,9 +245,9 @@ def create_trade_xls(trade_sheet) -> Tuple[float, float]:
     loss_pln = sum([t.loss_pln for t in trades])
     row = trade_sheet.row(len(trades) + 3)
     row.write(0, 'Profit PLN')
-    row.write(1, profit_pln)
+    row.write(1, round(profit_pln, 2))
     row.write(3, 'Loss PLN')
-    row.write(4, loss_pln)
+    row.write(4, round(loss_pln, 2))
 
     return profit_pln, loss_pln
 
@@ -284,9 +284,9 @@ def create_forex_xls(forex_sheet) -> Tuple[float, float]:
     loss_pln = sum([t.loss_pln for t in forex])
     row = forex_sheet.row(len(forex) + 3)
     row.write(0, 'Profit PLN')
-    row.write(1, profit_pln)
+    row.write(1, round(profit_pln, 2))
     row.write(3, 'Loss PLN')
-    row.write(4, loss_pln)
+    row.write(4, round(loss_pln, 2))
 
     return profit_pln, loss_pln
 
@@ -315,7 +315,7 @@ def create_fees_xls(fees_sheet) -> float:
     loss_pln = sum([t.loss_pln for t in fees])
     row = fees_sheet.row(len(fees) + 3)
     row.write(0, 'Loss PLN')
-    row.write(1, loss_pln)
+    row.write(1, round(loss_pln, 2))
 
     return loss_pln
 
@@ -360,9 +360,9 @@ def create_dividends_xls(dividends_sheet) -> Tuple[float, float]:
     tax_pln = sum([t.tax_pln for t in dividends])
     row = dividends_sheet.row(len(dividends) + 3)
     row.write(0, 'Dividend PLN')
-    row.write(1, dividend_pln)
+    row.write(1, round(dividend_pln, 2))
     row.write(3, 'Tax PLN')
-    row.write(4, tax_pln)
+    row.write(4, round(tax_pln, 2))
 
     return dividend_pln, tax_pln
 
@@ -401,6 +401,11 @@ def create_xls():
     row = summary_sheet.row(4)
     row.write(0, 'Dividends')
     row.write(1, round(dividends_pln, 2))
+    row.write(3, round(tax_pln, 2))
+
+    row = summary_sheet.row(6)
+    row.write(1, round(trade_profit_pln + forex_profit_pln + dividends_pln, 2))
+    row.write(2, round(trade_loss_pln + forex_loss_pln + fees_pln, 2))
     row.write(3, round(tax_pln, 2))
 
     path = config.STORE_PATH.joinpath(SUMMARY).with_suffix('.xls')
