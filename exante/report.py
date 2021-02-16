@@ -210,7 +210,7 @@ def test_calculate():
                             'RSX.ARCA': 19.0,
                             'SDEM.ARCA': -9.4,
                             'SPY.ARCA': -15.9,
-                            'USD/PLN.E.FX': 55.98,
+                            'USD/PLN.E.FX': -55.98,
                             'VNQI.NASDAQ': -5.64,
                             'XAU/USD.E.FX': 0.0,
                             'XME.ARCA': -0.8,
@@ -221,5 +221,5 @@ if __name__ == '__main__':
     # save_exante_transactions()
     # split_transactions()
     # test_currency_exchange()
-    # test_calculate()
-    calculate()
+    test_calculate()
+    # calculate()
