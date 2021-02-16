@@ -129,8 +129,6 @@ def calculate_trades():
     closed_transactions = []
     total_pnl = {}
     for symbol, time_transactions in trades.items():
-        pprint(symbol)
-        pprint(time_transactions, width=200)
         total_pnl[symbol] = 0.0
         pending = []
 
@@ -145,7 +143,6 @@ def calculate_trades():
                     tt.value = abs(t.sum)
                     tt.currency = t.asset
             tt.unit_value = tt.value / tt.quantity
-            pprint(tt, width=1000)
 
             for p in pending:
                 if tt.quantity != 0.0 and p.side != tt.side:
@@ -184,11 +181,9 @@ def calculate_trades():
             if tt.quantity != 0.0:
                 pending += [tt]
 
-    pprint(closed_transactions, width=400)
     write_json(TRADE_TRANSACTIONS, closed_transactions)
     write_csv(TRADE_TRANSACTIONS, closed_transactions)
     total_pnl = {k: round(v, 4) for k, v in total_pnl.items()}
-    pprint(total_pnl)
     return total_pnl
 
 
@@ -199,6 +194,7 @@ def test_currency_exchange():
 
 def test_calculate_trades():
     trade_pnl = calculate_trades()
+    pprint(trade_pnl)
     assert trade_pnl == {'DRW.ARCA': -16.0,
                          'EWS.ARCA': -101.0,
                          'FXF.ARCA': 7.36,
@@ -384,28 +380,28 @@ def create_xls():
     trade_profit_pln, trade_loss_pln = create_trade_xls(trade_sheet)
     row = summary_sheet.row(1)
     row.write(0, 'Trades')
-    row.write(1, round(trade_profit_pln, 4))
-    row.write(2, round(trade_loss_pln, 4))
+    row.write(1, round(trade_profit_pln, 2))
+    row.write(2, round(trade_loss_pln, 2))
 
     forex_sheet = book.add_sheet("Forex")
     forex_profit_pln, forex_loss_pln = create_forex_xls(forex_sheet)
     row = summary_sheet.row(2)
     row.write(0, 'Forex')
-    row.write(1, round(forex_profit_pln, 4))
-    row.write(2, round(forex_loss_pln, 4))
+    row.write(1, round(forex_profit_pln, 2))
+    row.write(2, round(forex_loss_pln, 2))
 
     fees_sheet = book.add_sheet("Fees")
     fees_pln = create_fees_xls(fees_sheet)
     row = summary_sheet.row(3)
     row.write(0, 'Fees')
-    row.write(2, round(fees_pln, 4))
+    row.write(2, round(fees_pln, 2))
 
     dividends_sheet = book.add_sheet("Dividends")
     dividends_pln, tax_pln = create_dividends_xls(dividends_sheet)
     row = summary_sheet.row(4)
     row.write(0, 'Dividends')
-    row.write(1, round(dividends_pln, 4))
-    row.write(3, round(tax_pln, 4))
+    row.write(1, round(dividends_pln, 2))
+    row.write(3, round(tax_pln, 2))
 
     path = config.STORE_PATH.joinpath(SUMMARY).with_suffix('.xls')
     book.save(path)
