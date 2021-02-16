@@ -220,7 +220,7 @@ def copy_data(columns: Dict, sheet: Any, data: List[Dict]):
         row = sheet.row(y + 1)
         for k, v in columns.items():
             value = t[k]
-            row.write(v, round(value, 4) if type(value) == float else value)
+            row.write(v, round(value, 2) if type(value) == float else value)
 
 
 def create_trade_xls(trade_sheet) -> Tuple[float, float]:
