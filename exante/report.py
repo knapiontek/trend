@@ -2,21 +2,24 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from pprint import pprint
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 import orjson as json
 import pandas as pd
 import xlrd
+import xlwt
 
 from src import exante, config, tool
 from src.clazz import Clazz
 
 EXANTE_TRANSACTIONS = 'exante_transactions'
-TAX_TRANSACTIONS = 'tax_transactions'
-COMMISSIONS = 'commissions'
+TRADE_TRANSACTIONS = 'trade_transactions'
+
+FEES = 'fees'
 DIVIDENDS = 'dividends'
 TRADES = 'trades'
 FOREX = 'forex'
+SUMMARY = 'summary'
 
 
 class Currency(Enum):
@@ -78,12 +81,12 @@ def save_exante_transactions():
         write_csv(EXANTE_TRANSACTIONS, transactions)
 
 
-def split_transactions():
+def split_exante_transactions():
     transactions = read_json(EXANTE_TRANSACTIONS)
 
-    commissions = [t for t in transactions if t.type in ('COMMISSION', 'INTEREST')]
-    write_json(COMMISSIONS, commissions)
-    write_csv(COMMISSIONS, commissions)
+    fees = [t for t in transactions if t.type in ('COMMISSION', 'INTEREST')]
+    write_json(FEES, fees)
+    write_csv(FEES, fees)
 
     dividends = [t for t in transactions if t.type in ('TAX', 'DIVIDEND')]
     write_json(DIVIDENDS, dividends)
@@ -124,11 +127,11 @@ def calculate_trades():
     exchange = CurrencyExchange()
     trades = sort_trades()
     closed_transactions = []
-    total_profit = {}
+    total_pnl = {}
     for symbol, time_transactions in trades.items():
         pprint(symbol)
         pprint(time_transactions, width=200)
-        total_profit[symbol] = 0.0
+        total_pnl[symbol] = 0.0
         pending = []
 
         for timestamp, sub_transactions in time_transactions.items():
@@ -155,12 +158,14 @@ def calculate_trades():
                         quantity = tt.quantity
                         p.quantity -= quantity
                         tt.quantity = 0.0
-                    unit_profit = p.side * (tt.unit_value - p.unit_value)
-                    profit = quantity * unit_profit
+                    unit_pnl = p.side * (tt.unit_value - p.unit_value)
+                    pnl = quantity * unit_pnl
                     open_value = quantity * p.unit_value
                     close_value = quantity * tt.unit_value
                     pln_exchange_value = exchange.value(tt.time, tt.currency)
-                    total_profit[symbol] += profit
+                    profit_pln = pnl * pln_exchange_value if pnl > 0 else 0.0
+                    loss_pln = pnl * pln_exchange_value if pnl <= 0 else 0.0
+                    total_pnl[symbol] += pnl
                     closed_transactions += [Clazz(symbol=symbol,
                                                   open_time=p.time,
                                                   close_time=tt.time,
@@ -169,20 +174,22 @@ def calculate_trades():
                                                   close_value=round(close_value, 4),
                                                   open_unit_value=round(p.unit_value, 4),
                                                   close_unit_value=round(tt.unit_value, 4),
-                                                  profit=round(profit, 4),
+                                                  pnl=round(pnl, 4),
                                                   currency=tt.currency,
                                                   pln_exchange_value=pln_exchange_value,
-                                                  profit_pln=round(profit * pln_exchange_value, 4))]
+                                                  profit_pln=round(profit_pln, 4),
+                                                  loss_pln=round(loss_pln, 4))]
 
             pending = [p for p in pending if p.quantity != 0]
             if tt.quantity != 0.0:
                 pending += [tt]
 
     pprint(closed_transactions, width=400)
-    write_csv(TAX_TRANSACTIONS, closed_transactions)
-    total_profit = {k: round(v, 4) for k, v in total_profit.items()}
-    pprint(total_profit)
-    return total_profit
+    write_json(TRADE_TRANSACTIONS, closed_transactions)
+    write_csv(TRADE_TRANSACTIONS, closed_transactions)
+    total_pnl = {k: round(v, 4) for k, v in total_pnl.items()}
+    pprint(total_pnl)
+    return total_pnl
 
 
 def test_currency_exchange():
@@ -190,27 +197,229 @@ def test_currency_exchange():
     assert 3.6981 == exchange.value('2020-12-27 00:00:00', Currency.USD.name)
 
 
-def test_calculate():
-    trade_profits = calculate_trades()
-    assert trade_profits == {'DRW.ARCA': -16.0,
-                             'EWS.ARCA': -101.0,
-                             'FXF.ARCA': 7.36,
-                             'GDXJ.ARCA': -27.6,
-                             'KGH.WSE': -176.0,
-                             'KRU.WSE': 234.0,
-                             'OGZD.LSEIOB': -180.6,
-                             'PKO.WSE': -380.0,
-                             'PSLV.ARCA': 411.0,
-                             'RSX.ARCA': 19.0,
-                             'SDEM.ARCA': -9.4,
-                             'SPY.ARCA': -15.9,
-                             'VNQI.NASDAQ': -5.64,
-                             'XME.ARCA': -0.8,
-                             'XOM.NYSE': -49.6}
+def test_calculate_trades():
+    trade_pnl = calculate_trades()
+    assert trade_pnl == {'DRW.ARCA': -16.0,
+                         'EWS.ARCA': -101.0,
+                         'FXF.ARCA': 7.36,
+                         'GDXJ.ARCA': -27.6,
+                         'KGH.WSE': -176.0,
+                         'KRU.WSE': 234.0,
+                         'OGZD.LSEIOB': -180.6,
+                         'PKO.WSE': -380.0,
+                         'PSLV.ARCA': 411.0,
+                         'RSX.ARCA': 19.0,
+                         'SDEM.ARCA': -9.4,
+                         'SPY.ARCA': -15.9,
+                         'VNQI.NASDAQ': -5.64,
+                         'XME.ARCA': -0.8,
+                         'XOM.NYSE': -49.6}
+
+
+def create_trade_xls(trade_sheet) -> Tuple[float, float]:
+    columns = dict(symbol=0,
+                   open_time=1,
+                   close_time=2,
+                   quantity=3,
+                   open_value=4,
+                   close_value=5,
+                   open_unit_value=6,
+                   close_unit_value=7,
+                   pnl=8,
+                   currency=9,
+                   pln_exchange_value=10,
+                   profit_pln=11,
+                   loss_pln=12)
+
+    trades = read_json(TRADE_TRANSACTIONS)
+
+    for k, v in columns.items():
+        row = trade_sheet.row(0)
+        row.write(v, k)
+    for y, t in enumerate(trades):
+        row = trade_sheet.row(y + 1)
+        for k, v in columns.items():
+            row.write(v, t[k])
+
+    profit_pln = sum([t.profit_pln for t in trades])
+    loss_pln = sum([t.loss_pln for t in trades])
+    row = trade_sheet.row(len(trades) + 3)
+    row.write(0, 'pnl PLN')
+    row.write(1, profit_pln)
+    row.write(3, 'Loss PLN')
+    row.write(4, loss_pln)
+
+    return profit_pln, loss_pln
+
+
+def create_forex_xls(forex_sheet) -> Tuple[float, float]:
+    exchange = CurrencyExchange()
+
+    columns = dict(currency=0,
+                   time=1,
+                   pnl=2,
+                   profit_pln=3,
+                   loss_pln=5)
+
+    forex = []
+    for i in read_json(FOREX):
+        if i.asset in ('PLN', 'USD', 'EUR'):
+            time = to_datetime(i.timestamp)
+            currency = i.asset
+            pnl = float(i.sum)
+            pln_exchange_value = exchange.value(time, currency)
+            profit_pln = pnl * pln_exchange_value if pnl > 0.0 else 0.0
+            loss_pln = pnl * pln_exchange_value if pnl <= 0.0 else 0.0
+            forex += [Clazz(currency=currency, time=time, pnl=pnl, profit_pln=profit_pln, loss_pln=loss_pln)]
+
+    for k, v in columns.items():
+        row = forex_sheet.row(0)
+        row.write(v, k)
+    for y, i in enumerate(forex):
+        row = forex_sheet.row(y + 1)
+        for k, v in columns.items():
+            row.write(v, i[k])
+
+    profit_pln = sum([t.profit_pln for t in forex])
+    loss_pln = sum([t.loss_pln for t in forex])
+    row = forex_sheet.row(len(forex) + 3)
+    row.write(0, 'Profit PLN')
+    row.write(1, profit_pln)
+    row.write(3, 'Loss PLN')
+    row.write(4, loss_pln)
+
+    return profit_pln, loss_pln
+
+
+def create_fees_xls(fees_sheet) -> float:
+    exchange = CurrencyExchange()
+
+    columns = dict(currency=0,
+                   time=1,
+                   loss=2,
+                   loss_pln=3)
+
+    fees = []
+    for i in read_json(FEES):
+        if i.asset in ('PLN', 'USD', 'EUR'):
+            time = to_datetime(i.timestamp)
+            currency = i.asset
+            loss = float(i.sum)
+            pln_exchange_value = exchange.value(time, currency)
+            loss_pln = loss * pln_exchange_value
+            fees += [Clazz(currency=currency, time=time, loss=loss, loss_pln=loss_pln)]
+
+    for k, v in columns.items():
+        row = fees_sheet.row(0)
+        row.write(v, k)
+    for y, i in enumerate(fees):
+        row = fees_sheet.row(y + 1)
+        for k, v in columns.items():
+            row.write(v, i[k])
+
+    loss_pln = sum([t.loss_pln for t in fees])
+    row = fees_sheet.row(len(fees) + 3)
+    row.write(0, 'Loss PLN')
+    row.write(1, loss_pln)
+
+    return loss_pln
+
+
+def create_dividends_xls(dividends_sheet) -> Tuple[float, float]:
+    exchange = CurrencyExchange()
+
+    columns = dict(symbol=0,
+                   time=1,
+                   currency=2,
+                   dividend=3,
+                   tax=4,
+                   dividend_pln=5,
+                   tax_pln=6)
+
+    dividends_index = defaultdict(Clazz)
+    for i in read_json(DIVIDENDS):
+        d = dividends_index[i.timestamp]
+        currency = i.asset
+        time = to_datetime(i.timestamp)
+        pln_exchange_value = exchange.value(time, currency)
+        if i.type == 'DIVIDEND':
+            d.symbol = i.symbol
+            d.time = time
+            d.currency = currency
+            d.dividend = float(i.sum)
+            d.dividend_pln = d.dividend * pln_exchange_value
+            if 'tax' not in d:
+                d.tax = 0.0
+            if 'tax_pln' not in d:
+                d.tax_pln = 0.0
+        if i.type == 'TAX':
+            d.tax = float(i.sum)
+            d.tax_pln = d.tax * pln_exchange_value
+
+    dividends = dividends_index.values()
+
+    for k, v in columns.items():
+        row = dividends_sheet.row(0)
+        row.write(v, k)
+    for y, i in enumerate(dividends):
+        row = dividends_sheet.row(y + 1)
+        for k, v in columns.items():
+            row.write(v, i[k])
+
+    dividend_pln = sum([t.dividend_pln for t in dividends])
+    tax_pln = sum([t.tax_pln for t in dividends])
+    row = dividends_sheet.row(len(dividends) + 3)
+    row.write(0, 'Dividend PLN')
+    row.write(1, dividend_pln)
+    row.write(3, 'Tax PLN')
+    row.write(4, tax_pln)
+
+    return dividend_pln, tax_pln
+
+
+def create_xls():
+    book = xlwt.Workbook()
+
+    summary_sheet = book.add_sheet("Summary")
+    row = summary_sheet.row(0)
+    row.write(1, 'pnl PLN')
+    row.write(2, 'Loss PLN')
+    row.write(3, 'Prepaid Tax PLN')
+
+    trade_sheet = book.add_sheet("Trades")
+    trade_profit_pln, trade_loss_pln = create_trade_xls(trade_sheet)
+    row = summary_sheet.row(1)
+    row.write(0, 'Trades')
+    row.write(1, trade_profit_pln)
+    row.write(2, trade_loss_pln)
+
+    forex_sheet = book.add_sheet("Forex")
+    forex_profit_pln, forex_loss_pln = create_forex_xls(forex_sheet)
+    row = summary_sheet.row(2)
+    row.write(0, 'Forex')
+    row.write(1, forex_profit_pln)
+    row.write(2, forex_loss_pln)
+
+    fees_sheet = book.add_sheet("Fees")
+    fees_pln = create_fees_xls(fees_sheet)
+    row = summary_sheet.row(3)
+    row.write(0, 'Fees')
+    row.write(2, fees_pln)
+
+    dividends_sheet = book.add_sheet("Dividends")
+    dividends_pln, tax_pln = create_dividends_xls(dividends_sheet)
+    row = summary_sheet.row(4)
+    row.write(0, 'Dividends')
+    row.write(1, dividends_pln)
+    row.write(3, tax_pln)
+
+    path = config.STORE_PATH.joinpath(SUMMARY).with_suffix('.xls')
+    book.save(path)
 
 
 if __name__ == '__main__':
     # save_exante_transactions()
-    split_transactions()
+    split_exante_transactions()
     test_currency_exchange()
-    test_calculate()
+    test_calculate_trades()
+    create_xls()
