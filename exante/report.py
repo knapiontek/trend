@@ -404,6 +404,7 @@ def create_xls():
     row.write(3, round(tax_pln, 2))
 
     row = summary_sheet.row(6)
+    row.write(0, 'Total')
     row.write(1, round(trade_profit_pln + forex_profit_pln + dividends_pln, 2))
     row.write(2, round(trade_loss_pln + forex_loss_pln + fees_pln, 2))
     row.write(3, round(tax_pln, 2))
