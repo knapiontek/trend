@@ -224,7 +224,7 @@ def copy_data(columns: Dict, sheet: Any, data: List[Dict]):
             row.write(v, round(value, 2) if type(value) == float else value)
 
 
-def create_trade_xls(trade_sheet) -> Tuple[float, float]:
+def create_trade_xls(trade_sheet, year: int) -> Tuple[float, float]:
     columns = dict(symbol=0,
                    open_time=1,
                    close_time=2,
@@ -240,6 +240,7 @@ def create_trade_xls(trade_sheet) -> Tuple[float, float]:
                    loss_pln=12)
 
     trades = read_json(TRADE_TRANSACTIONS)
+    trades = [t for t in trades if datetime.fromisoformat(t.close_time).year == year]
     copy_data(columns, trade_sheet, trades)
 
     profit_pln = sum([t.profit_pln for t in trades])
@@ -253,7 +254,7 @@ def create_trade_xls(trade_sheet) -> Tuple[float, float]:
     return profit_pln, loss_pln
 
 
-def create_forex_xls(forex_sheet) -> Tuple[float, float]:
+def create_forex_xls(forex_sheet, year: int) -> Tuple[float, float]:
     exchange = CurrencyExchange()
 
     columns = dict(currency=0,
@@ -267,17 +268,18 @@ def create_forex_xls(forex_sheet) -> Tuple[float, float]:
     for i in read_json(FOREX):
         if i.asset in ('PLN', 'USD', 'EUR'):
             time = to_datetime(i.timestamp)
-            currency = i.asset
-            pln_factor = exchange.value(time, currency)
-            pnl = float(i.sum)
-            profit_pln = pnl * pln_factor if pnl > 0.0 else 0.0
-            loss_pln = pnl * pln_factor if pnl <= 0.0 else 0.0
-            forex += [Clazz(currency=currency,
-                            pln_factor=pln_factor,
-                            time=time,
-                            pnl=pnl,
-                            profit_pln=profit_pln,
-                            loss_pln=loss_pln)]
+            if datetime.fromisoformat(time).year == year:
+                currency = i.asset
+                pln_factor = exchange.value(time, currency)
+                pnl = float(i.sum)
+                profit_pln = pnl * pln_factor if pnl > 0.0 else 0.0
+                loss_pln = pnl * pln_factor if pnl <= 0.0 else 0.0
+                forex += [Clazz(currency=currency,
+                                pln_factor=pln_factor,
+                                time=time,
+                                pnl=pnl,
+                                profit_pln=profit_pln,
+                                loss_pln=loss_pln)]
 
     copy_data(columns, forex_sheet, forex)
 
@@ -292,7 +294,7 @@ def create_forex_xls(forex_sheet) -> Tuple[float, float]:
     return profit_pln, loss_pln
 
 
-def create_fees_xls(fees_sheet) -> float:
+def create_fees_xls(fees_sheet, year: int) -> float:
     exchange = CurrencyExchange()
 
     columns = dict(currency=0,
@@ -305,11 +307,12 @@ def create_fees_xls(fees_sheet) -> float:
     for i in read_json(FEES):
         if i.asset in ('PLN', 'USD', 'EUR'):
             time = to_datetime(i.timestamp)
-            currency = i.asset
-            loss = float(i.sum)
-            pln_factor = exchange.value(time, currency)
-            loss_pln = loss * pln_factor
-            fees += [Clazz(currency=currency, pln_factor=pln_factor, time=time, loss=loss, loss_pln=loss_pln)]
+            if datetime.fromisoformat(time).year == year:
+                currency = i.asset
+                loss = float(i.sum)
+                pln_factor = exchange.value(time, currency)
+                loss_pln = loss * pln_factor
+                fees += [Clazz(currency=currency, pln_factor=pln_factor, time=time, loss=loss, loss_pln=loss_pln)]
 
     copy_data(columns, fees_sheet, fees)
 
@@ -321,7 +324,7 @@ def create_fees_xls(fees_sheet) -> float:
     return loss_pln
 
 
-def create_dividends_xls(dividends_sheet) -> Tuple[float, float]:
+def create_dividends_xls(dividends_sheet, year: int) -> Tuple[float, float]:
     exchange = CurrencyExchange()
 
     columns = dict(symbol=0,
@@ -338,21 +341,22 @@ def create_dividends_xls(dividends_sheet) -> Tuple[float, float]:
         d = dividends_index[i.timestamp]
         currency = i.asset
         time = to_datetime(i.timestamp)
-        pln_factor = exchange.value(time, currency)
-        if i.type == 'DIVIDEND':
-            d.symbol = i.symbol
-            d.time = time
-            d.currency = currency
-            d.pln_factor = pln_factor
-            d.dividend = float(i.sum)
-            d.dividend_pln = d.dividend * pln_factor
-            if 'tax' not in d:
-                d.tax = 0.0
-            if 'tax_pln' not in d:
-                d.tax_pln = 0.0
-        if i.type == 'TAX':
-            d.tax = float(i.sum)
-            d.tax_pln = d.tax * pln_factor
+        if datetime.fromisoformat(time).year == year:
+            pln_factor = exchange.value(time, currency)
+            if i.type == 'DIVIDEND':
+                d.symbol = i.symbol
+                d.time = time
+                d.currency = currency
+                d.pln_factor = pln_factor
+                d.dividend = float(i.sum)
+                d.dividend_pln = d.dividend * pln_factor
+                if 'tax' not in d:
+                    d.tax = 0.0
+                if 'tax_pln' not in d:
+                    d.tax_pln = 0.0
+            if i.type == 'TAX':
+                d.tax = float(i.sum)
+                d.tax_pln = d.tax * pln_factor
 
     dividends = list(dividends_index.values())
     copy_data(columns, dividends_sheet, dividends)
@@ -368,7 +372,7 @@ def create_dividends_xls(dividends_sheet) -> Tuple[float, float]:
     return dividend_pln, tax_pln
 
 
-def create_xls():
+def annual_report(year: int):
     book = xlwt.Workbook()
 
     summary_sheet = book.add_sheet("Summary")
@@ -378,27 +382,27 @@ def create_xls():
     row.write(3, 'Prepaid Tax PLN')
 
     trade_sheet = book.add_sheet("Trades")
-    trade_profit_pln, trade_loss_pln = create_trade_xls(trade_sheet)
+    trade_profit_pln, trade_loss_pln = create_trade_xls(trade_sheet, year=year)
     row = summary_sheet.row(1)
     row.write(0, 'Trades')
     row.write(1, round(trade_profit_pln, 2))
     row.write(2, round(trade_loss_pln, 2))
 
     forex_sheet = book.add_sheet("Forex")
-    forex_profit_pln, forex_loss_pln = create_forex_xls(forex_sheet)
+    forex_profit_pln, forex_loss_pln = create_forex_xls(forex_sheet, year=year)
     row = summary_sheet.row(2)
     row.write(0, 'Forex')
     row.write(1, round(forex_profit_pln, 2))
     row.write(2, round(forex_loss_pln, 2))
 
     fees_sheet = book.add_sheet("Fees")
-    fees_pln = create_fees_xls(fees_sheet)
+    fees_pln = create_fees_xls(fees_sheet, year=year)
     row = summary_sheet.row(3)
     row.write(0, 'Fees')
     row.write(2, round(fees_pln, 2))
 
     dividends_sheet = book.add_sheet("Dividends")
-    dividends_pln, tax_pln = create_dividends_xls(dividends_sheet)
+    dividends_pln, tax_pln = create_dividends_xls(dividends_sheet, year=year)
     row = summary_sheet.row(4)
     row.write(0, 'Dividends')
     row.write(1, round(dividends_pln, 2))
@@ -419,4 +423,4 @@ if __name__ == '__main__':
     split_exante_transactions()
     test_currency_exchange()
     test_calculate_trades()
-    create_xls()
+    annual_report(year=2020)
