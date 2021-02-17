@@ -414,7 +414,7 @@ def annual_report(year: int):
     row.write(2, round(trade_loss_pln + forex_loss_pln + fees_pln, 2))
     row.write(3, round(tax_pln, 2))
 
-    path = config.STORE_PATH.joinpath(SUMMARY).with_suffix('.xls')
+    path = config.STORE_PATH.joinpath(f'{SUMMARY}-{year}').with_suffix('.xls')
     book.save(path)
 
 
