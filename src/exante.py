@@ -37,7 +37,8 @@ def datum_from_exante(dt: Dict, symbol: str) -> Optional[Clazz]:
                      close=float(dt['close']),
                      low=float(dt['low']),
                      high=float(dt['high']),
-                     volume=int(dt['volume']))
+                     volume=int(dt['volume']),
+                     **tool.SECURITY_SCORE_DEFAULT)
     except:
         return None
 
@@ -92,8 +93,9 @@ class Session(session.Session):
         response = self.get(url)
         return response.json()
 
-    def place_order(self, symbol: str, limit: float, stop_loss: float):
-        params = {'side': 'buy',
+    def order(self, symbol: str, limit: float, stop_loss: float):
+        params = {'accountId': config.exante_account(),
+                  'side': 'buy',
                   'duration': 'day',
                   'quantity': '1',
                   'symbolId': symbol,
@@ -103,7 +105,8 @@ class Session(session.Session):
                   'limitPrice': str(limit),
                   'stopLoss': str(stop_loss)}
         url = f'{TRADE_URL}/orders'
-        response = self.post(url, params=params)
+        response = self.post(url, json=params)
+        assert response.status_code == 200, response.text
         return response.json()
 
 

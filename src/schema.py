@@ -27,6 +27,7 @@ CONFIG_SCHEMA = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
+                'account': {'type': 'string'},
                 'app': {'type': 'string', 'format': 'uuid'},
                 'shared-key': {'type': 'string'}
             },
@@ -135,8 +136,22 @@ SECURITY_SCHEMA = {
             'close': {'type': 'number', 'format': 'float'},
             'low': {'type': 'number', 'format': 'float'},
             'high': {'type': 'number', 'format': 'float'},
-            'volume': {'type': 'integer'}
+            'volume': {'type': 'integer'},
+            'low_score': {'type': 'integer'},
+            'high_score': {'type': 'integer'},
+            'valid_low_score': {'type': 'integer'},
+            'valid_high_score': {'type': 'integer'}
         },
-        'required': ['symbol', 'timestamp', 'open', 'close', 'low', 'high', 'volume']
+        'required': ['symbol',
+                     'timestamp',
+                     'open',
+                     'close',
+                     'low',
+                     'high',
+                     'volume',
+                     'low_score',
+                     'high_score',
+                     'valid_low_score',
+                     'valid_high_score']
     }
 }

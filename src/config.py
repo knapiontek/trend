@@ -41,6 +41,12 @@ def datetime_from() -> datetime:
     return DateTime.parse_datetime(config['system']['date-time-from'])
 
 
+def exante_account() -> str:
+    config = load_file()
+    exante_config = config['exante']
+    return exante_config['account']
+
+
 def exante_auth() -> Tuple[str, str]:
     config = load_file()
     exante_config = config['exante']

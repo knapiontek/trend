@@ -75,3 +75,8 @@ def test_orders():
     with exante.Session() as session:
         orders = session.orders()
     assert len(orders) >= 0
+
+
+def _test_order():
+    with exante.Session() as session:
+        session.order(symbol='TOA.WSE', limit=6.48, stop_loss=4.0)

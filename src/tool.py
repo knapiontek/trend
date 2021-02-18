@@ -129,6 +129,9 @@ def health_name(engine: Any, interval: Union[timedelta, str]) -> str:
     return f'{source}_health'
 
 
+SECURITY_SCORE_DEFAULT = {k: 0 for k in ('low_score', 'high_score', 'valid_low_score', 'valid_high_score')}
+
+
 # working days
 
 @lru_cache(maxsize=16)

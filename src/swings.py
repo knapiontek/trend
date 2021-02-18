@@ -1,15 +1,13 @@
 from collections import deque
 from typing import List
 
+from src import tool
 from src.clazz import Clazz
 
 
 def init(series: List[Clazz]) -> List[Clazz]:
     for s in series:
-        s.low_score = 0
-        s.high_score = 0
-        s.valid_low_score = 0
-        s.valid_high_score = 0
+        s.update(tool.SECURITY_SCORE_DEFAULT)
 
     results = []
     for s in series:
