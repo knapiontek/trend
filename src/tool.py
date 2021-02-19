@@ -129,7 +129,7 @@ def health_name(engine: Any, interval: Union[timedelta, str]) -> str:
     return f'{source}_health'
 
 
-SECURITY_SCORE_DEFAULT = {k: 0 for k in ('low_score', 'high_score', 'valid_low_score', 'valid_high_score')}
+SECURITY_SCORE_DEFAULT = {'low_score': 0, 'high_score': 0, 'valid_low_score': 0, 'valid_high_score': 0, 'test': {}}
 
 
 # working days

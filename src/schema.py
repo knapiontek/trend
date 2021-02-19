@@ -127,6 +127,12 @@ SECURITY_SCHEMA = {
     'message': 'security-schema',
     'level': 'strict',
     'rule': {
+        'definitions': {
+            'Result': {
+                'type': 'object',
+                'additionalProperties': True
+            }
+        },
         'type': 'object',
         'additionalProperties': True,
         'properties': {
@@ -140,7 +146,8 @@ SECURITY_SCHEMA = {
             'low_score': {'type': 'integer'},
             'high_score': {'type': 'integer'},
             'valid_low_score': {'type': 'integer'},
-            'valid_high_score': {'type': 'integer'}
+            'valid_high_score': {'type': 'integer'},
+            'test': {'$ref': '#/definitions/Result'}
         },
         'required': ['symbol',
                      'timestamp',
@@ -152,6 +159,7 @@ SECURITY_SCHEMA = {
                      'low_score',
                      'high_score',
                      'valid_low_score',
-                     'valid_high_score']
+                     'valid_high_score',
+                     'test']
     }
 }
