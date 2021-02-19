@@ -96,6 +96,11 @@ def plot_vma(ax: Axes, series: List[Clazz], w_size: int, color: Color):
     plot_line(ax, [s.timestamp for s in series], [s.get(vma_name) for s in series], label=vma_name, color=color)
 
 
+def plot_atr(ax: Axes, series: List[Clazz], w_size: int, color: Color):
+    atr_name = f'atr-{w_size}'
+    plot_line(ax, [s.timestamp for s in series], [s.get(atr_name) for s in series], label=atr_name, color=color)
+
+
 def plot_valid_swings(ax: Axes, series: List[Clazz], score: int):
     results = []
     for s in series:
@@ -140,6 +145,10 @@ def show_vma(symbol: str, interval: timedelta, begin: int, end: int):
         analyse.vma(series, w_size)
         plot_vma(ax1, series, w_size, color)
 
+    w_size = 14
+    analyse.volatile(series, w_size)
+    plot_atr(ax2, series, w_size, Color.red)
+
     show_widget((ax1, ax2), symbol, begin, end)
 
 
@@ -152,6 +161,10 @@ def show_valid_swings(symbol: str, interval: timedelta, begin: int, end: int):
     swings.calculate(series)
     for score in range(1, 9):
         plot_valid_swings(ax1, series, score)
+
+    w_size = 14
+    analyse.volatile(series, w_size)
+    plot_atr(ax2, series, w_size, Color.red)
 
     show_widget((ax1, ax2), symbol, begin, end)
 
@@ -166,6 +179,10 @@ def show_candidate_swings(symbol: str, interval: timedelta, begin: int, end: int
     for score in (1, 3):
         reduced = swings.reduce(reduced, score)
         plot_candidate_swings(ax1, series, score)
+
+    w_size = 14
+    analyse.volatile(series, w_size)
+    plot_atr(ax2, series, w_size, Color.red)
 
     show_widget((ax1, ax2), symbol, begin, end)
 
@@ -215,6 +232,10 @@ def show_strategy(symbol: str, interval: timedelta, begin: int, end: int):
                 continue
 
     plot_strategy(ax1, series)
+
+    w_size = 14
+    analyse.volatile(series, w_size)
+    plot_atr(ax2, series, w_size, Color.red)
 
     show_widget((ax1, ax2), symbol, begin, end)
 

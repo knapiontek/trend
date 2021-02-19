@@ -34,6 +34,16 @@ def vma(series: List[Clazz], w_size: int):
                 s1[vma_name] = sum_value / sum_volume
 
 
+def volatile(series: List[Clazz], w_size: int):
+    if len(series) >= w_size:
+        atr_name = f'atr-{w_size}'
+        atr_value = sum([s.high - s.low for s in series[:w_size]])
+        series[w_size - 1][atr_name] = atr_value / w_size
+        for s1, s2 in zip(series[w_size:], series):
+            atr_value += (s1.high - s1.low) - (s2.high - s2.low)
+            s1[atr_name] = atr_value / w_size
+
+
 def action(series: List[Clazz]) -> Clazz:
     """
     profit - total profit or loss
